@@ -16,8 +16,12 @@ import adminRoutes from './routes/admin.routes.js';
 const app = express();
 
 // Configure CORS
+
 const corsOptions = {
-  origin: process.env.CLIENT_ORIGIN || true,
+  origin: [
+    "http://localhost:5173",
+    "https://ryuhaalliance.devsandbox.me"
+  ],
   credentials: true,
   optionsSuccessStatus: 200
 };
