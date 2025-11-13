@@ -1,163 +1,289 @@
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import client from '../api/client';
 import { useAuth } from '../store/auth';
 import { getRankImageSrc, calculateRank } from '../utils/rank';
 
-// Helper function to get house image path
 function getHouseImageSrc(houseName) {
   if (!houseName) return '/assets/pendragon.jpeg';
   const houseMap = {
-    'Pendragon': 'pendragon',
-    'Phantomhive': 'phantomhive',
-    'Tempest': 'tempest',
-    'Zodylk': 'zodlyck',
-    'Fritz': 'fritz',
-    'Elric': 'elric',
-    'Dragneel': 'dragneel',
-    'Hellsing': 'hellsing',
-    'Obsidian Order': 'obsidian_order'
+    Pendragon: 'pendragon',
+    Phantomhive: 'phantomhive',
+    Tempest: 'tempest',
+    Zodylk: 'zodlyck',
+    Fritz: 'fritz',
+    Elric: 'elric',
+    Dragneel: 'dragneel',
+    Hellsing: 'hellsing',
+    'Obsidian Order': 'obsidian_order',
   };
-  const fileName = houseMap[houseName] || houseName.toLowerCase().replace(' ', '_');
+  const fileName = houseMap[houseName] || houseName.toLowerCase().replace(/\s+/g, '_');
   return `/assets/${fileName}.jpeg`;
 }
 
 export default function Profile() {
   const { user: authUser, loadUser } = useAuth();
   const navigate = useNavigate();
-  const [me, setMe] = useState(null);
-  const [file, setFile] = useState(null);
-  const [pfpFile, setPfpFile] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [uploading, setUploading] = useState(false);
-  const [uploadingPfp, setUploadingPfp] = useState(false);
+  const location = useLocation();
+
+  const [profile, setProfile] = useState(null);
+  const [loadingProfile, setLoadingProfile] = useState(false);
+  const [profileError, setProfileError] = useState(null);
+  const [searchTerm, setSearchTerm] = useState(() => {
+    const params = new URLSearchParams(location.search);
+    return params.get('q')?.trim() || '';
+  });
+
+  const [posts, setPosts] = useState([]);
+  const [postsLoading, setPostsLoading] = useState(false);
+  const [newPostContent, setNewPostContent] = useState('');
+  const [creatingPost, setCreatingPost] = useState(false);
+
+  const [heroFile, setHeroFile] = useState(null);
+  const [avatarFile, setAvatarFile] = useState(null);
+  const [uploadingHero, setUploadingHero] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+
   const [showPasswordChange, setShowPasswordChange] = useState(false);
-  const [passwordData, setPasswordData] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+  });
   const [passwordError, setPasswordError] = useState(null);
   const [passwordSuccess, setPasswordSuccess] = useState(false);
   const [changingPassword, setChangingPassword] = useState(false);
-  
-  async function load() {
-    setLoading(true);
+
+  const viewerId = authUser?.id || authUser?._id;
+  const profileId = profile?.id || profile?._id;
+  const isSelf = Boolean(viewerId && profileId && String(viewerId) === String(profileId));
+
+  const rankName = profile?.rank || calculateRank(profile?.points || 0);
+  const statusLabel = profile?.status ? profile.status[0].toUpperCase() + profile.status.slice(1) : 'Unknown';
+  const memberSince = profile?.createdAt
+    ? new Date(profile.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+    : 'Unknown';
+
+  const detailRows = useMemo(() => {
+    if (!profile) return [];
+    const rows = [
+      { label: 'Role', value: profile.role ? profile.role[0].toUpperCase() + profile.role.slice(1) : 'User' },
+      { label: 'House', value: profile.house },
+      { label: 'Rank', value: rankName },
+      { label: 'Points', value: profile.points ?? 0 },
+      { label: 'Sigil', value: profile.sigil },
+      { label: 'Status', value: statusLabel },
+      { label: 'Member Since', value: memberSince },
+    ];
+    if (isSelf && profile.email) {
+      rows.splice(1, 0, { label: 'Email', value: profile.email });
+    }
+    return rows.filter((row) => row.value !== undefined && row.value !== null && row.value !== '');
+  }, [profile, isSelf, memberSince, rankName, statusLabel]);
+
+  useEffect(() => {
+    if (!authUser && localStorage.getItem('token')) {
+      loadUser();
+    }
+  }, [authUser, loadUser]);
+
+  const loadPostsForIdentifier = useCallback(async (identifier) => {
+    if (!identifier) {
+      setPosts([]);
+      return;
+    }
+    setPostsLoading(true);
     try {
-      // First try to load user from auth store
+      const { data } = await client.get(`/posts/user/${encodeURIComponent(identifier)}`);
+      setPosts(data.posts || []);
+    } catch (error) {
+      console.error('Failed to load posts:', error);
+      setPosts([]);
+    } finally {
+      setPostsLoading(false);
+    }
+  }, []);
+
+  const loadSelfProfile = useCallback(async () => {
+    setLoadingProfile(true);
+    setProfileError(null);
+    try {
       if (!authUser) {
         await loadUser();
       }
-      
-      // Then fetch fresh data from API
       const { data } = await client.get('/users/me');
-      setMe(data.user);
+      setProfile(data.user);
+      setSearchTerm(data.user.username || '');
+      await loadPostsForIdentifier(data.user.username || data.user.sigil || data.user.id);
     } catch (error) {
       console.error('Failed to load profile:', error);
-      // If 401, redirect to login
-      if (error?.response?.status === 401) {
-        navigate('/login');
-      }
+      setProfile(null);
+      setPosts([]);
+      setProfileError(error?.response?.data?.error || 'Failed to load profile');
     } finally {
-      setLoading(false);
+      setLoadingProfile(false);
     }
-  }
-  
-  useEffect(() => { 
-    // Check if we have a token, if not redirect to login
-    const token = localStorage.getItem('token');
-    if (!token) {
-      navigate('/login');
+  }, [authUser, loadUser, loadPostsForIdentifier]);
+
+  const loadPublicProfile = useCallback(async (identifier) => {
+    const trimmed = identifier?.trim();
+    if (!trimmed) return;
+    setLoadingProfile(true);
+    setProfileError(null);
+    try {
+      const { data } = await client.get('/users/public/profile', { params: { identifier: trimmed } });
+      const viewer = authUser?.id || authUser?._id;
+      if (viewer && data.user.id && String(viewer) === String(data.user.id)) {
+        await loadSelfProfile();
+        navigate('/profile', { replace: true });
+        return;
+      }
+      setProfile(data.user);
+      setSearchTerm(trimmed);
+      await loadPostsForIdentifier(data.user.username || trimmed);
+    } catch (error) {
+      console.error('Failed to load public profile:', error);
+      setProfile(null);
+      setPosts([]);
+      setProfileError(error?.response?.data?.error || 'Profile not found');
+    } finally {
+      setLoadingProfile(false);
+    }
+  }, [authUser, loadPostsForIdentifier, loadSelfProfile, navigate]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const identifierParam = params.get('q')?.trim();
+    if (identifierParam) {
+      loadPublicProfile(identifierParam);
+    } else if (authUser) {
+      loadSelfProfile();
+    } else {
+      setProfile(null);
+      setPosts([]);
+      setProfileError(null);
+    }
+  }, [location.search, authUser, loadPublicProfile, loadSelfProfile]);
+
+  const handleSearchSubmit = (event) => {
+    event.preventDefault();
+    const value = searchTerm.trim();
+    if (!value) {
+      if (authUser) {
+        navigate('/profile', { replace: true });
+        loadSelfProfile();
+      } else {
+        setProfileError('Enter a sigil, username, or display name to search.');
+      }
       return;
     }
-    load(); 
-  }, []);
-  
-  const handleUpload = async () => {
-    if (!file) return;
-    setUploading(true);
+    navigate(`/profile?q=${encodeURIComponent(value)}`);
+  };
+
+  const handleCreatePost = async () => {
+    if (!newPostContent.trim()) return;
+    setCreatingPost(true);
+    try {
+      await client.post('/posts', { content: newPostContent.trim() });
+      setNewPostContent('');
+      if (profile?.username) {
+        await loadPostsForIdentifier(profile.username);
+      }
+    } catch (error) {
+      console.error('Failed to create post:', error);
+      alert(error?.response?.data?.error || 'Failed to create post');
+    } finally {
+      setCreatingPost(false);
+    }
+  };
+
+  const selectHeroFile = () => {
+    if (!isSelf) return;
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/png,image/jpeg,image/webp';
+    input.onchange = (e) => {
+      const selected = e.target.files?.[0];
+      if (selected) setHeroFile(selected);
+    };
+    input.click();
+  };
+
+  const selectAvatarFile = () => {
+    if (!isSelf) return;
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/png,image/jpeg,image/webp';
+    input.onchange = (e) => {
+      const selected = e.target.files?.[0];
+      if (selected) setAvatarFile(selected);
+    };
+    input.click();
+  };
+
+  const handleHeroUpload = async () => {
+    if (!isSelf || !heroFile) return;
+    setUploadingHero(true);
     try {
       const form = new FormData();
-      form.append('heroCard', file);
+      form.append('heroCard', heroFile);
       await client.post('/users/me/hero-card', form, { headers: { 'Content-Type': 'multipart/form-data' } });
-      setFile(null);
-      await load();
+      setHeroFile(null);
+      await loadSelfProfile();
     } catch (error) {
       console.error('Failed to upload hero card:', error);
+      alert(error?.response?.data?.error || 'Failed to upload hero card');
     } finally {
-      setUploading(false);
+      setUploadingHero(false);
     }
   };
 
-  const handleHeroCardClick = () => {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'image/png,image/jpeg,image/webp';
-    input.onchange = (e) => {
-      const selectedFile = e.target.files?.[0];
-      if (selectedFile) {
-        setFile(selectedFile);
-      }
-    };
-    input.click();
-  };
-
-  const handlePfpUpload = async () => {
-    if (!pfpFile) return;
-    setUploadingPfp(true);
+  const handleAvatarUpload = async () => {
+    if (!isSelf || !avatarFile) return;
+    setUploadingAvatar(true);
     try {
       const form = new FormData();
-      form.append('photo', pfpFile);
+      form.append('photo', avatarFile);
       await client.post('/users/me/photo', form, { headers: { 'Content-Type': 'multipart/form-data' } });
-      setPfpFile(null);
-      await load();
+      setAvatarFile(null);
+      await loadSelfProfile();
     } catch (error) {
       console.error('Failed to upload profile picture:', error);
+      alert(error?.response?.data?.error || 'Failed to upload profile picture');
     } finally {
-      setUploadingPfp(false);
+      setUploadingAvatar(false);
     }
-  };
-
-  const handlePfpClick = () => {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'image/png,image/jpeg,image/webp';
-    input.onchange = (e) => {
-      const selectedFile = e.target.files?.[0];
-      if (selectedFile) {
-        setPfpFile(selectedFile);
-      }
-    };
-    input.click();
   };
 
   const handlePasswordChange = async () => {
     setPasswordError(null);
     setPasswordSuccess(false);
-    
+
     if (!passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword) {
       setPasswordError('All fields are required');
       return;
     }
-    
     if (passwordData.newPassword !== passwordData.confirmPassword) {
       setPasswordError('New passwords do not match');
       return;
     }
-    
     if (passwordData.newPassword.length < 8) {
       setPasswordError('New password must be at least 8 characters long');
       return;
     }
-    
+
     setChangingPassword(true);
     try {
       await client.post('/users/me/change-password', {
         currentPassword: passwordData.currentPassword,
-        newPassword: passwordData.newPassword
+        newPassword: passwordData.newPassword,
       });
       setPasswordSuccess(true);
       setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
       setTimeout(() => {
         setShowPasswordChange(false);
         setPasswordSuccess(false);
-      }, 2000);
+      }, 1800);
     } catch (error) {
       setPasswordError(error?.response?.data?.error || 'Failed to change password');
     } finally {
@@ -165,506 +291,443 @@ export default function Profile() {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="container" style={{ padding: '2rem 1rem' }}>
-        <div style={{ textAlign: 'center', color: 'var(--muted)' }}>Loading profile...</div>
-      </div>
-    );
-  }
-
-  if (!me) {
-    return (
-      <div className="container" style={{ padding: '2rem 1rem' }}>
-        <div style={{ textAlign: 'center', color: 'var(--muted)' }}>Failed to load profile</div>
-      </div>
-    );
-  }
-
   return (
-    <div className="container" style={{ padding: '2rem 1rem' }}>
-      <div style={{ marginBottom: '2rem' }}>
-        <h2 className="hdr" style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>Profile</h2>
-        <p style={{ color: 'var(--muted)' }}>Manage your account information and preferences</p>
-      </div>
-
-      {/* Status Banner */}
-      {me.status === 'pending' && (
-        <div className="card" style={{ 
+    <div className="container" style={{ padding: '2rem 1rem 3rem' }}>
+      <div
+        className="card"
+        style={{
           marginBottom: '1.5rem',
-          background: 'linear-gradient(135deg, rgba(251, 191, 36, 0.1) 0%, rgba(251, 191, 36, 0.05) 100%)',
-          border: '1px solid rgba(251, 191, 36, 0.3)',
-          padding: '1rem'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <div style={{ fontSize: '1.5rem' }}>⏳</div>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontWeight: '600', marginBottom: '0.25rem' }}>Your account is pending approval</div>
-              <div style={{ color: 'var(--muted)', fontSize: '0.9rem' }}>
-                Your account is waiting for admin approval. You will be able to access all features once approved.
-                {me.adminMessage && (
-                  <div style={{ marginTop: '0.5rem', padding: '0.5rem', background: 'rgba(0,0,0,0.2)', borderRadius: '4px' }}>
-                    <strong>Admin Message:</strong> {me.adminMessage}
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-      
-      {me.status === 'declined' && (
-        <div className="card" style={{ 
-          marginBottom: '1.5rem',
-          background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(239, 68, 68, 0.05) 100%)',
-          border: '1px solid rgba(239, 68, 68, 0.3)',
-          padding: '1rem'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <div style={{ fontSize: '1.5rem' }}>❌</div>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontWeight: '600', marginBottom: '0.25rem' }}>Your account has been declined</div>
-              <div style={{ color: 'var(--muted)', fontSize: '0.9rem' }}>
-                {me.adminMessage ? (
-                  <div>
-                    <strong>Reason:</strong> {me.adminMessage}
-                  </div>
-                ) : (
-                  'Your account request has been declined. Please contact an administrator for more information.'
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Hero Card Section */}
-      <div className="card" style={{ 
-        padding: 0,
-        marginBottom: '1.5rem',
-        overflow: 'hidden',
-        position: 'relative',
-        cursor: 'pointer',
-        border: '2px solid rgba(177,15,46,0.2)'
-      }}
-      onClick={handleHeroCardClick}
-      onMouseEnter={(e) => {
-        if (!uploading) {
-          e.currentTarget.style.borderColor = 'rgba(177,15,46,0.5)';
-        }
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.borderColor = 'rgba(177,15,46,0.2)';
-      }}
+          padding: '1.75rem',
+          border: '1px solid rgba(148,163,184,0.2)',
+        }}
       >
-        {me.heroCardUrl ? (
-          <img 
-            src={me.heroCardUrl} 
-            alt={`${me.username}'s hero card`}
-            style={{
-              width: '100%',
-              aspectRatio: '16/9',
-              objectFit: 'cover',
-              display: 'block'
-            }}
-            onError={(e) => {
-              e.target.style.display = 'none';
-              e.target.nextSibling.style.display = 'flex';
-            }}
+        <h2 className="hdr" style={{ fontSize: '1.8rem', marginBottom: '0.75rem' }}>Find a Warrior</h2>
+        <p style={{ color: 'var(--muted)', marginBottom: '1rem' }}>
+          Search by sigil code, username, or display name. Use the format <code>RA–########–###</code> for sigils.
+        </p>
+        <form onSubmit={handleSearchSubmit} style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem' }}>
+          <input
+            className="input"
+            placeholder="RA–12345678–123, username, or display name"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            style={{ flex: '1 1 260px' }}
           />
-        ) : null}
-        <div style={{
-          width: '100%',
-          aspectRatio: '16/9',
-          background: 'linear-gradient(135deg, rgba(177,15,46,0.3) 0%, rgba(177,15,46,0.1) 100%)',
-          display: me.heroCardUrl ? 'none' : 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          flexDirection: 'column',
-          gap: '1rem',
-          color: 'var(--muted)'
-        }}>
-          <div style={{ fontSize: '3rem' }}>🛡️</div>
-          <div style={{ fontSize: '1.1rem', fontWeight: '600' }}>Click to upload hero card</div>
-          <div style={{ fontSize: '0.9rem' }}>16:9 ratio recommended</div>
-        </div>
-        {uploading && (
-          <div style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: 'rgba(0, 0, 0, 0.7)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: 'white',
-            fontSize: '1.2rem',
-            fontWeight: '600'
-          }}>
-            Uploading...
-          </div>
-        )}
-      </div>
-
-      {/* Profile Header Card */}
-      <div className="card" style={{ 
-        position: 'relative',
-        border: '1px solid rgba(177,15,46,0.2)',
-        padding: '2rem',
-        marginBottom: '1.5rem',
-        overflow: 'hidden'
-      }}>
-        {/* House Background */}
-        <div style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundImage: `url(${getHouseImageSrc(me.house)})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          opacity: 0.15,
-          zIndex: 0
-        }} />
-        {/* Overlay for better text readability */}
-        <div style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: 'linear-gradient(135deg, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.1) 100%)',
-          zIndex: 1
-        }} />
-        <div style={{ display: 'flex', gap: '2rem', alignItems: 'flex-start', flexWrap: 'wrap', position: 'relative', zIndex: 2 }}>
-          {/* Avatar Section */}
-          <div style={{ position: 'relative' }}>
-            {me.photoUrl ? (
-              <img 
-                src={me.photoUrl} 
-                alt={me.username}
-                style={{
-                  width: 140,
-                  height: 140,
-                  borderRadius: '50%',
-                  border: '4px solid rgba(177,15,46,0.3)',
-                  boxShadow: '0 8px 24px rgba(177,15,46,0.2)',
-                  objectFit: 'cover'
-                }}
-                onError={(e) => {
-                  e.target.style.display = 'none';
-                  e.target.nextSibling.style.display = 'flex';
-                }}
-              />
-            ) : null}
-            <div style={{
-              width: 140,
-              height: 140,
-              borderRadius: '50%',
-              background: 'linear-gradient(135deg, var(--primary) 0%, #8b0d26 100%)',
-              border: '4px solid rgba(177,15,46,0.3)',
-              boxShadow: '0 8px 24px rgba(177,15,46,0.2)',
-              display: me.photoUrl ? 'none' : 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '3rem',
-              color: 'white',
-              fontWeight: 'bold',
-              textTransform: 'uppercase'
-            }}>
-              {me.username?.[0] || 'U'}
-            </div>
+          <button className="btn" type="submit" style={{ flex: '0 0 auto' }}>
+            Search
+          </button>
+          {authUser && (
             <button
               className="btn"
-              onClick={handlePfpClick}
-              disabled={uploadingPfp}
-              style={{
-                marginTop: '0.75rem',
-                width: '100%',
-                fontSize: '0.9rem',
-                padding: '0.5rem',
-                opacity: uploadingPfp ? 0.6 : 1,
-                cursor: uploadingPfp ? 'not-allowed' : 'pointer'
-              }}
-            >
-              {uploadingPfp ? 'Uploading...' : 'Change PFP'}
-            </button>
-          </div>
-
-          {/* User Info Section */}
-          <div style={{ flex: 1, minWidth: '250px' }}>
-            <div style={{ marginBottom: '1rem' }}>
-              <h3 className="hdr" style={{ fontSize: '1.75rem', margin: '0 0 0.5rem 0' }}>
-                {me.displayName || me.username}
-              </h3>
-              <div style={{ color: 'var(--muted)', fontSize: '0.95rem', marginBottom: '0.25rem' }}>
-                @{me.username}
-              </div>
-              {me.email && (
-                <div style={{ color: 'var(--muted)', fontSize: '0.9rem' }}>
-                  {me.email}
-                </div>
-              )}
-            </div>
-
-            <div style={{ 
-              display: 'flex', 
-              gap: '1.5rem', 
-              flexWrap: 'wrap',
-              marginTop: '1.5rem',
-              paddingTop: '1.5rem',
-              borderTop: '1px solid rgba(255,255,255,0.2)'
-            }}>
-              <div>
-                <div style={{ color: 'var(--muted)', fontSize: '0.85rem', marginBottom: '0.25rem' }}>Rank</div>
-                <div style={{ 
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem'
-                }}>
-                  <img 
-                    src={getRankImageSrc(me.rank || calculateRank(me.points || 0))}
-                    alt={me.rank || calculateRank(me.points || 0)}
-                    onError={(e) => {
-                      // Hide image if it fails to load
-                      e.target.style.display = 'none';
-                    }}
-                    style={{
-                      width: 32,
-                      height: 32,
-                      objectFit: 'contain'
-                    }}
-                  />
-                  <div style={{ 
-                    fontSize: '1rem',
-                    fontWeight: '600'
-                  }}>
-                    {me.rank || calculateRank(me.points || 0)}
-                  </div>
-                </div>
-              </div>
-              <div>
-                <div style={{ color: 'var(--muted)', fontSize: '0.85rem', marginBottom: '0.25rem' }}>House</div>
-                <div style={{ 
-                  display: 'inline-block',
-                  padding: '0.35rem 0.75rem',
-                  background: 'rgba(177,15,46,0.2)',
-                  border: '1px solid rgba(177,15,46,0.4)',
-                  borderRadius: '6px',
-                  fontSize: '0.9rem',
-                  fontWeight: '600'
-                }}>
-                  {me.house}
-                </div>
-              </div>
-              <div>
-                <div style={{ color: 'var(--muted)', fontSize: '0.85rem', marginBottom: '0.25rem' }}>Points</div>
-                <div style={{ fontSize: '1.5rem', fontWeight: '700', color: 'var(--primary)' }}>
-                  {me.points || 0}
-                </div>
-              </div>
-              {me.sigil && (
-                <div>
-                  <div style={{ color: 'var(--muted)', fontSize: '0.85rem', marginBottom: '0.25rem' }}>Sigil</div>
-                  <div style={{ fontSize: '1rem', fontWeight: '600' }}>
-                    {me.sigil}
-                  </div>
-                </div>
-              )}
-              {me.createdAt && (
-                <div>
-                  <div style={{ color: 'var(--muted)', fontSize: '0.85rem', marginBottom: '0.25rem' }}>Member Since</div>
-                  <div style={{ fontSize: '1rem', fontWeight: '500' }}>
-                    {new Date(me.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-
-
-      {/* Profile Picture Upload Card */}
-      {pfpFile && (
-        <div className="card" style={{ marginBottom: '1rem' }}>
-          <h4 className="hdr" style={{ marginBottom: '1rem', fontSize: '1.25rem' }}>Upload Profile Picture</h4>
-          <p style={{ color: 'var(--muted)', fontSize: '0.9rem', marginBottom: '1rem' }}>
-            Selected: <strong>{pfpFile.name}</strong>
-          </p>
-          <p style={{ color: 'var(--muted)', fontSize: '0.85rem', marginBottom: '1rem' }}>
-            Profile pictures should be square format for best results. Supported formats: PNG, JPEG, WebP
-          </p>
-          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
-            <button 
-              className="btn" 
-              onClick={handlePfpUpload}
-              disabled={uploadingPfp}
-              style={{ 
-                opacity: uploadingPfp ? 0.6 : 1,
-                cursor: uploadingPfp ? 'not-allowed' : 'pointer'
-              }}
-            >
-              {uploadingPfp ? 'Uploading...' : 'Upload Profile Picture'}
-            </button>
-            <button 
-              className="btn" 
+              type="button"
               onClick={() => {
-                setPfpFile(null);
+                navigate('/profile', { replace: true });
+                loadSelfProfile();
               }}
-              disabled={uploadingPfp}
-              style={{ 
-                background: 'transparent',
-                border: '1px solid #1f2937'
-              }}
+              style={{ flex: '0 0 auto', background: 'transparent', border: '1px solid rgba(148,163,184,0.3)' }}
             >
-              Cancel
+              View my profile
             </button>
-          </div>
-        </div>
-      )}
-
-      {/* Hero Card Upload Card */}
-      {file && (
-        <div className="card" style={{ marginBottom: '1rem' }}>
-          <h4 className="hdr" style={{ marginBottom: '1rem', fontSize: '1.25rem' }}>Upload Hero Card</h4>
-          <p style={{ color: 'var(--muted)', fontSize: '0.9rem', marginBottom: '1rem' }}>
-            Selected: <strong>{file.name}</strong>
-          </p>
-          <p style={{ color: 'var(--muted)', fontSize: '0.85rem', marginBottom: '1rem' }}>
-            Hero cards should be in 16:9 aspect ratio. Supported formats: PNG, JPEG, WebP
-          </p>
-          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
-            <button 
-              className="btn" 
-              onClick={handleUpload}
-              disabled={uploading}
-              style={{ 
-                opacity: uploading ? 0.6 : 1,
-                cursor: uploading ? 'not-allowed' : 'pointer'
-              }}
-            >
-              {uploading ? 'Uploading...' : 'Upload Hero Card'}
-            </button>
-            <button 
-              className="btn" 
-              onClick={() => {
-                setFile(null);
-              }}
-              disabled={uploading}
-              style={{ 
-                background: 'transparent',
-                border: '1px solid #1f2937'
-              }}
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Change Password Card */}
-      <div className="card">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-          <h4 className="hdr" style={{ margin: 0, fontSize: '1.25rem' }}>Change Password</h4>
-          <button 
-            className="btn" 
-            onClick={() => {
-              setShowPasswordChange(!showPasswordChange);
-              setPasswordError(null);
-              setPasswordSuccess(false);
-              setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
-            }}
-            style={{ 
-              background: showPasswordChange ? 'transparent' : undefined,
-              border: showPasswordChange ? '1px solid #1f2937' : undefined
+          )}
+        </form>
+        {profileError && (
+          <div
+            style={{
+              marginTop: '1rem',
+              padding: '0.75rem 1rem',
+              borderRadius: '8px',
+              background: 'rgba(239, 68, 68, 0.12)',
+              border: '1px solid rgba(239, 68, 68, 0.35)',
+              color: 'rgba(239, 68, 68, 1)',
             }}
           >
-            {showPasswordChange ? 'Cancel' : 'Change Password'}
-          </button>
-        </div>
-        
-        {showPasswordChange && (
-          <div>
-            {passwordError && (
-              <div style={{ 
-                padding: '0.75rem', 
-                background: 'rgba(239, 68, 68, 0.1)', 
-                border: '1px solid rgba(239, 68, 68, 0.3)', 
-                borderRadius: '8px', 
-                color: 'rgba(239, 68, 68, 1)',
-                marginBottom: '1rem'
-              }}>
-                {passwordError}
-              </div>
-            )}
-            {passwordSuccess && (
-              <div style={{ 
-                padding: '0.75rem', 
-                background: 'rgba(34, 197, 94, 0.1)', 
-                border: '1px solid rgba(34, 197, 94, 0.3)', 
-                borderRadius: '8px', 
-                color: 'rgba(34, 197, 94, 1)',
-                marginBottom: '1rem'
-              }}>
-                Password changed successfully!
-              </div>
-            )}
-            <div className="grid" style={{ gridTemplateColumns: '1fr', gap: '1rem' }}>
-              <div>
-                <label style={{ display: 'block', color: 'var(--muted)', fontSize: '0.85rem', marginBottom: '0.5rem' }}>
-                  Current Password
-                </label>
-                <input 
-                  className="input"
-                  type="password"
-                  placeholder="Enter current password"
-                  value={passwordData.currentPassword}
-                  onChange={e => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
-                />
-              </div>
-              <div>
-                <label style={{ display: 'block', color: 'var(--muted)', fontSize: '0.85rem', marginBottom: '0.5rem' }}>
-                  New Password
-                </label>
-                <input 
-                  className="input"
-                  type="password"
-                  placeholder="Enter new password (min 8 characters)"
-                  value={passwordData.newPassword}
-                  onChange={e => setPasswordData({ ...passwordData, newPassword: e.target.value })}
-                />
-              </div>
-              <div>
-                <label style={{ display: 'block', color: 'var(--muted)', fontSize: '0.85rem', marginBottom: '0.5rem' }}>
-                  Confirm New Password
-                </label>
-                <input 
-                  className="input"
-                  type="password"
-                  placeholder="Confirm new password"
-                  value={passwordData.confirmPassword}
-                  onChange={e => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
-                />
-              </div>
-              <button 
-                className="btn" 
-                onClick={handlePasswordChange}
-                disabled={changingPassword}
-                style={{ 
-                  opacity: changingPassword ? 0.6 : 1,
-                  cursor: changingPassword ? 'not-allowed' : 'pointer'
-                }}
-              >
-                {changingPassword ? 'Changing...' : 'Change Password'}
-              </button>
-            </div>
+            {profileError}
           </div>
         )}
       </div>
+
+      {loadingProfile ? (
+        <div className="card" style={{ padding: '2rem', textAlign: 'center', color: 'var(--muted)' }}>
+          Loading profile...
+        </div>
+      ) : !profile ? (
+        <div className="card" style={{ padding: '2rem', textAlign: 'center', color: 'var(--muted)' }}>
+          Enter a sigil, username, or display name to view a profile.
+        </div>
+      ) : (
+        <>
+          {isSelf && profile.status === 'pending' && (
+            <div
+              className="card"
+              style={{
+                marginBottom: '1.5rem',
+                padding: '1rem',
+                border: '1px solid rgba(251, 191, 36, 0.3)',
+                background: 'rgba(251, 191, 36, 0.1)',
+              }}
+            >
+              <strong>Your account is pending approval.</strong> You will gain full access after an admin review.
+              {profile.adminMessage && (
+                <div style={{ marginTop: '0.5rem', color: 'var(--text)' }}><strong>Admin Message:</strong> {profile.adminMessage}</div>
+              )}
+            </div>
+          )}
+
+          {isSelf && profile.status === 'declined' && (
+            <div
+              className="card"
+              style={{
+                marginBottom: '1.5rem',
+                padding: '1rem',
+                border: '1px solid rgba(239, 68, 68, 0.3)',
+                background: 'rgba(239, 68, 68, 0.1)',
+              }}
+            >
+              <strong>Your account was declined.</strong> Contact an administrator if you need more information.
+              {profile.adminMessage && (
+                <div style={{ marginTop: '0.5rem', color: 'var(--text)' }}><strong>Reason:</strong> {profile.adminMessage}</div>
+              )}
+            </div>
+          )}
+
+          <div
+            className="card"
+            style={{
+              padding: 0,
+              marginBottom: '1.5rem',
+              border: '1px solid rgba(148,163,184,0.2)',
+              overflow: 'hidden',
+              cursor: isSelf ? 'pointer' : 'default',
+              position: 'relative',
+            }}
+            onClick={isSelf ? selectHeroFile : undefined}
+          >
+            {profile.heroCardUrl ? (
+              <img
+                src={profile.heroCardUrl}
+                alt={`${profile.username}'s hero banner`}
+                style={{ width: '100%', aspectRatio: '16/6', objectFit: 'cover', display: 'block' }}
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                }}
+              />
+            ) : (
+              <div
+                style={{
+                  width: '100%',
+                  aspectRatio: '16/6',
+                  backgroundImage: `url(${getHouseImageSrc(profile.house)})`,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: 'var(--muted)',
+                  fontWeight: 600,
+                }}
+              >
+                {isSelf ? 'Click to upload your hero banner' : 'No hero banner yet'}
+              </div>
+            )}
+            {uploadingHero && (
+              <div
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  background: 'rgba(15, 23, 42, 0.6)',
+                  color: 'white',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontWeight: 600,
+                }}
+              >
+                Uploading...
+              </div>
+            )}
+          </div>
+
+          <div
+            className="card"
+            style={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              gap: '1.5rem',
+              alignItems: 'flex-start',
+              border: '1px solid rgba(148,163,184,0.2)',
+              marginBottom: '1.5rem',
+            }}
+          >
+            <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+              {profile.photoUrl ? (
+                <img
+                  src={profile.photoUrl}
+                  alt={profile.username}
+                  style={{ width: 140, height: 140, borderRadius: '50%', objectFit: 'cover', border: '3px solid rgba(148,163,184,0.3)' }}
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                  }}
+                />
+              ) : (
+                <div
+                  style={{
+                    width: 140,
+                    height: 140,
+                    borderRadius: '50%',
+                    background: 'linear-gradient(135deg, var(--primary), #8b0d26)',
+                    color: 'white',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '3rem',
+                    fontWeight: '700',
+                  }}
+                >
+                  {profile.username?.[0] || 'U'}
+                </div>
+              )}
+              {isSelf && (
+                <button
+                  className="btn"
+                  onClick={selectAvatarFile}
+                  style={{ marginTop: '0.75rem', fontSize: '0.85rem' }}
+                >
+                  Change picture
+                </button>
+              )}
+            </div>
+
+            <div style={{ flex: '1 1 260px' }}>
+              <h2 className="hdr" style={{ fontSize: '2rem', marginBottom: '0.25rem' }}>
+                {profile.displayName || profile.username}
+              </h2>
+              <div style={{ color: 'var(--muted)', marginBottom: '0.75rem' }}>@{profile.username}</div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem 1.25rem' }}>
+                {detailRows.map((row) => (
+                  <div key={row.label} style={{ minWidth: 140 }}>
+                    <div style={{ color: 'var(--muted)', fontSize: '0.8rem', marginBottom: '0.2rem' }}>{row.label}</div>
+                    <div style={{ fontWeight: 600 }}>{row.label === 'Rank' ? (
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
+                        <img
+                          src={getRankImageSrc(rankName)}
+                          alt={rankName}
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                          }}
+                          style={{ width: 26, height: 26, objectFit: 'contain' }}
+                        />
+                        {row.value}
+                      </span>
+                    ) : row.value}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {heroFile && (
+            <div className="card" style={{ marginBottom: '1.5rem', border: '1px solid rgba(148,163,184,0.2)' }}>
+              <h4 className="hdr" style={{ marginBottom: '0.5rem' }}>Upload hero banner</h4>
+              <div style={{ color: 'var(--muted)', marginBottom: '0.75rem' }}>Selected file: <strong>{heroFile.name}</strong></div>
+              <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+                <button className="btn" onClick={handleHeroUpload} disabled={uploadingHero}>
+                  {uploadingHero ? 'Uploading...' : 'Upload banner'}
+                </button>
+                <button
+                  className="btn"
+                  onClick={() => setHeroFile(null)}
+                  disabled={uploadingHero}
+                  style={{ background: 'transparent', border: '1px solid rgba(148,163,184,0.3)' }}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
+
+          {avatarFile && (
+            <div className="card" style={{ marginBottom: '1.5rem', border: '1px solid rgba(148,163,184,0.2)' }}>
+              <h4 className="hdr" style={{ marginBottom: '0.5rem' }}>Upload profile picture</h4>
+              <div style={{ color: 'var(--muted)', marginBottom: '0.75rem' }}>Selected file: <strong>{avatarFile.name}</strong></div>
+              <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+                <button className="btn" onClick={handleAvatarUpload} disabled={uploadingAvatar}>
+                  {uploadingAvatar ? 'Uploading...' : 'Upload picture'}
+                </button>
+                <button
+                  className="btn"
+                  onClick={() => setAvatarFile(null)}
+                  disabled={uploadingAvatar}
+                  style={{ background: 'transparent', border: '1px solid rgba(148,163,184,0.3)' }}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
+
+          <div className="card" style={{ marginBottom: '1.5rem', border: '1px solid rgba(148,163,184,0.2)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+              <h3 className="hdr" style={{ margin: 0, fontSize: '1.2rem' }}>
+                {isSelf ? 'Your Posts' : `${profile.displayName || profile.username}'s Posts`}
+              </h3>
+              {!postsLoading && (
+                <button
+                  className="btn"
+                  onClick={() => {
+                    if (profile?.username) {
+                      loadPostsForIdentifier(profile.username);
+                    }
+                  }}
+                  style={{ background: 'transparent', border: '1px solid rgba(148,163,184,0.3)' }}
+                >
+                  Refresh
+                </button>
+              )}
+            </div>
+
+            {isSelf && (
+              <div style={{ marginBottom: '1rem' }}>
+                <textarea
+                  className="input"
+                  placeholder="Share an update..."
+                  value={newPostContent}
+                  onChange={(e) => setNewPostContent(e.target.value.slice(0, 500))}
+                  style={{ minHeight: 100, resize: 'vertical', marginBottom: '0.5rem' }}
+                />
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
+                  <span style={{ color: 'var(--muted)', fontSize: '0.85rem' }}>{newPostContent.length}/500</span>
+                  <button className="btn" onClick={handleCreatePost} disabled={creatingPost || !newPostContent.trim()}>
+                    {creatingPost ? 'Posting...' : 'Post'}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {postsLoading ? (
+              <div style={{ textAlign: 'center', color: 'var(--muted)', padding: '1rem' }}>Loading posts...</div>
+            ) : posts.length === 0 ? (
+              <div style={{ textAlign: 'center', color: 'var(--muted)', padding: '1rem' }}>No posts to show.</div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                {posts.map((post) => {
+                  const postId = post._id || post.id;
+                  return (
+                    <div
+                      key={postId}
+                      style={{
+                        border: '1px solid rgba(148,163,184,0.25)',
+                        borderRadius: '12px',
+                        padding: '1rem',
+                        background: 'rgba(15,23,42,0.4)',
+                      }}
+                    >
+                      <div style={{ marginBottom: '0.35rem', fontWeight: 600 }}>
+                        {post.author?.displayName || post.author?.username || profile.username}
+                      </div>
+                      <div style={{ color: 'var(--muted)', fontSize: '0.8rem', marginBottom: '0.75rem' }}>
+                        {new Date(post.createdAt).toLocaleString()}
+                      </div>
+                      <div style={{ whiteSpace: 'pre-wrap', lineHeight: 1.6 }}>{post.content}</div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          <div className="card" style={{ border: '1px solid rgba(148,163,184,0.2)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+              <h3 className="hdr" style={{ margin: 0, fontSize: '1.2rem' }}>Change Password</h3>
+              <button
+                className="btn"
+                onClick={() => {
+                  setShowPasswordChange(!showPasswordChange);
+                  setPasswordError(null);
+                  setPasswordSuccess(false);
+                  setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+                }}
+                style={{ background: showPasswordChange ? 'transparent' : undefined, border: showPasswordChange ? '1px solid rgba(148,163,184,0.3)' : undefined }}
+              >
+                {showPasswordChange ? 'Close' : 'Change Password'}
+              </button>
+            </div>
+
+            {showPasswordChange && (
+              <div>
+                {passwordError && (
+                  <div
+                    style={{
+                      marginBottom: '0.75rem',
+                      padding: '0.75rem',
+                      borderRadius: '8px',
+                      background: 'rgba(239, 68, 68, 0.13)',
+                      border: '1px solid rgba(239, 68, 68, 0.35)',
+                      color: 'rgba(239, 68, 68, 1)',
+                    }}
+                  >
+                    {passwordError}
+                  </div>
+                )}
+                {passwordSuccess && (
+                  <div
+                    style={{
+                      marginBottom: '0.75rem',
+                      padding: '0.75rem',
+                      borderRadius: '8px',
+                      background: 'rgba(34, 197, 94, 0.13)',
+                      border: '1px solid rgba(34, 197, 94, 0.35)',
+                      color: 'rgba(34, 197, 94, 1)',
+                    }}
+                  >
+                    Password changed successfully!
+                  </div>
+                )}
+                <div className="grid" style={{ gridTemplateColumns: '1fr', gap: '0.75rem' }}>
+                  <div>
+                    <label style={{ display: 'block', color: 'var(--muted)', fontSize: '0.85rem', marginBottom: '0.25rem' }}>
+                      Current password
+                    </label>
+                    <input
+                      className="input"
+                      type="password"
+                      placeholder="Enter current password"
+                      value={passwordData.currentPassword}
+                      onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', color: 'var(--muted)', fontSize: '0.85rem', marginBottom: '0.25rem' }}>
+                      New password
+                    </label>
+                    <input
+                      className="input"
+                      type="password"
+                      placeholder="Enter new password (min 8 characters)"
+                      value={passwordData.newPassword}
+                      onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', color: 'var(--muted)', fontSize: '0.85rem', marginBottom: '0.25rem' }}>
+                      Confirm new password
+                    </label>
+                    <input
+                      className="input"
+                      type="password"
+                      placeholder="Confirm new password"
+                      value={passwordData.confirmPassword}
+                      onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
+                    />
+                  </div>
+                  <button className="btn" onClick={handlePasswordChange} disabled={changingPassword}>
+                    {changingPassword ? 'Changing...' : 'Update password'}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </>
+      )}
     </div>
   );
 }

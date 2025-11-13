@@ -106,6 +106,25 @@ export default function Admin() {
       alert(error?.response?.data?.error || 'Failed to add moderator');
     }
   };
+
+  const handleRemoveUser = async (userId) => {
+    if (!userId) return;
+    const currentUserId = authUser?.id || authUser?._id;
+    if (currentUserId && String(currentUserId) === String(userId)) {
+      alert('You cannot remove your own account.');
+      return;
+    }
+    const confirmed = window.confirm('Are you sure you want to remove this user? This action cannot be undone.');
+    if (!confirmed) return;
+    try {
+      await client.delete(`/admin/user/${userId}`);
+      await loadAllUsers();
+      alert('User removed successfully');
+    } catch (error) {
+      console.error('Error removing user:', error);
+      alert(error?.response?.data?.error || 'Failed to remove user');
+    }
+  };
   
   const startEdit = (userId, field, currentValue) => {
     setEditingUser({ userId, field });
@@ -178,60 +197,133 @@ export default function Admin() {
             No pending users
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '0.5rem',
+            }}
+          >
             {pendingUsers.map((u) => (
-              <div 
-                key={u.id || u._id} 
-                style={{ 
-                  display: 'flex', 
-                  justifyContent: 'space-between', 
-                  alignItems: 'center',
-                  padding: '1rem', 
+              <div
+                key={u.id || u._id}
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '0.8rem',
+                  padding: '1rem',
                   border: '1px solid #1f2937',
                   borderRadius: '8px',
-                  background: 'rgba(177,15,46,0.05)'
+                  background: 'rgba(177,15,46,0.05)',
+                  width: '100%',
                 }}
               >
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontWeight: '600', marginBottom: '0.25rem' }}>
-                    {u.displayName || u.username}
-                  </div>
-                  <div style={{ color: 'var(--muted)', fontSize: '0.9rem', marginBottom: '0.25rem' }}>
-                    @{u.username} • {u.email}
-                  </div>
-                  <div style={{ color: 'var(--muted)', fontSize: '0.85rem' }}>
-                    House: {u.house} • Sigil: {u.sigil}
-                  </div>
-                  {u.createdAt && (
-                    <div style={{ color: 'var(--muted)', fontSize: '0.85rem', marginTop: '0.25rem' }}>
-                      Created: {new Date(u.createdAt).toLocaleString()}
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    flexWrap: 'wrap',
+                    gap: window.innerWidth < 600 ? '0.5rem' : '0.75rem 1.5rem',
+                    flexDirection: window.innerWidth < 600 ? 'column' : 'row',
+                  }}
+                >
+                  <div style={{ minWidth: 0, flex: 1, minHeight: 0 }}>
+                    <div style={{ fontWeight: 600, marginBottom: '0.25rem', fontSize: '1rem', wordBreak: 'break-word' }}>
+                      {u.displayName || u.username}
                     </div>
-                  )}
-                </div>
-                <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                  <button 
-                    className="btn" 
-                    onClick={() => handleApprove(u.id || u._id)}
-                    style={{ background: 'rgba(34, 197, 94, 0.2)', border: '1px solid rgba(34, 197, 94, 0.4)' }}
+                    <div style={{ color: 'var(--muted)', fontSize: '0.88rem', marginBottom: '0.19rem', wordBreak: 'break-word' }}>
+                      @{u.username} • {u.email}
+                    </div>
+                    <div style={{ color: 'var(--muted)', fontSize: '0.82rem', wordBreak: 'break-word' }}>
+                      House: {u.house} • Sigil: {u.sigil}
+                    </div>
+                    {u.createdAt && (
+                      <div style={{ color: 'var(--muted)', fontSize: '0.8rem', marginTop: '0.22rem', wordBreak: 'break-word' }}>
+                        Created: {new Date(u.createdAt).toLocaleString()}
+                      </div>
+                    )}
+                  </div>
+                  <div
+                    style={{
+                      display: 'flex',
+                      gap: '0.25rem',
+                      flexShrink: 0,
+                      flexWrap: 'wrap',
+                      minWidth: 0,
+                    }}
                   >
-                    Approve
-                  </button>
-                  <button 
-                    className="btn" 
-                    onClick={() => setDeclineModal({ open: true, userId: u.id || u._id, message: '' })}
-                    style={{ background: 'rgba(239, 68, 68, 0.2)', border: '1px solid rgba(239, 68, 68, 0.4)' }}
-                  >
-                    Decline
-                  </button>
-                  <button 
-                    className="btn" 
-                    onClick={() => setMessageModal({ open: true, userId: u.id || u._id, message: '' })}
-                  >
-                    Message
-                  </button>
+                    <button
+                      className="btn"
+                      onClick={() => handleApprove(u.id || u._id)}
+                      style={{
+                        background: 'rgba(34, 197, 94, 0.15)',
+                        border: '1px solid rgba(34, 197, 94, 0.36)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        padding: '0.4rem',
+                        minWidth: '32px',
+                        minHeight: '32px',
+                        fontSize: '1rem',
+                        borderRadius: '6px',
+                      }}
+                      aria-label="Approve user"
+                    >
+                      <span style={{ fontSize: '1.1rem', lineHeight: 1 }}>✅</span>
+                    </button>
+                    <button
+                      className="btn"
+                      onClick={() => setDeclineModal({ open: true, userId: u.id || u._id, message: '' })}
+                      style={{
+                        background: 'rgba(239, 68, 68, 0.12)',
+                        border: '1px solid rgba(239, 68, 68, 0.31)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        padding: '0.4rem',
+                        minWidth: '32px',
+                        minHeight: '32px',
+                        fontSize: '1rem',
+                        borderRadius: '6px',
+                      }}
+                      aria-label="Decline user"
+                    >
+                      <span style={{ fontSize: '1.1rem', lineHeight: 1 }}>✖️</span>
+                    </button>
+                    <button
+                      className="btn"
+                      onClick={() => setMessageModal({ open: true, userId: u.id || u._id, message: '' })}
+                      style={{
+                        background: 'rgba(59, 130, 246, 0.07)',
+                        border: '1px solid rgba(59, 130, 246, 0.15)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        padding: '0.4rem',
+                        minWidth: '32px',
+                        minHeight: '32px',
+                        fontSize: '1rem',
+                        borderRadius: '6px',
+                      }}
+                      aria-label="Message user"
+                    >
+                      <span style={{ fontSize: '1.1rem', lineHeight: 1 }}>💬</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}
+            <style>
+              {`
+              @media (max-width: 500px) {
+                .admin-pending-user-flex {
+                  flex-direction: column !important;
+                  gap: 0.5rem !important;
+                }
+              }
+              `}
+            </style>
           </div>
         )}
       </div>
@@ -256,229 +348,253 @@ export default function Admin() {
             {q ? 'No users found matching your search' : 'No users found'}
           </div>
         ) : (
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr style={{ borderBottom: '2px solid #1f2937' }}>
-                  <th style={{ padding: '0.75rem', textAlign: 'left', color: 'var(--muted)', fontWeight: '600' }}>User</th>
-                  <th style={{ padding: '0.75rem', textAlign: 'left', color: 'var(--muted)', fontWeight: '600' }}>House</th>
-                  <th style={{ padding: '0.75rem', textAlign: 'left', color: 'var(--muted)', fontWeight: '600' }}>Rank</th>
-                  <th style={{ padding: '0.75rem', textAlign: 'left', color: 'var(--muted)', fontWeight: '600' }}>Points</th>
-                  <th style={{ padding: '0.75rem', textAlign: 'left', color: 'var(--muted)', fontWeight: '600' }}>Role</th>
-                  <th style={{ padding: '0.75rem', textAlign: 'left', color: 'var(--muted)', fontWeight: '600' }}>Status</th>
-                  <th style={{ padding: '0.75rem', textAlign: 'right', color: 'var(--muted)', fontWeight: '600' }}>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredUsers.map((u) => {
-                  const userId = u.id || u._id;
-                  const isEditingPoints = editingUser.userId === userId && editingUser.field === 'points';
-                  const isEditingRank = editingUser.userId === userId && editingUser.field === 'rank';
-                  const isEditingHouse = editingUser.userId === userId && editingUser.field === 'house';
-                  const userRank = u.rank || calculateRank(u.points || 0);
-                  
-                  return (
-                    <tr key={userId} style={{ borderBottom: '1px solid #1f2937' }}>
-                      <td style={{ padding: '0.75rem' }}>
-                        <div>
-                          <div style={{ fontWeight: '600' }}>{u.displayName || u.username}</div>
-                          <div style={{ color: 'var(--muted)', fontSize: '0.85rem' }}>@{u.username}</div>
-                        </div>
-                      </td>
-                      <td style={{ padding: '0.75rem' }}>
-                        {isEditingHouse ? (
-                          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                            <select
-                              className="input"
-                              value={editValues.house}
-                              onChange={e => setEditValues({ ...editValues, house: e.target.value })}
-                              style={{ padding: '0.25rem 0.5rem', fontSize: '0.9rem' }}
-                            >
-                              {HOUSES.map(house => (
-                                <option key={house} value={house}>{house}</option>
-                              ))}
-                            </select>
-                            <button 
-                              className="btn" 
-                              onClick={() => handleUpdateHouse(userId, editValues.house)}
-                              style={{ padding: '0.25rem 0.5rem', fontSize: '0.85rem' }}
-                            >
-                              ✓
-                            </button>
-                            <button 
-                              className="btn" 
-                              onClick={cancelEdit}
-                              style={{ padding: '0.25rem 0.5rem', fontSize: '0.85rem', background: 'transparent', border: '1px solid #1f2937' }}
-                            >
-                              ✕
-                            </button>
-                          </div>
-                        ) : (
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            <span>{u.house}</span>
-                            <button 
-                              className="btn" 
-                              onClick={() => startEdit(userId, 'house', { house: u.house })}
-                              style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem', marginLeft: '0.5rem', background: 'transparent', border: '1px solid #1f2937' }}
-                            >
-                              Edit
-                            </button>
-                          </div>
-                        )}
-                      </td>
-                      <td style={{ padding: '0.75rem' }}>
-                        {isEditingRank ? (
-                          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                            <select
-                              className="input"
-                              value={editValues.rank}
-                              onChange={e => setEditValues({ ...editValues, rank: e.target.value })}
-                              style={{ padding: '0.25rem 0.5rem', fontSize: '0.9rem' }}
-                            >
-                              {RANKS.map(rank => (
-                                <option key={rank} value={rank}>{rank}</option>
-                              ))}
-                            </select>
-                            <button 
-                              className="btn" 
-                              onClick={() => handleUpdateRank(userId, editValues.rank)}
-                              style={{ padding: '0.25rem 0.5rem', fontSize: '0.85rem' }}
-                            >
-                              ✓
-                            </button>
-                            <button 
-                              className="btn" 
-                              onClick={cancelEdit}
-                              style={{ padding: '0.25rem 0.5rem', fontSize: '0.85rem', background: 'transparent', border: '1px solid #1f2937' }}
-                            >
-                              ✕
-                            </button>
-                          </div>
-                        ) : (
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            <img 
-                              src={getRankImageSrc(userRank)}
-                              alt={userRank}
-                              onError={(e) => e.target.style.display = 'none'}
-                              style={{ width: 24, height: 24, objectFit: 'contain' }}
-                            />
-                            <span>{userRank}</span>
-                            <button 
-                              className="btn" 
-                              onClick={() => startEdit(userId, 'rank', { rank: userRank })}
-                              style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem', marginLeft: '0.5rem', background: 'transparent', border: '1px solid #1f2937' }}
-                            >
-                              Edit
-                            </button>
-                          </div>
-                        )}
-                      </td>
-                      <td style={{ padding: '0.75rem' }}>
-                        {isEditingPoints ? (
-                          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                            <input
-                              type="number"
-                              className="input"
-                              value={editValues.points}
-                              onChange={e => setEditValues({ ...editValues, points: e.target.value })}
-                              style={{ padding: '0.25rem 0.5rem', fontSize: '0.9rem', width: '100px' }}
-                            />
-                            <button 
-                              className="btn" 
-                              onClick={() => handleUpdatePoints(userId, editValues.points)}
-                              style={{ padding: '0.25rem 0.5rem', fontSize: '0.85rem' }}
-                            >
-                              ✓
-                            </button>
-                            <button 
-                              className="btn" 
-                              onClick={cancelEdit}
-                              style={{ padding: '0.25rem 0.5rem', fontSize: '0.85rem', background: 'transparent', border: '1px solid #1f2937' }}
-                            >
-                              ✕
-                            </button>
-                          </div>
-                        ) : (
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            <span style={{ fontWeight: '600', fontSize: '1.1rem' }}>{u.points || 0}</span>
-                            <button 
-                              className="btn" 
-                              onClick={() => startEdit(userId, 'points', { points: u.points || 0 })}
-                              style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem', background: 'transparent', border: '1px solid #1f2937' }}
-                            >
-                              Edit
-                            </button>
-                          </div>
-                        )}
-                      </td>
-                      <td style={{ padding: '0.75rem' }}>
-                        <span style={{
-                          padding: '0.25rem 0.5rem',
-                          borderRadius: '4px',
-                          fontSize: '0.85rem',
-                          background: u.role === 'admin' ? 'rgba(177, 15, 46, 0.2)' : 
-                                      u.role === 'moderator' ? 'rgba(59, 130, 246, 0.2)' : 
-                                      'rgba(107, 114, 128, 0.2)',
-                          color: u.role === 'admin' ? 'rgba(177, 15, 46, 1)' : 
-                                 u.role === 'moderator' ? 'rgba(59, 130, 246, 1)' : 
-                                 'rgba(107, 114, 128, 1)'
-                        }}>
-                          {u.role || 'user'}
-                        </span>
-                      </td>
-                      <td style={{ padding: '0.75rem' }}>
-                        <span style={{
-                          padding: '0.25rem 0.5rem',
-                          borderRadius: '4px',
-                          fontSize: '0.85rem',
-                          background: u.status === 'approved' ? 'rgba(34, 197, 94, 0.2)' : 
-                                      u.status === 'pending' ? 'rgba(251, 191, 36, 0.2)' : 
-                                      'rgba(239, 68, 68, 0.2)',
-                          color: u.status === 'approved' ? 'rgba(34, 197, 94, 1)' : 
-                                 u.status === 'pending' ? 'rgba(251, 191, 36, 1)' : 
-                                 'rgba(239, 68, 68, 1)'
-                        }}>
-                          {u.status || 'pending'}
-                        </span>
-                      </td>
-                      <td style={{ padding: '0.75rem', textAlign: 'right' }}>
-                        <div style={{ display: 'flex', gap: '0.25rem', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
-                          {u.role !== 'admin' && u.role !== 'moderator' && (
-                            <button 
-                              className="btn" 
-                              onClick={() => setModeratorModal({ open: true, userId })}
-                              style={{ padding: '0.25rem 0.5rem', fontSize: '0.85rem', background: 'rgba(59, 130, 246, 0.2)', border: '1px solid rgba(59, 130, 246, 0.4)' }}
-                            >
-                              Add Moderator
-                            </button>
-                          )}
-                          <button 
-                            className="btn" 
-                            onClick={async () => { 
-                              await client.post(`/users/${userId}/points`, { delta: 1 }); 
-                              await loadAllUsers(); 
-                            }}
-                            style={{ padding: '0.25rem 0.5rem', fontSize: '0.85rem' }}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            {filteredUsers.map((u) => {
+              const userId = u.id || u._id;
+              const isEditingPoints = editingUser.userId === userId && editingUser.field === 'points';
+              const isEditingRank = editingUser.userId === userId && editingUser.field === 'rank';
+              const isEditingHouse = editingUser.userId === userId && editingUser.field === 'house';
+              const userRank = u.rank || calculateRank(u.points || 0);
+              const statusBadge = (
+                <span
+                  style={{
+                    display: 'inline-block',
+                    padding: '0.25rem 0.6rem',
+                    borderRadius: '999px',
+                    fontSize: '0.8rem',
+                    fontWeight: 600,
+                    background:
+                      u.status === 'approved'
+                        ? 'rgba(34, 197, 94, 0.2)'
+                        : u.status === 'pending'
+                        ? 'rgba(251, 191, 36, 0.2)'
+                        : 'rgba(239, 68, 68, 0.2)',
+                    color:
+                      u.status === 'approved'
+                        ? 'rgba(34, 197, 94, 1)'
+                        : u.status === 'pending'
+                        ? 'rgba(251, 191, 36, 1)'
+                        : 'rgba(239, 68, 68, 1)'
+                  }}
+                >
+                  {u.status || 'pending'}
+                </span>
+              );
+              const roleBadge = (
+                <span
+                  style={{
+                    display: 'inline-block',
+                    padding: '0.25rem 0.6rem',
+                    borderRadius: '999px',
+                    fontSize: '0.8rem',
+                    fontWeight: 600,
+                    background:
+                      u.role === 'admin'
+                        ? 'rgba(177, 15, 46, 0.2)'
+                        : u.role === 'moderator'
+                        ? 'rgba(59, 130, 246, 0.2)'
+                        : 'rgba(107, 114, 128, 0.2)',
+                    color:
+                      u.role === 'admin'
+                        ? 'rgba(177, 15, 46, 1)'
+                        : u.role === 'moderator'
+                        ? 'rgba(59, 130, 246, 1)'
+                        : 'rgba(107, 114, 128, 1)'
+                  }}
+                >
+                  {u.role || 'user'}
+                </span>
+              );
+
+              return (
+                <div
+                  key={userId}
+                  style={{
+                    border: '1px solid #1f2937',
+                    borderRadius: '12px',
+                    padding: '1rem',
+                    background: 'rgba(255,255,255,0.01)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '0.75rem'
+                  }}
+                >
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                      <div style={{ fontWeight: 600, fontSize: '1.05rem' }}>{u.displayName || u.username}</div>
+                      <div style={{ color: 'var(--muted)', fontSize: '0.85rem' }}>@{u.username}</div>
+                      <div style={{ color: 'var(--muted)', fontSize: '0.8rem' }}>{u.email}</div>
+                      <div style={{ color: 'var(--muted)', fontSize: '0.8rem' }}>Sigil: {u.sigil}</div>
+                    </div>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', alignItems: 'center' }}>
+                      {roleBadge}
+                      {statusBadge}
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', alignItems: 'center' }}>
+                      <span style={{ color: 'var(--muted)', fontSize: '0.85rem' }}>House</span>
+                      {isEditingHouse ? (
+                        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                          <select
+                            className="input"
+                            value={editValues.house}
+                            onChange={(e) => setEditValues({ ...editValues, house: e.target.value })}
+                            style={{ padding: '0.25rem 0.5rem', fontSize: '0.9rem' }}
                           >
-                            +1
+                            {HOUSES.map((house) => (
+                              <option key={house} value={house}>
+                                {house}
+                              </option>
+                            ))}
+                          </select>
+                          <button
+                            className="btn"
+                            onClick={() => handleUpdateHouse(userId, editValues.house)}
+                            style={{ padding: '0.3rem 0.6rem', fontSize: '0.85rem' }}
+                          >
+                            ✓
                           </button>
-                          <button 
-                            className="btn" 
-                            onClick={async () => { 
-                              await client.post(`/users/${userId}/points`, { delta: -1 }); 
-                              await loadAllUsers(); 
-                            }}
-                            style={{ padding: '0.25rem 0.5rem', fontSize: '0.85rem' }}
+                          <button
+                            className="btn"
+                            onClick={cancelEdit}
+                            style={{ padding: '0.3rem 0.6rem', fontSize: '0.85rem', background: 'transparent', border: '1px solid #1f2937' }}
                           >
-                            -1
+                            ✕
                           </button>
                         </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                      ) : (
+                        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                          <span>{u.house}</span>
+                          <button
+                            className="btn"
+                            onClick={() => startEdit(userId, 'house', { house: u.house })}
+                            style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem', background: 'transparent', border: '1px solid #1f2937' }}
+                          >
+                            Edit
+                          </button>
+                        </div>
+                      )}
+                    </div>
+
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', alignItems: 'center' }}>
+                      <span style={{ color: 'var(--muted)', fontSize: '0.85rem' }}>Rank</span>
+                      {isEditingRank ? (
+                        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                          <select
+                            className="input"
+                            value={editValues.rank}
+                            onChange={(e) => setEditValues({ ...editValues, rank: e.target.value })}
+                            style={{ padding: '0.25rem 0.5rem', fontSize: '0.9rem' }}
+                          >
+                            {RANKS.map((rank) => (
+                              <option key={rank} value={rank}>
+                                {rank}
+                              </option>
+                            ))}
+                          </select>
+                          <button
+                            className="btn"
+                            onClick={() => handleUpdateRank(userId, editValues.rank)}
+                            style={{ padding: '0.3rem 0.6rem', fontSize: '0.85rem' }}
+                          >
+                            ✓
+                          </button>
+                          <button
+                            className="btn"
+                            onClick={cancelEdit}
+                            style={{ padding: '0.3rem 0.6rem', fontSize: '0.85rem', background: 'transparent', border: '1px solid #1f2937' }}
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ) : (
+                        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                          <img
+                            src={getRankImageSrc(userRank)}
+                            alt={userRank}
+                            onError={(e) => {
+                              e.target.style.display = 'none';
+                            }}
+                            style={{ width: 24, height: 24, objectFit: 'contain' }}
+                          />
+                          <span>{userRank}</span>
+                          <button
+                            className="btn"
+                            onClick={() => startEdit(userId, 'rank', { rank: userRank })}
+                            style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem', background: 'transparent', border: '1px solid #1f2937' }}
+                          >
+                            Edit
+                          </button>
+                        </div>
+                      )}
+                    </div>
+
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', alignItems: 'center' }}>
+                      <span style={{ color: 'var(--muted)', fontSize: '0.85rem' }}>Points</span>
+                      {isEditingPoints ? (
+                        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                          <input
+                            type="number"
+                            className="input"
+                            value={editValues.points}
+                            onChange={(e) => setEditValues({ ...editValues, points: e.target.value })}
+                            style={{ padding: '0.25rem 0.5rem', fontSize: '0.9rem', width: 120 }}
+                          />
+                          <button
+                            className="btn"
+                            onClick={() => handleUpdatePoints(userId, editValues.points)}
+                            style={{ padding: '0.3rem 0.6rem', fontSize: '0.85rem' }}
+                          >
+                            ✓
+                          </button>
+                          <button
+                            className="btn"
+                            onClick={cancelEdit}
+                            style={{ padding: '0.3rem 0.6rem', fontSize: '0.85rem', background: 'transparent', border: '1px solid #1f2937' }}
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ) : (
+                        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                          <span style={{ fontWeight: 600, fontSize: '1.1rem' }}>{u.points || 0}</span>
+                          <button
+                            className="btn"
+                            onClick={() => startEdit(userId, 'points', { points: u.points || 0 })}
+                            style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem', background: 'transparent', border: '1px solid #1f2937' }}
+                          >
+                            Edit
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                    {u.role !== 'admin' && u.role !== 'moderator' && (
+                      <button
+                        className="btn"
+                        onClick={() => setModeratorModal({ open: true, userId })}
+                        style={{ padding: '0.3rem 0.6rem', fontSize: '0.85rem', background: 'rgba(59, 130, 246, 0.2)', border: '1px solid rgba(59, 130, 246, 0.4)' }}
+                      >
+                        Add Moderator
+                      </button>
+                    )}
+                    {u.role !== 'admin' && (
+                      <button
+                        className="btn"
+                        onClick={() => handleRemoveUser(userId)}
+                        style={{ padding: '0.3rem 0.6rem', fontSize: '0.85rem', background: 'rgba(239, 68, 68, 0.2)', border: '1px solid rgba(239, 68, 68, 0.4)' }}
+                      >
+                        Remove
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         )}
       </div>

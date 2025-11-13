@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { requireAuth, requireAdmin } from '../middleware/auth.js';
-import { getPendingUsers, approveUser, declineUser, sendMessageToUser, validateApproveUser, validateDeclineUser, validateSendMessage, getAllUsers, updateHouse, validateUpdateHouse, addModerator, validateAddModerator } from '../controllers/admin.controller.js';
+import { getPendingUsers, approveUser, declineUser, sendMessageToUser, validateApproveUser, validateDeclineUser, validateSendMessage, getAllUsers, updateHouse, validateUpdateHouse, addModerator, validateAddModerator, removeUser, validateRemoveUser } from '../controllers/admin.controller.js';
 
 const router = Router();
 
@@ -12,6 +12,7 @@ router.post('/decline-user', requireAuth, requireAdmin, validateDeclineUser, dec
 router.post('/send-message', requireAuth, requireAdmin, validateSendMessage, sendMessageToUser);
 router.post('/update-house', requireAuth, requireAdmin, validateUpdateHouse, updateHouse);
 router.post('/add-moderator', requireAuth, requireAdmin, validateAddModerator, addModerator);
+router.delete('/user/:userId', requireAuth, requireAdmin, validateRemoveUser, removeUser);
 
 export default router;
 

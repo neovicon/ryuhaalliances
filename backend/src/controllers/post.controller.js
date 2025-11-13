@@ -1,6 +1,8 @@
 import { body, validationResult, param } from 'express-validator';
 import Post from '../models/Post.js';
+import User from '../models/User.js';
 import { getPhotoUrl } from '../utils/photoUrl.js';
+import mongoose from 'mongoose';
 
 export const validateCreatePost = [ body('content').isString().isLength({ min: 1, max: 2000 }) ];
 export async function createPost(req, res) {
@@ -76,6 +78,49 @@ export async function removePost(req, res) {
   if (!post) return res.status(404).json({ error: 'Not found' });
   await post.deleteOne();
   res.json({ ok: true });
+}
+
+export async function listPostsByUser(req, res) {
+  const identifier = req.params.identifier?.trim();
+  if (!identifier) {
+    return res.status(400).json({ error: 'Identifier is required' });
+  }
+
+  try {
+    const upperIdentifier = identifier.toUpperCase();
+    const conditions = [
+      { username: identifier },
+      { sigil: upperIdentifier },
+      { displayName: { $regex: `^${identifier}$`, $options: 'i' } }
+    ];
+
+    if (mongoose.Types.ObjectId.isValid(identifier)) {
+      conditions.push({ _id: identifier });
+    }
+
+    const user = await User.findOne({ $or: conditions });
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const posts = await Post.find({ author: user._id })
+      .populate('author', 'username photoUrl')
+      .sort({ createdAt: -1 })
+      .limit(100);
+
+    const postsWithFullUrl = posts.map(post => {
+      const postObj = post.toObject();
+      if (postObj.author && postObj.author.photoUrl) {
+        postObj.author.photoUrl = getPhotoUrl(postObj.author.photoUrl, req);
+      }
+      return postObj;
+    });
+
+    res.json({ posts: postsWithFullUrl });
+  } catch (error) {
+    console.error('Error fetching user posts:', error);
+    res.status(500).json({ error: 'Failed to fetch posts' });
+  }
 }
 
 

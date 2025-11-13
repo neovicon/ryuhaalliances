@@ -1,10 +1,12 @@
 import { Router } from 'express';
 import { requireAuth, requireAdmin } from '../middleware/auth.js';
-import { updateDisplayName, validateDisplayName, searchUsers, validateSearch, getMe, updatePhoto, updateHeroCard, changePassword, validateChangePassword } from '../controllers/user.controller.js';
+import { updateDisplayName, validateDisplayName, searchUsers, validateSearch, getMe, updatePhoto, updateHeroCard, changePassword, validateChangePassword, getPublicProfile, validatePublicProfile, publicSearch, validatePublicSearch } from '../controllers/user.controller.js';
 import { uploadImage } from '../middleware/upload.js';
 import { adjustPoints, leaderboard, validateAdjust, updateRank, validateUpdateRank } from '../controllers/points.controller.js';
 
 const router = Router();
+router.get('/public/profile', validatePublicProfile, getPublicProfile);
+router.get('/public/search', validatePublicSearch, publicSearch);
 router.get('/me', requireAuth, getMe);
 router.patch('/me/display-name', requireAuth, validateDisplayName, updateDisplayName);
 router.post('/me/photo', requireAuth, uploadImage.single('photo'), updatePhoto);

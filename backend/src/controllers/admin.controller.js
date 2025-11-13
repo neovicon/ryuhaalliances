@@ -1,6 +1,7 @@
-import { body, validationResult } from 'express-validator';
+import { body, param, validationResult } from 'express-validator';
 import User from '../models/User.js';
 import { getPhotoUrl } from '../utils/photoUrl.js';
+import Post from '../models/Post.js';
 
 export async function getPendingUsers(req, res) {
   try {
@@ -215,6 +216,39 @@ export async function addModerator(req, res) {
   } catch (error) {
     console.error('Error adding moderator:', error);
     res.status(500).json({ error: 'Failed to add moderator' });
+  }
+}
+
+export const validateRemoveUser = [
+  param('userId').isMongoId().withMessage('Valid user ID is required'),
+];
+
+export async function removeUser(req, res) {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+
+  try {
+    const { userId } = req.params;
+    if (String(req.user.id) === userId) {
+      return res.status(400).json({ error: 'You cannot remove your own account' });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    if (user.role === 'admin') {
+      return res.status(400).json({ error: 'Cannot remove an admin account' });
+    }
+
+    await Post.deleteMany({ author: user._id });
+    await user.deleteOne();
+
+    res.json({ message: 'User removed successfully' });
+  } catch (error) {
+    console.error('Error removing user:', error);
+    res.status(500).json({ error: 'Failed to remove user' });
   }
 }
 

@@ -2,6 +2,7 @@ import { body, validationResult, query } from 'express-validator';
 import User from '../models/User.js';
 import { getPhotoUrl } from '../utils/photoUrl.js';
 import bcrypt from 'bcryptjs';
+import mongoose from 'mongoose';
 
 export const validateDisplayName = [ body('displayName').isString().isLength({ min: 1, max: 64 }) ];
 export async function updateDisplayName(req, res) {
@@ -90,6 +91,110 @@ export async function changePassword(req, res) {
   } catch (error) {
     console.error('Error changing password:', error);
     res.status(500).json({ error: 'Failed to change password' });
+  }
+}
+
+export const validatePublicProfile = [
+  query('identifier').isString().trim().isLength({ min: 1, max: 128 }).withMessage('Identifier is required'),
+];
+
+export async function getPublicProfile(req, res) {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+
+  try {
+    const identifier = req.query.identifier.trim();
+    const upperIdentifier = identifier.toUpperCase();
+
+    const conditions = [
+      { username: identifier },
+      { sigil: upperIdentifier },
+      { displayName: { $regex: `^${identifier}$`, $options: 'i' } }
+    ];
+
+    if (mongoose.Types.ObjectId.isValid(identifier)) {
+      conditions.push({ _id: identifier });
+    }
+
+    const user = await User.findOne({ $or: conditions }).select('-passwordHash');
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const userObj = user.toObject();
+    userObj.photoUrl = getPhotoUrl(userObj.photoUrl, req);
+    userObj.heroCardUrl = getPhotoUrl(userObj.heroCardUrl, req);
+
+    const { _id, email, adminMessage, ...rest } = userObj;
+    const publicUser = {
+      id: _id,
+      username: rest.username,
+      displayName: rest.displayName,
+      house: rest.house,
+      sigil: rest.sigil,
+      points: rest.points,
+      rank: rest.rank,
+      role: rest.role,
+      status: rest.status,
+      photoUrl: rest.photoUrl,
+      heroCardUrl: rest.heroCardUrl,
+      createdAt: rest.createdAt,
+      updatedAt: rest.updatedAt
+    };
+
+    res.json({ user: publicUser });
+  } catch (error) {
+    console.error('Error fetching public profile:', error);
+    res.status(500).json({ error: 'Failed to fetch profile' });
+  }
+}
+
+export const validatePublicSearch = [
+  query('q').optional().isString().trim().isLength({ min: 1, max: 64 }),
+];
+
+function escapeRegex(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+export async function publicSearch(req, res) {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+
+  const q = req.query.q?.trim();
+  if (!q) {
+    return res.json({ users: [] });
+  }
+
+  try {
+    const regex = new RegExp(escapeRegex(q), 'i');
+    const users = await User.find({
+      $or: [
+        { username: regex },
+        { displayName: regex },
+        { sigil: regex }
+      ]
+    })
+      .select('username displayName sigil house photoUrl')
+      .limit(10);
+
+    const results = users.map(user => {
+      const userObj = user.toObject();
+      userObj.photoUrl = getPhotoUrl(userObj.photoUrl, req);
+      return {
+        id: userObj._id,
+        username: userObj.username,
+        displayName: userObj.displayName,
+        sigil: userObj.sigil,
+        house: userObj.house,
+        photoUrl: userObj.photoUrl
+      };
+    });
+
+    res.json({ users: results });
+  } catch (error) {
+    console.error('Error searching users:', error);
+    res.status(500).json({ error: 'Failed to search users' });
   }
 }
 
