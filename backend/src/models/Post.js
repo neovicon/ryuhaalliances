@@ -1,0 +1,22 @@
+import mongoose from 'mongoose';
+
+const reactionSchema = new mongoose.Schema({
+  key: { type: String, required: true },
+  userIds: { type: [mongoose.Schema.Types.ObjectId], ref: 'User', default: [] }
+}, { _id: false });
+
+const commentSchema = new mongoose.Schema({
+  author: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  content: { type: String, required: true },
+}, { timestamps: true });
+
+const postSchema = new mongoose.Schema({
+  author: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  content: { type: String, required: true },
+  reactions: { type: [reactionSchema], default: [] },
+  comments: { type: [commentSchema], default: [] },
+}, { timestamps: true });
+
+export default mongoose.model('Post', postSchema);
+
+
