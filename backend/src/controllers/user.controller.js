@@ -13,14 +13,14 @@ export async function updateDisplayName(req, res) {
   res.json({ user: userObj });
 }
 
-export const validateSearch = [ query('q').optional().isString(), query('group').optional().isString() ];
+export const validateSearch = [ query('q').optional().isString(), query('house').optional().isString() ];
 
 export async function searchUsers(req, res) {
-  const { q, group } = req.query;
+  const { q, house } = req.query;
   const filter = {};
   if (q) filter.username = { $regex: q, $options: 'i' };
-  if (group) filter.group = group;
-  const users = await User.find(filter).select('username displayName group points photoUrl');
+  if (house) filter.house = house;
+  const users = await User.find(filter).select('username displayName house points photoUrl');
   const usersWithFullUrl = users.map(user => {
     const userObj = user.toObject();
     userObj.photoUrl = getPhotoUrl(userObj.photoUrl, req);

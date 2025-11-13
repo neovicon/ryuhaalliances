@@ -4,6 +4,24 @@ import client from '../api/client';
 import { useAuth } from '../store/auth';
 import { getRankImageSrc, calculateRank } from '../utils/rank';
 
+// Helper function to get house image path
+function getHouseImageSrc(houseName) {
+  if (!houseName) return '/assets/pendragon.jpeg';
+  const houseMap = {
+    'Pendragon': 'pendragon',
+    'Phantomhive': 'phantomhive',
+    'Tempest': 'tempest',
+    'Zodylk': 'zodlyck',
+    'Fritz': 'fritz',
+    'Elric': 'elric',
+    'Dragneel': 'dragneel',
+    'Hellsing': 'hellsing',
+    'Obsidian Order': 'obsidian_order'
+  };
+  const fileName = houseMap[houseName] || houseName.toLowerCase().replace(' ', '_');
+  return `/assets/${fileName}.jpeg`;
+}
+
 export default function Profile() {
   const { user: authUser, loadUser } = useAuth();
   const navigate = useNavigate();
@@ -292,12 +310,36 @@ export default function Profile() {
 
       {/* Profile Header Card */}
       <div className="card" style={{ 
-        background: 'linear-gradient(135deg, rgba(177,15,46,0.1) 0%, rgba(177,15,46,0.05) 100%)',
+        position: 'relative',
         border: '1px solid rgba(177,15,46,0.2)',
         padding: '2rem',
-        marginBottom: '1.5rem'
+        marginBottom: '1.5rem',
+        overflow: 'hidden'
       }}>
-        <div style={{ display: 'flex', gap: '2rem', alignItems: 'flex-start', flexWrap: 'wrap' }}>
+        {/* House Background */}
+        <div style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundImage: `url(${getHouseImageSrc(me.house)})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          opacity: 0.15,
+          zIndex: 0
+        }} />
+        {/* Overlay for better text readability */}
+        <div style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'linear-gradient(135deg, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.1) 100%)',
+          zIndex: 1
+        }} />
+        <div style={{ display: 'flex', gap: '2rem', alignItems: 'flex-start', flexWrap: 'wrap', position: 'relative', zIndex: 2 }}>
           {/* Avatar Section */}
           <div style={{ position: 'relative' }}>
             {me.photoUrl ? (
@@ -374,7 +416,7 @@ export default function Profile() {
               flexWrap: 'wrap',
               marginTop: '1.5rem',
               paddingTop: '1.5rem',
-              borderTop: '1px solid rgba(255,255,255,0.1)'
+              borderTop: '1px solid rgba(255,255,255,0.2)'
             }}>
               <div>
                 <div style={{ color: 'var(--muted)', fontSize: '0.85rem', marginBottom: '0.25rem' }}>Rank</div>
@@ -405,7 +447,7 @@ export default function Profile() {
                 </div>
               </div>
               <div>
-                <div style={{ color: 'var(--muted)', fontSize: '0.85rem', marginBottom: '0.25rem' }}>Group</div>
+                <div style={{ color: 'var(--muted)', fontSize: '0.85rem', marginBottom: '0.25rem' }}>House</div>
                 <div style={{ 
                   display: 'inline-block',
                   padding: '0.35rem 0.75rem',
@@ -415,7 +457,7 @@ export default function Profile() {
                   fontSize: '0.9rem',
                   fontWeight: '600'
                 }}>
-                  {me.group}
+                  {me.house}
                 </div>
               </div>
               <div>
@@ -432,65 +474,19 @@ export default function Profile() {
                   </div>
                 </div>
               )}
+              {me.createdAt && (
+                <div>
+                  <div style={{ color: 'var(--muted)', fontSize: '0.85rem', marginBottom: '0.25rem' }}>Member Since</div>
+                  <div style={{ fontSize: '1rem', fontWeight: '500' }}>
+                    {new Date(me.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
       </div>
 
-      {/* Account Details Card */}
-      <div className="card" style={{ marginBottom: '1.5rem' }}>
-        <h4 className="hdr" style={{ marginBottom: '1rem', fontSize: '1.25rem' }}>Account Details</h4>
-        <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem' }}>
-          <div>
-            <div style={{ color: 'var(--muted)', fontSize: '0.85rem', marginBottom: '0.25rem' }}>Rank</div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <img 
-                src={getRankImageSrc(me.rank || calculateRank(me.points || 0))}
-                alt={me.rank || calculateRank(me.points || 0)}
-                onError={(e) => {
-                  e.target.style.display = 'none';
-                }}
-                style={{
-                  width: 24,
-                  height: 24,
-                  objectFit: 'contain'
-                }}
-              />
-              <span style={{ fontSize: '1rem', fontWeight: '500' }}>
-                {me.rank || calculateRank(me.points || 0)}
-              </span>
-            </div>
-          </div>
-          <div>
-            <div style={{ color: 'var(--muted)', fontSize: '0.85rem', marginBottom: '0.25rem' }}>Username</div>
-            <div style={{ fontSize: '1rem', fontWeight: '500' }}>{me.username}</div>
-          </div>
-          {me.displayName && (
-            <div>
-              <div style={{ color: 'var(--muted)', fontSize: '0.85rem', marginBottom: '0.25rem' }}>Display Name</div>
-              <div style={{ fontSize: '1rem', fontWeight: '500' }}>{me.displayName}</div>
-            </div>
-          )}
-          <div>
-            <div style={{ color: 'var(--muted)', fontSize: '0.85rem', marginBottom: '0.25rem' }}>Group</div>
-            <div style={{ fontSize: '1rem', fontWeight: '500' }}>{me.group}</div>
-          </div>
-          {me.sigil && (
-            <div>
-              <div style={{ color: 'var(--muted)', fontSize: '0.85rem', marginBottom: '0.25rem' }}>Sigil Code</div>
-              <div style={{ fontSize: '1rem', fontWeight: '500' }}>{me.sigil}</div>
-            </div>
-          )}
-          {me.createdAt && (
-            <div>
-              <div style={{ color: 'var(--muted)', fontSize: '0.85rem', marginBottom: '0.25rem' }}>Member Since</div>
-              <div style={{ fontSize: '1rem', fontWeight: '500' }}>
-                {new Date(me.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
 
       {/* Profile Picture Upload Card */}
       {pfpFile && (

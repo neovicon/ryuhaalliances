@@ -1,19 +1,21 @@
 import { useEffect, useState } from 'react';
 import client from '../api/client';
 import { getRankImageSrc, calculateRank, RANKS } from '../utils/rank';
+import { useAuth } from '../store/auth';
+
+const HOUSES = ['Pendragon', 'Phantomhive', 'Tempest', 'Zodylk', 'Fritz', 'Elric', 'Dragneel', 'Hellsing', 'Obsidian Order'];
 
 export default function Admin() {
+  const { user: authUser } = useAuth();
   const [q, setQ] = useState('');
   const [allUsers, setAllUsers] = useState([]);
   const [filteredUsers, setFilteredUsers] = useState([]);
   const [pendingUsers, setPendingUsers] = useState([]);
-  const [blogTitle, setBlogTitle] = useState('');
-  const [blogContent, setBlogContent] = useState('');
-  const [blogs, setBlogs] = useState([]);
   const [messageModal, setMessageModal] = useState({ open: false, userId: null, message: '' });
   const [declineModal, setDeclineModal] = useState({ open: false, userId: null, message: '' });
   const [editingUser, setEditingUser] = useState({ userId: null, field: null });
-  const [editValues, setEditValues] = useState({ points: '', rank: '' });
+  const [editValues, setEditValues] = useState({ points: '', rank: '', house: '' });
+  const [moderatorModal, setModeratorModal] = useState({ open: false, userId: null });
   
   async function loadAllUsers() {
     try {
@@ -35,16 +37,11 @@ export default function Admin() {
         u.username?.toLowerCase().includes(query) ||
         u.displayName?.toLowerCase().includes(query) ||
         u.email?.toLowerCase().includes(query) ||
-        u.group?.toLowerCase().includes(query)
+        u.house?.toLowerCase().includes(query)
       );
       setFilteredUsers(filtered);
     }
   }, [q, allUsers]);
-  
-  async function search() { 
-    // Search is now handled by the filter effect above
-    // This function is kept for backward compatibility but does nothing
-  }
   
   async function loadPendingUsers() {
     try {
@@ -55,17 +52,7 @@ export default function Admin() {
     }
   }
   
-  async function refreshBlogs() { 
-    try {
-      const { data } = await client.get('/blog'); 
-      setBlogs(data.blogs); 
-    } catch (error) {
-      console.error('Error loading blogs:', error);
-    }
-  }
-  
   useEffect(() => { 
-    refreshBlogs(); 
     loadPendingUsers();
     loadAllUsers();
   }, []);
@@ -94,15 +81,44 @@ export default function Admin() {
       alert(error?.response?.data?.error || 'Failed to update rank');
     }
   };
+
+  const handleUpdateHouse = async (userId, newHouse) => {
+    try {
+      await client.post('/admin/update-house', { userId, house: newHouse });
+      await loadAllUsers();
+      setEditingUser({ userId: null, field: null });
+      alert('House updated successfully');
+    } catch (error) {
+      console.error('Error updating house:', error);
+      alert(error?.response?.data?.error || 'Failed to update house');
+    }
+  };
+
+  const handleAddModerator = async () => {
+    if (!moderatorModal.userId) return;
+    try {
+      await client.post('/admin/add-moderator', { userId: moderatorModal.userId });
+      await loadAllUsers();
+      setModeratorModal({ open: false, userId: null });
+      alert('User promoted to moderator successfully');
+    } catch (error) {
+      console.error('Error adding moderator:', error);
+      alert(error?.response?.data?.error || 'Failed to add moderator');
+    }
+  };
   
   const startEdit = (userId, field, currentValue) => {
     setEditingUser({ userId, field });
-    setEditValues({ points: currentValue?.points || '', rank: currentValue?.rank || '' });
+    setEditValues({ 
+      points: currentValue?.points || '', 
+      rank: currentValue?.rank || '', 
+      house: currentValue?.house || '' 
+    });
   };
   
   const cancelEdit = () => {
     setEditingUser({ userId: null, field: null });
-    setEditValues({ points: '', rank: '' });
+    setEditValues({ points: '', rank: '', house: '' });
   };
   
   const handleApprove = async (userId) => {
@@ -184,7 +200,7 @@ export default function Admin() {
                     @{u.username} • {u.email}
                   </div>
                   <div style={{ color: 'var(--muted)', fontSize: '0.85rem' }}>
-                    Group: {u.group} • Sigil: {u.sigil}
+                    House: {u.house} • Sigil: {u.sigil}
                   </div>
                   {u.createdAt && (
                     <div style={{ color: 'var(--muted)', fontSize: '0.85rem', marginTop: '0.25rem' }}>
@@ -245,9 +261,10 @@ export default function Admin() {
               <thead>
                 <tr style={{ borderBottom: '2px solid #1f2937' }}>
                   <th style={{ padding: '0.75rem', textAlign: 'left', color: 'var(--muted)', fontWeight: '600' }}>User</th>
-                  <th style={{ padding: '0.75rem', textAlign: 'left', color: 'var(--muted)', fontWeight: '600' }}>Group</th>
+                  <th style={{ padding: '0.75rem', textAlign: 'left', color: 'var(--muted)', fontWeight: '600' }}>House</th>
                   <th style={{ padding: '0.75rem', textAlign: 'left', color: 'var(--muted)', fontWeight: '600' }}>Rank</th>
                   <th style={{ padding: '0.75rem', textAlign: 'left', color: 'var(--muted)', fontWeight: '600' }}>Points</th>
+                  <th style={{ padding: '0.75rem', textAlign: 'left', color: 'var(--muted)', fontWeight: '600' }}>Role</th>
                   <th style={{ padding: '0.75rem', textAlign: 'left', color: 'var(--muted)', fontWeight: '600' }}>Status</th>
                   <th style={{ padding: '0.75rem', textAlign: 'right', color: 'var(--muted)', fontWeight: '600' }}>Actions</th>
                 </tr>
@@ -257,6 +274,7 @@ export default function Admin() {
                   const userId = u.id || u._id;
                   const isEditingPoints = editingUser.userId === userId && editingUser.field === 'points';
                   const isEditingRank = editingUser.userId === userId && editingUser.field === 'rank';
+                  const isEditingHouse = editingUser.userId === userId && editingUser.field === 'house';
                   const userRank = u.rank || calculateRank(u.points || 0);
                   
                   return (
@@ -267,7 +285,47 @@ export default function Admin() {
                           <div style={{ color: 'var(--muted)', fontSize: '0.85rem' }}>@{u.username}</div>
                         </div>
                       </td>
-                      <td style={{ padding: '0.75rem' }}>{u.group}</td>
+                      <td style={{ padding: '0.75rem' }}>
+                        {isEditingHouse ? (
+                          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                            <select
+                              className="input"
+                              value={editValues.house}
+                              onChange={e => setEditValues({ ...editValues, house: e.target.value })}
+                              style={{ padding: '0.25rem 0.5rem', fontSize: '0.9rem' }}
+                            >
+                              {HOUSES.map(house => (
+                                <option key={house} value={house}>{house}</option>
+                              ))}
+                            </select>
+                            <button 
+                              className="btn" 
+                              onClick={() => handleUpdateHouse(userId, editValues.house)}
+                              style={{ padding: '0.25rem 0.5rem', fontSize: '0.85rem' }}
+                            >
+                              ✓
+                            </button>
+                            <button 
+                              className="btn" 
+                              onClick={cancelEdit}
+                              style={{ padding: '0.25rem 0.5rem', fontSize: '0.85rem', background: 'transparent', border: '1px solid #1f2937' }}
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        ) : (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <span>{u.house}</span>
+                            <button 
+                              className="btn" 
+                              onClick={() => startEdit(userId, 'house', { house: u.house })}
+                              style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem', marginLeft: '0.5rem', background: 'transparent', border: '1px solid #1f2937' }}
+                            >
+                              Edit
+                            </button>
+                          </div>
+                        )}
+                      </td>
                       <td style={{ padding: '0.75rem' }}>
                         {isEditingRank ? (
                           <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
@@ -358,6 +416,21 @@ export default function Admin() {
                           padding: '0.25rem 0.5rem',
                           borderRadius: '4px',
                           fontSize: '0.85rem',
+                          background: u.role === 'admin' ? 'rgba(177, 15, 46, 0.2)' : 
+                                      u.role === 'moderator' ? 'rgba(59, 130, 246, 0.2)' : 
+                                      'rgba(107, 114, 128, 0.2)',
+                          color: u.role === 'admin' ? 'rgba(177, 15, 46, 1)' : 
+                                 u.role === 'moderator' ? 'rgba(59, 130, 246, 1)' : 
+                                 'rgba(107, 114, 128, 1)'
+                        }}>
+                          {u.role || 'user'}
+                        </span>
+                      </td>
+                      <td style={{ padding: '0.75rem' }}>
+                        <span style={{
+                          padding: '0.25rem 0.5rem',
+                          borderRadius: '4px',
+                          fontSize: '0.85rem',
                           background: u.status === 'approved' ? 'rgba(34, 197, 94, 0.2)' : 
                                       u.status === 'pending' ? 'rgba(251, 191, 36, 0.2)' : 
                                       'rgba(239, 68, 68, 0.2)',
@@ -369,7 +442,16 @@ export default function Admin() {
                         </span>
                       </td>
                       <td style={{ padding: '0.75rem', textAlign: 'right' }}>
-                        <div style={{ display: 'flex', gap: '0.25rem', justifyContent: 'flex-end' }}>
+                        <div style={{ display: 'flex', gap: '0.25rem', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+                          {u.role !== 'admin' && u.role !== 'moderator' && (
+                            <button 
+                              className="btn" 
+                              onClick={() => setModeratorModal({ open: true, userId })}
+                              style={{ padding: '0.25rem 0.5rem', fontSize: '0.85rem', background: 'rgba(59, 130, 246, 0.2)', border: '1px solid rgba(59, 130, 246, 0.4)' }}
+                            >
+                              Add Moderator
+                            </button>
+                          )}
                           <button 
                             className="btn" 
                             onClick={async () => { 
@@ -399,24 +481,6 @@ export default function Admin() {
             </table>
           </div>
         )}
-      </div>
-
-      {/* Blog Section */}
-      <div className="card">
-        <h4 className="hdr">Blog</h4>
-        <input className="input" placeholder="Title" value={blogTitle} onChange={e => setBlogTitle(e.target.value)} />
-        <textarea className="input" style={{ width: '100%', minHeight: 120, marginTop: 8 }} placeholder="Content" value={blogContent} onChange={e => setBlogContent(e.target.value)} />
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 8 }}>
-          <button className="btn" onClick={async () => { await client.post('/blog', { title: blogTitle, content: blogContent }); setBlogTitle(''); setBlogContent(''); refreshBlogs(); }}>Publish</button>
-        </div>
-        <div style={{ marginTop: '.5rem' }}>
-          {blogs.map(b => (
-            <div key={b._id} style={{ display: 'flex', justifyContent: 'space-between', padding: '.5rem 0', borderBottom: '1px solid #1f2937' }}>
-              <div>{b.title} <span style={{ color: 'var(--muted)' }}>{new Date(b.createdAt).toLocaleString()}</span></div>
-              <button className="btn" onClick={async () => { await client.delete(`/blog/${b._id}`); refreshBlogs(); }}>Delete</button>
-            </div>
-          ))}
-        </div>
       </div>
       
       {/* Message Modal */}
@@ -492,8 +556,41 @@ export default function Admin() {
           </div>
         </div>
       )}
+
+      {/* Moderator Modal */}
+      {moderatorModal.open && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0, 0, 0, 0.7)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }}>
+          <div className="card" style={{ maxWidth: 500, width: '90%' }}>
+            <h4 className="hdr" style={{ marginBottom: '1rem' }}>Add Moderator</h4>
+            <p style={{ color: 'var(--muted)', marginBottom: '1rem' }}>
+              Are you sure you want to promote this user to moderator? They will be able to manage events.
+            </p>
+            <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+              <button className="btn" onClick={() => setModeratorModal({ open: false, userId: null })}>
+                Cancel
+              </button>
+              <button 
+                className="btn" 
+                onClick={handleAddModerator}
+                style={{ background: 'rgba(59, 130, 246, 0.2)', border: '1px solid rgba(59, 130, 246, 0.4)' }}
+              >
+                Add Moderator
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
-
-

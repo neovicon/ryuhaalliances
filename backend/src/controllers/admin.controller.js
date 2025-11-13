@@ -149,3 +149,72 @@ export async function getAllUsers(req, res) {
   }
 }
 
+export const validateUpdateHouse = [
+  body('userId').notEmpty().withMessage('User ID is required'),
+  body('house').notEmpty().withMessage('House is required'),
+];
+
+export async function updateHouse(req, res) {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+
+  try {
+    const { userId, house } = req.body;
+    const { allowedHouses } = await import('../models/User.js');
+    
+    if (!allowedHouses.includes(house)) {
+      return res.status(400).json({ error: `House must be one of: ${allowedHouses.join(', ')}` });
+    }
+    
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { house },
+      { new: true }
+    ).select('-passwordHash');
+    
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    const userObj = user.toObject();
+    userObj.photoUrl = getPhotoUrl(userObj.photoUrl, req);
+    const { _id, ...rest } = userObj;
+    
+    res.json({ user: { id: _id, ...rest }, message: 'House updated successfully' });
+  } catch (error) {
+    console.error('Error updating house:', error);
+    res.status(500).json({ error: 'Failed to update house' });
+  }
+}
+
+export const validateAddModerator = [
+  body('userId').notEmpty().withMessage('User ID is required'),
+];
+
+export async function addModerator(req, res) {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+
+  try {
+    const { userId } = req.body;
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { role: 'moderator' },
+      { new: true }
+    ).select('-passwordHash');
+    
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    const userObj = user.toObject();
+    userObj.photoUrl = getPhotoUrl(userObj.photoUrl, req);
+    const { _id, ...rest } = userObj;
+    
+    res.json({ user: { id: _id, ...rest }, message: 'User promoted to moderator successfully' });
+  } catch (error) {
+    console.error('Error adding moderator:', error);
+    res.status(500).json({ error: 'Failed to add moderator' });
+  }
+}
+

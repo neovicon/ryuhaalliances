@@ -39,10 +39,9 @@ export const useAuth = create((set, get) => ({
     set({ token: data.token, user: data.user });
   },
   async signup(payload) {
-    const { data } = await client.post('/auth/signup', payload);
-    localStorage.setItem('token', data.token);
-    localStorage.setItem('user', JSON.stringify(data.user));
-    set({ token: data.token, user: data.user });
+    await client.post('/auth/signup', payload);
+    // Don't auto-login after signup - user needs to wait for admin approval
+    // They will need to login manually after their account is approved
   },
   logout() {
     localStorage.removeItem('token');

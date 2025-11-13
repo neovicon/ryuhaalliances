@@ -2,17 +2,21 @@ import { useEffect, useState } from 'react';
 import client from '../api/client';
 import { getRankImageSrc, calculateRank } from '../utils/rank';
 
-// Helper function to get group image path
-function getGroupImageSrc(groupName) {
-  if (!groupName) return '/assets/pendragon.jpeg';
-  const groupMap = {
+// Helper function to get house image path
+function getHouseImageSrc(houseName) {
+  if (!houseName) return '/assets/pendragon.jpeg';
+  const houseMap = {
     'Pendragon': 'pendragon',
+    'Phantomhive': 'phantomhive',
     'Tempest': 'tempest',
-    'Zodylk': 'zodlyck', // Note: file is zodlyck.jpeg but group name is Zodylk
+    'Zodylk': 'zodlyck', // Note: file is zodlyck.jpeg but house name is Zodylk
     'Fritz': 'fritz',
-    'Elric': 'elric'
+    'Elric': 'elric',
+    'Dragneel': 'dragneel',
+    'Hellsing': 'hellsing',
+    'Obsidian Order': 'obsidian_order'
   };
-  const fileName = groupMap[groupName] || groupName.toLowerCase();
+  const fileName = houseMap[houseName] || houseName.toLowerCase().replace(' ', '_');
   return `/assets/${fileName}.jpeg`;
 }
 
@@ -20,18 +24,18 @@ export default function Leaderboard() {
   const [rows, setRows] = useState([]);
   useEffect(() => { (async () => { const { data } = await client.get('/users/leaderboard'); setRows(data.top); })(); }, []);
   
-  // Group users by group name
+  // Group users by house name
   const groupedUsers = rows.reduce((acc, user) => {
-    const group = user.group || 'Unknown';
-    if (!acc[group]) {
-      acc[group] = [];
+    const house = user.house || 'Unknown';
+    if (!acc[house]) {
+      acc[house] = [];
     }
-    acc[group].push(user);
+    acc[house].push(user);
     return acc;
   }, {});
   
-  // Sort groups by total points (sum of all members' points)
-  const sortedGroups = Object.entries(groupedUsers).sort((a, b) => {
+  // Sort houses by total points (sum of all members' points)
+  const sortedHouses = Object.entries(groupedUsers).sort((a, b) => {
     const aTotal = a[1].reduce((sum, u) => sum + (u.points || 0), 0);
     const bTotal = b[1].reduce((sum, u) => sum + (u.points || 0), 0);
     return bTotal - aTotal;
@@ -41,17 +45,17 @@ export default function Leaderboard() {
     <div className="container">
       <h3 className="hdr">Leaderboard</h3>
       
-      {/* Groups Leaderboard */}
-      {sortedGroups.map(([groupName, users]) => {
+      {/* Houses Leaderboard */}
+      {sortedHouses.map(([houseName, users]) => {
         const sortedUsers = [...users].sort((a, b) => (b.points || 0) - (a.points || 0));
-        const groupTotal = users.reduce((sum, u) => sum + (u.points || 0), 0);
+        const houseTotal = users.reduce((sum, u) => sum + (u.points || 0), 0);
         
         return (
-          <div key={groupName} className="card" style={{ marginBottom: '1.5rem' }}>
+          <div key={houseName} className="card" style={{ marginBottom: '1.5rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem', paddingBottom: '1rem', borderBottom: '2px solid #1f2937' }}>
               <img 
-                src={getGroupImageSrc(groupName)}
-                alt={groupName}
+                src={getHouseImageSrc(houseName)}
+                alt={houseName}
                 onError={(e) => {
                   e.target.style.display = 'none';
                 }}
@@ -63,9 +67,9 @@ export default function Leaderboard() {
                 }}
               />
               <div style={{ flex: 1 }}>
-                <h4 className="hdr" style={{ margin: 0, fontSize: '1.5rem' }}>{groupName}</h4>
+                <h4 className="hdr" style={{ margin: 0, fontSize: '1.5rem' }}>{houseName}</h4>
                 <div style={{ color: 'var(--muted)', fontSize: '0.9rem' }}>
-                  {users.length} member{users.length !== 1 ? 's' : ''} • Total: {groupTotal} points
+                  {users.length} member{users.length !== 1 ? 's' : ''} • Total: {houseTotal} points
                 </div>
               </div>
             </div>

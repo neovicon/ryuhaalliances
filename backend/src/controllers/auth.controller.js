@@ -1,6 +1,6 @@
 import bcrypt from 'bcryptjs';
 import { body, validationResult } from 'express-validator';
-import User, { allowedGroups } from '../models/User.js';
+import User, { allowedHouses } from '../models/User.js';
 import { signJwt, verifyJwt } from '../utils/jwt.js';
 import { getPhotoUrl } from '../utils/photoUrl.js';
 
@@ -9,7 +9,7 @@ export const validateSignup = [
   body('password').isLength({ min: 8 }).withMessage('Password must be at least 8 characters long'),
   body('username').isLength({ min: 3 }).withMessage('Username must be at least 3 characters long'),
   body('sigil').notEmpty().withMessage('Sigil code is required'),
-  body('group').isIn(allowedGroups).withMessage(`Group must be one of: ${allowedGroups.join(', ')}`),
+  body('house').isIn(allowedHouses).withMessage(`House must be one of: ${allowedHouses.join(', ')}`),
   body('displayName').optional({ nullable: true, checkFalsy: true }).isLength({ max: 64 }).withMessage('Display name must be less than 64 characters'),
 ];
 
@@ -24,7 +24,7 @@ export async function signup(req, res) {
     return res.status(400).json({ error: errorMessages, errors: errors.array() });
   }
 
-  const { email, password, username, sigil, group, displayName } = req.body;
+  const { email, password, username, sigil, house, displayName } = req.body;
   
   // Trim and clean up input
   const cleanEmail = email?.trim();
@@ -42,7 +42,7 @@ export async function signup(req, res) {
     passwordHash, 
     username: cleanUsername, 
     sigil: cleanSigil, 
-    group, 
+    house, 
     displayName: cleanDisplayName
   });
   const token = signJwt({ id: user._id, role: user.role, username: user.username });
@@ -103,14 +103,14 @@ export async function resendVerification(req, res) {
 
 function sanitizeUser(user, req = null) {
   const userObj = user.toObject ? user.toObject() : user;
-  const { _id, email, username, displayName, sigil, group, photoUrl, heroCardUrl, points, role, status, adminMessage, rank, createdAt, updatedAt } = userObj;
+  const { _id, email, username, displayName, sigil, house, photoUrl, heroCardUrl, points, role, status, adminMessage, rank, createdAt, updatedAt } = userObj;
   return { 
     id: _id, 
     email, 
     username, 
     displayName, 
     sigil, 
-    group, 
+    house, 
     photoUrl: getPhotoUrl(photoUrl, req), 
     heroCardUrl: getPhotoUrl(heroCardUrl, req),
     points, 

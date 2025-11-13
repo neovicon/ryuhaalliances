@@ -2,16 +2,38 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../store/auth';
 
-const groups = ['Pendragon', 'Phantomhive', 'Tempest', 'Zodylk', 'Fritz', 'Elric', 'Dragneel', 'Hellsing'];
+const houses = ['Pendragon', 'Phantomhive', 'Tempest', 'Zodylk', 'Fritz', 'Elric', 'Dragneel', 'Hellsing', 'Obsidian Order'];
+
+const SIGIL_PATTERN = /^RA–\d{8}–\d{3}$/;
+
+const formatSigil = (digits) => {
+  const part1 = digits.slice(0, 8);
+  const part2 = digits.slice(8, 11);
+  let formatted = 'RA–';
+  formatted += part1;
+  if (part2.length > 0 || digits.length > 8) {
+    formatted += '–' + part2;
+  }
+  return formatted;
+};
 
 export default function Signup() {
   const { signup } = useAuth();
   const navigate = useNavigate();
-  const [form, setForm] = useState({ email: '', password: '', username: '', displayName: '', sigil: '', group: groups[0] });
+  const [form, setForm] = useState({ email: '', password: '', username: '', displayName: '', sigil: 'RA–', house: houses[0] });
   const [error, setError] = useState(null);
   const [isPending, setIsPending] = useState(false);
   
+  const handleSigilChange = (rawValue) => {
+    const digits = rawValue.replace(/\D/g, '').slice(0, 11);
+    setForm(prev => ({ ...prev, sigil: formatSigil(digits) }));
+  };
+  
   const handleSignup = async () => {
+    if (!SIGIL_PATTERN.test(form.sigil)) {
+      setError('Sigil must follow the format RA–########–###');
+      return;
+    }
     try { 
       await signup(form);
       setIsPending(true);
@@ -59,20 +81,38 @@ export default function Signup() {
   
   return (
     <div className="container">
-      <div className="card" style={{ maxWidth: 520, margin: '2rem auto' }}>
+      <div className="card" style={{ maxWidth: 520, margin: '2rem auto', padding: '1.5rem' }}>
         <h3 className="hdr">Create account</h3>
         {error && <div style={{ color: 'tomato' }}>{error}</div>}
-        <div className="grid" style={{ gridTemplateColumns: '1fr 1fr' }}>
+        <div
+          className="grid"
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+            gap: '0.75rem'
+          }}
+        >
           <input className="input" placeholder="Email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} />
           <input className="input" placeholder="Password" type="password" value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} />
           <input className="input" placeholder="Username" value={form.username} onChange={e => setForm({ ...form, username: e.target.value })} />
           <input className="input" placeholder="Display name" value={form.displayName} onChange={e => setForm({ ...form, displayName: e.target.value })} />
-          <input className="input" placeholder="Sigil code" value={form.sigil} onChange={e => setForm({ ...form, sigil: e.target.value })} />
-          <select className="input" value={form.group} onChange={e => setForm({ ...form, group: e.target.value })}>
-            {groups.map(g => <option key={g} value={g}>{g}</option>)}
+          <input
+            className="input"
+            placeholder="RA–________–___"
+            inputMode="numeric"
+            value={form.sigil}
+            onChange={e => handleSigilChange(e.target.value)}
+            onFocus={() => {
+              if (!form.sigil || form.sigil === 'RA') {
+                setForm(prev => ({ ...prev, sigil: 'RA–' }));
+              }
+            }}
+          />
+          <select className="input" value={form.house} onChange={e => setForm({ ...form, house: e.target.value })}>
+            {houses.map(h => <option key={h} value={h}>{h}</option>)}
           </select>
-          <div style={{ gridColumn: '1/-1' }}>
-            <button className="btn" onClick={handleSignup}>Create account</button>
+          <div style={{ gridColumn: '1/-1', display: 'flex', justifyContent: 'center' }}>
+            <button className="btn" style={{ width: '100%', maxWidth: 240 }} onClick={handleSignup}>Create account</button>
           </div>
         </div>
       </div>

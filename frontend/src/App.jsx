@@ -29,11 +29,16 @@ function Nav() {
       <div className="container nav-inner">
         <Link to="/" className="nav-brand link" onClick={() => setOpen(false)}>
           <div className="nav-logo" />
-          <h2 className="hdr nav-title">Ryuha Alliances</h2>
+          <h2 className="hdr nav-title">Ryuha Alliance</h2>
         </Link>
         <div className={`nav-links ${open ? 'open' : ''}`} onClick={() => setOpen(false)}>
-          <Link to="/feed" className={`nav-link ${isActive('/feed') ? 'active' : ''}`}>Feed</Link>
-          <Link to="/leaderboard" className={`nav-link ${isActive('/leaderboard') ? 'active' : ''}`}>Leaderboard</Link>
+          {user && (
+            <>
+              <Link to="/feed" className={`nav-link ${isActive('/feed') ? 'active' : ''}`}>Feed</Link>
+              <Link to="/leaderboard" className={`nav-link ${isActive('/leaderboard') ? 'active' : ''}`}>Leaderboard</Link>
+            </>
+          )}
+          <Link to="/events" className={`nav-link ${isActive('/events') ? 'active' : ''}`}>Events</Link>
           {user?.role === 'admin' && (
             <Link to="/admin" className={`nav-link ${isActive('/admin') ? 'active' : ''}`}>Admin</Link>
           )}
@@ -93,7 +98,7 @@ function Footer() {
     <footer className="footer">
       <div className="footer-inner">
         <div>
-          <h4 className="hdr">Ryuha Alliances</h4>
+          <h4 className="hdr">Ryuha Alliance</h4>
           <p style={{ color: 'var(--muted)', lineHeight: 1.6 }}>United by honor, discipline, courage, growth, and unity.</p>
         </div>
         <div>
@@ -123,7 +128,7 @@ function Footer() {
         </div>
       </div>
       <div className="footer-inner footer-bottom">
-        <div style={{ color: 'var(--muted)' }}>© {new Date().getFullYear()} Ryuha Alliances. All rights reserved.</div>
+        <div style={{ color: 'var(--muted)' }}>© {new Date().getFullYear()} Ryuha Alliance. All rights reserved.</div>
         <div style={{ display: 'flex', gap: '.75rem' }}>
           <a href="/codex">Privacy & Policies</a>
           <a href="#">Terms</a>

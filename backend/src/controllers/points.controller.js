@@ -30,7 +30,7 @@ export async function leaderboard(req, res) {
     status: 'approved',
     role: { $ne: 'admin' }
   })
-    .select('username group points photoUrl rank')
+    .select('username house points photoUrl rank')
     .sort({ points: -1 })
     .limit(50);
   const topWithFullUrl = top.map(user => {

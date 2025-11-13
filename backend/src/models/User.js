@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 
-const groups = ['Pendragon', 'Tempest', 'Zodylk', 'Fritz', 'Elric'];
+const houses = ['Pendragon', 'Phantomhive', 'Tempest', 'Zodylk', 'Fritz', 'Elric', 'Dragneel', 'Hellsing', 'Obsidian Order'];
 
 const userSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true, index: true },
@@ -9,17 +9,17 @@ const userSchema = new mongoose.Schema({
   username: { type: String, required: true, unique: true, index: true },
   displayName: { type: String },
   sigil: { type: String, required: true },
-  group: { type: String, enum: groups, required: true },
+  house: { type: String, enum: houses, required: true },
   photoUrl: { type: String },
   heroCardUrl: { type: String },
   points: { type: Number, default: 0 },
-  role: { type: String, enum: ['user', 'admin'], default: 'user' },
+  role: { type: String, enum: ['user', 'moderator', 'admin'], default: 'user' },
   status: { type: String, enum: ['pending', 'approved', 'declined'], default: 'pending' },
   adminMessage: { type: String },
   rank: { type: String, default: 'Novice' },
 }, { timestamps: true });
 
 export default mongoose.model('User', userSchema);
-export const allowedGroups = groups;
+export const allowedHouses = houses;
 
 

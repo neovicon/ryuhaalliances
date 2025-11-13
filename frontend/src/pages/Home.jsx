@@ -8,7 +8,7 @@ export default function Home() {
         borderBottom: '1px solid #1f2937'
       }}>
         <div className="container" style={{ textAlign: 'center' }}>
-          <h1 className="hdr" style={{ fontSize: 42, letterSpacing: 2 }}>Ryuha Alliances</h1>
+          <h1 className="hdr" style={{ fontSize: 42, letterSpacing: 2 }}>Ryuha Alliance</h1>
           <p style={{ maxWidth: 800, margin: '1rem auto', color: 'var(--muted)', lineHeight: 1.6 }}>
           a legendary gathering of warriors, dreamers, and adventurers from all walks of anime fandom.
           </p>
@@ -26,22 +26,23 @@ export default function Home() {
           <div className="card"><h4 className="hdr">Our Motive</h4><p style={{ color: 'var(--muted)' }}></p></div>
           <div className="card"><h4 className="hdr">The Path</h4><p style={{ color: 'var(--muted)' }}></p></div>
           <div className="card"><h4 className="hdr">The Culture</h4><p style={{ color: 'var(--muted)' }}></p></div>
-          <div className="card"><h4 className="hdr">The Divisions</h4><p style={{ color: 'var(--muted)' }}></p></div>
+          <div className="card"><h4 className="hdr">The Houses</h4><p style={{ color: 'var(--muted)' }}></p></div>
         </div>
       </section>
 
       <section className="container" style={{ padding: '0 1rem 2rem' }}>
-        <h3 className="hdr">Divisions</h3>
+        <h3 className="hdr">Houses</h3>
         <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))' }}>
           {[
             { name: 'Pendragon', img: '/assets/pendragon.jpeg' },
+            { name: 'Phantomhive', img: '/assets/phantomhive.jpeg' },
             { name: 'Tempest', img: '/assets/tempest.jpeg' },
             { name: 'Zodlyck', img: '/assets/zodlyck.jpeg' },
             { name: 'Fritz', img: '/assets/fritz.jpeg' },
             { name: 'Elric', img: '/assets/elric.jpeg' },
             { name: 'Dragneel', img: '/assets/dragneel.jpeg' },
             { name: 'Hellsing', img: '/assets/hellsing.jpeg' },
-            { name: 'Phantomhive', img: '/assets/phantomhive.jpeg' },
+            { name: 'Obsidian Order', img: '/assets/obsidian_order.jpeg' },
           ].map(d => (
             <div key={d.name} className="card" style={{ padding: 0, overflow: 'hidden' }}>
               <div style={{ position: 'relative', height: 150, background: `url(${d.img}) center/cover no-repeat` }}>

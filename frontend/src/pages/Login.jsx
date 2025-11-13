@@ -3,12 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../store/auth';
 
 export default function Login() {
-  const { login } = useAuth();
+  const login = useAuth(state => state.login);
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState(null);
-  
+
   const handleLogin = async () => {
     try {
       await login(email, password);
@@ -17,7 +17,7 @@ export default function Login() {
       setError(e?.response?.data?.error || 'Login failed');
     }
   };
-  
+
   return (
     <div className="container">
       <div className="card" style={{ maxWidth: 420, margin: '2rem auto' }}>
@@ -32,5 +32,3 @@ export default function Login() {
     </div>
   );
 }
-
-

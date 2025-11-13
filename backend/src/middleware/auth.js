@@ -18,4 +18,11 @@ export function requireAdmin(req, res, next) {
   next();
 }
 
+export function requireModerator(req, res, next) {
+  if (!req.user || (req.user.role !== 'admin' && req.user.role !== 'moderator')) {
+    return res.status(403).json({ error: 'Forbidden' });
+  }
+  next();
+}
+
 
