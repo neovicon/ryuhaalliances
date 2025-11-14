@@ -108,16 +108,16 @@ function Footer() {
         <div>
           <h4 className="hdr">Social</h4>
           <div className="grid" style={{ gridTemplateColumns: '1fr' }}>
-            <a href="#" target="_blank" rel="noreferrer">
+            <a href="https://www.facebook.com/groups/1Brd988fMv/" target="_blank" rel="noreferrer">
               <i className="fa-brands fa-facebook" style={{marginRight: 8}}></i> Facebook
             </a>
-            <a href="#" target="_blank" rel="noreferrer">
+            <a href="https://m.me/j/Abah_xP2JTbUxM1C/" target="_blank" rel="noreferrer">
               <i className="fa-brands fa-facebook-messenger" style={{marginRight: 8}}></i> Messenger
             </a>
-            <a href="#" target="_blank" rel="noreferrer">
+            <a href="https://www.youtube.com/@ryuha-alliances" target="_blank" rel="noreferrer">
               <i className="fa-brands fa-youtube" style={{marginRight: 8}}></i> YouTube
             </a>
-            <a href="#" target="_blank" rel="noreferrer">
+            <a href="https://discord.gg/ZxVqUaZF" target="_blank" rel="noreferrer">
               <i className="fa-brands fa-discord" style={{marginRight: 8}}></i> Discord
             </a>
           </div>
@@ -126,16 +126,15 @@ function Footer() {
           <h4 className="hdr">Join / Contact</h4>
           <div className="grid" style={{ gridTemplateColumns: '1fr' }}>
             <a href="mailto:contact@ryuha-alliances.org">contact@ryuha-alliances.org</a>
-            <a href="#">How to join</a>
-            <a href="/codex">Codex (Policies)</a>
+            <a href="https://docs.google.com/forms/d/e/1FAIpQLSfdvm7nvw912EFOQUqzQNnW9GUFHZc-Zfmz8Dwo6T097gnKPQ/viewform?usp=header" target="_blank" rel="noreferrer">How to join</a>
+            <a href="https://docs.google.com/forms/d/e/1FAIpQLSfdvm7nvw912EFOQUqzQNnW9GUFHZc-Zfmz8Dwo6T097gnKPQ/viewform?usp=header" target="_blank" rel="noreferrer">Codex (Policies)</a>
           </div>
         </div>
       </div>
       <div className="footer-inner footer-bottom">
         <div style={{ color: 'var(--muted)' }}>© {new Date().getFullYear()} Ryuha Alliance. All rights reserved.</div>
         <div style={{ display: 'flex', gap: '.75rem' }}>
-          <a href="/codex">Privacy & Policies</a>
-          <a href="#">Terms</a>
+          <a href="https://docs.google.com/forms/d/e/1FAIpQLSfdvm7nvw912EFOQUqzQNnW9GUFHZc-Zfmz8Dwo6T097gnKPQ/formResponse">Privacy & Policies</a>
         </div>
       </div>
     </footer>

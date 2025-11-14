@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { requireAuth, requireAdmin } from '../middleware/auth.js';
-import { getPendingUsers, approveUser, declineUser, sendMessageToUser, validateApproveUser, validateDeclineUser, validateSendMessage, getAllUsers, updateHouse, validateUpdateHouse, addModerator, validateAddModerator, removeUser, validateRemoveUser } from '../controllers/admin.controller.js';
+import { getPendingUsers, approveUser, declineUser, sendMessageToUser, validateApproveUser, validateDeclineUser, validateSendMessage, getAllUsers, updateHouse, validateUpdateHouse, addModerator, validateAddModerator, removeUser, validateRemoveUser, updateMemberStatus, validateUpdateMemberStatus, getHouseMembers, getHouse, getAllHouses, updateHouseDetails, validateUpdateHouseDetails } from '../controllers/admin.controller.js';
 
 const router = Router();
 
@@ -11,8 +11,13 @@ router.post('/approve-user', requireAuth, requireAdmin, validateApproveUser, app
 router.post('/decline-user', requireAuth, requireAdmin, validateDeclineUser, declineUser);
 router.post('/send-message', requireAuth, requireAdmin, validateSendMessage, sendMessageToUser);
 router.post('/update-house', requireAuth, requireAdmin, validateUpdateHouse, updateHouse);
+router.post('/update-member-status', requireAuth, requireAdmin, validateUpdateMemberStatus, updateMemberStatus);
 router.post('/add-moderator', requireAuth, requireAdmin, validateAddModerator, addModerator);
 router.delete('/user/:userId', requireAuth, requireAdmin, validateRemoveUser, removeUser);
+router.get('/house-members', getHouseMembers);
+router.get('/house', getHouse);
+router.get('/all-houses', requireAuth, requireAdmin, getAllHouses);
+router.post('/update-house-details', requireAuth, requireAdmin, validateUpdateHouseDetails, updateHouseDetails);
 
 export default router;
 

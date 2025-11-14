@@ -16,12 +16,9 @@ import eventRoutes from './routes/event.routes.js';
 
 const app = express();
 
-// Configure CORS
-
 const corsOptions = {
   origin: [
-    "http://localhost:5173",
-    "https://ryuhaalliance.devsandbox.me"
+    process.env.CLIENT_ORIGIN,
   ],
   credentials: true,
   optionsSuccessStatus: 200

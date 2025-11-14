@@ -16,6 +16,8 @@ function getHouseImageSrc(houseName) {
     Dragneel: 'dragneel',
     Hellsing: 'hellsing',
     'Obsidian Order': 'obsidian_order',
+    'Council of IV': 'counsil_of_iv',
+    'Abyssal IV': 'abyssal_iv',
   };
   const fileName = houseMap[houseName] || houseName.toLowerCase().replace(/\s+/g, '_');
   return `../../assets/${fileName}.jpeg`;
@@ -378,7 +380,7 @@ export default function Profile() {
                   fontWeight: 600,
                 }}
               >
-                {isSelf ? 'Click to upload your hero banner' : 'No hero banner yet'}
+                {isSelf ? 'Click to upload your hero license' : 'No hero license yet'}
               </div>
             )}
             {uploadingHero && (
@@ -482,11 +484,11 @@ export default function Profile() {
 
           {heroFile && (
             <div className="card" style={{ marginBottom: '1.5rem', border: '1px solid rgba(148,163,184,0.2)' }}>
-              <h4 className="hdr" style={{ marginBottom: '0.5rem' }}>Upload hero banner</h4>
+              <h4 className="hdr" style={{ marginBottom: '0.5rem' }}>Upload hero license</h4>
               <div style={{ color: 'var(--muted)', marginBottom: '0.75rem' }}>Selected file: <strong>{heroFile.name}</strong></div>
               <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
                 <button className="btn" onClick={handleHeroUpload} disabled={uploadingHero}>
-                  {uploadingHero ? 'Uploading...' : 'Upload banner'}
+                  {uploadingHero ? 'Uploading...' : 'Upload license'}
                 </button>
                 <button
                   className="btn"

@@ -3,7 +3,9 @@ import client from '../api/client';
 import { getRankImageSrc, calculateRank, RANKS } from '../utils/rank';
 import { useAuth } from '../store/auth';
 
-const HOUSES = ['Pendragon', 'Phantomhive', 'Tempest', 'Zodylk', 'Fritz', 'Elric', 'Dragneel', 'Hellsing', 'Obsidian Order'];
+const HOUSES = ['Pendragon', 'Phantomhive', 'Tempest', 'Zodylk', 'Fritz', 'Elric', 'Dragneel', 'Hellsing', 'Obsidian Order', 'Council of IV', 'Abyssal IV'];
+
+const MEMBER_STATUSES = ['Guardian', 'Lord of the House', 'General', 'Seeker', 'Herald', 'Watcher', 'Knight of Genesis', 'Knight of I', 'Knight of II', 'Knight of III', 'Knight of IV', 'Knight of V', 'Commoner'];
 
 export default function Admin() {
   const { user: authUser } = useAuth();
@@ -14,8 +16,13 @@ export default function Admin() {
   const [messageModal, setMessageModal] = useState({ open: false, userId: null, message: '' });
   const [declineModal, setDeclineModal] = useState({ open: false, userId: null, message: '' });
   const [editingUser, setEditingUser] = useState({ userId: null, field: null });
-  const [editValues, setEditValues] = useState({ points: '', rank: '', house: '' });
+  const [editValues, setEditValues] = useState({ points: '', rank: '', house: '', memberStatus: '' });
   const [moderatorModal, setModeratorModal] = useState({ open: false, userId: null });
+  const [houses, setHouses] = useState([]);
+  const [selectedHouseName, setSelectedHouseName] = useState('');
+  const [selectedHouse, setSelectedHouse] = useState(null);
+  const [loadingSelectedHouse, setLoadingSelectedHouse] = useState(false);
+  const [houseEditValues, setHouseEditValues] = useState({ description: '', status: 'Active' });
   
   async function loadAllUsers() {
     try {
@@ -52,9 +59,19 @@ export default function Admin() {
     }
   }
   
+  async function loadHouses() {
+    try {
+      const { data } = await client.get('/admin/all-houses');
+      setHouses(data.houses || []);
+    } catch (error) {
+      console.error('Error loading houses:', error);
+    }
+  }
+  
   useEffect(() => { 
     loadPendingUsers();
     loadAllUsers();
+    loadHouses();
   }, []);
   
   const handleUpdatePoints = async (userId, newPoints) => {
@@ -91,6 +108,18 @@ export default function Admin() {
     } catch (error) {
       console.error('Error updating house:', error);
       alert(error?.response?.data?.error || 'Failed to update house');
+    }
+  };
+
+  const handleUpdateMemberStatus = async (userId, newMemberStatus) => {
+    try {
+      await client.post('/admin/update-member-status', { userId, memberStatus: newMemberStatus || null });
+      await loadAllUsers();
+      setEditingUser({ userId: null, field: null });
+      alert('Member status updated successfully');
+    } catch (error) {
+      console.error('Error updating member status:', error);
+      alert(error?.response?.data?.error || 'Failed to update member status');
     }
   };
 
@@ -131,13 +160,14 @@ export default function Admin() {
     setEditValues({ 
       points: currentValue?.points || '', 
       rank: currentValue?.rank || '', 
-      house: currentValue?.house || '' 
+      house: currentValue?.house || '',
+      memberStatus: currentValue?.memberStatus || ''
     });
   };
   
   const cancelEdit = () => {
     setEditingUser({ userId: null, field: null });
-    setEditValues({ points: '', rank: '', house: '' });
+    setEditValues({ points: '', rank: '', house: '', memberStatus: '' });
   };
   
   const handleApprove = async (userId) => {
@@ -179,6 +209,55 @@ export default function Admin() {
     } catch (error) {
       console.error('Error sending message:', error);
       alert(error?.response?.data?.error || 'Failed to send message');
+    }
+  };
+
+  const loadSelectedHouse = async (houseName) => {
+    if (!houseName) {
+      setSelectedHouse(null);
+      setHouseEditValues({ description: '', status: 'Active' });
+      return;
+    }
+    try {
+      setLoadingSelectedHouse(true);
+      const { data } = await client.get('/admin/house', { params: { houseName } });
+      const house = data.house;
+      setSelectedHouse(house);
+      setHouseEditValues({
+        description: house.description || '',
+        status: house.status || 'Active'
+      });
+    } catch (error) {
+      console.error('Error loading house:', error);
+      alert(error?.response?.data?.error || 'Failed to load house');
+    } finally {
+      setLoadingSelectedHouse(false);
+    }
+  };
+
+  useEffect(() => {
+    if (selectedHouseName) {
+      loadSelectedHouse(selectedHouseName);
+    } else {
+      setSelectedHouse(null);
+      setHouseEditValues({ description: '', status: 'Active' });
+    }
+  }, [selectedHouseName]);
+
+  const handleUpdateHouseDetails = async () => {
+    if (!selectedHouseName) return;
+    try {
+      await client.post('/admin/update-house-details', {
+        houseName: selectedHouseName,
+        description: houseEditValues.description,
+        status: houseEditValues.status
+      });
+      await loadSelectedHouse(selectedHouseName);
+      await loadHouses();
+      alert('House details updated successfully');
+    } catch (error) {
+      console.error('Error updating house details:', error);
+      alert(error?.response?.data?.error || 'Failed to update house details');
     }
   };
   
@@ -328,6 +407,107 @@ export default function Admin() {
         )}
       </div>
       
+      {/* Houses Management Section */}
+      <div className="card" style={{ marginBottom: '1rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+          <h4 className="hdr" style={{ margin: 0 }}>Manage Houses</h4>
+          <button className="btn" onClick={loadHouses}>Refresh</button>
+        </div>
+        
+        <div style={{ marginBottom: '1.5rem' }}>
+          <label style={{ display: 'block', color: 'var(--muted)', fontSize: '0.85rem', marginBottom: '0.5rem' }}>
+            Select House to Edit
+          </label>
+          <select
+            className="input"
+            value={selectedHouseName}
+            onChange={(e) => setSelectedHouseName(e.target.value)}
+            style={{ width: '100%', maxWidth: '400px' }}
+          >
+            <option value="">-- Select a house --</option>
+            {HOUSES.map((houseName) => (
+              <option key={houseName} value={houseName}>
+                {houseName}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {loadingSelectedHouse ? (
+          <div style={{ color: 'var(--muted)', textAlign: 'center', padding: '2rem' }}>
+            Loading house details...
+          </div>
+        ) : selectedHouse ? (
+          <div style={{
+            border: '1px solid #1f2937',
+            borderRadius: '12px',
+            padding: '1.5rem',
+            background: 'rgba(255,255,255,0.01)',
+          }}>
+            <h5 className="hdr" style={{ margin: 0, marginBottom: '1.5rem', fontSize: '1.3rem' }}>
+              Editing: House {selectedHouse.name}
+            </h5>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+              <div>
+                <label style={{ display: 'block', color: 'var(--muted)', fontSize: '0.85rem', marginBottom: '0.5rem' }}>
+                  Description
+                </label>
+                <textarea
+                  className="input"
+                  value={houseEditValues.description}
+                  onChange={(e) => setHouseEditValues({ ...houseEditValues, description: e.target.value })}
+                  style={{ width: '100%', minHeight: 150, resize: 'vertical' }}
+                  placeholder="Enter house description..."
+                />
+              </div>
+              <div>
+                <label style={{ display: 'block', color: 'var(--muted)', fontSize: '0.85rem', marginBottom: '0.5rem' }}>
+                  Status
+                </label>
+                <select
+                  className="input"
+                  value={houseEditValues.status}
+                  onChange={(e) => setHouseEditValues({ ...houseEditValues, status: e.target.value })}
+                  style={{ width: '100%', maxWidth: '200px' }}
+                >
+                  <option value="Active">Active</option>
+                  <option value="Inactive">Inactive</option>
+                </select>
+              </div>
+              <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+                <button
+                  className="btn"
+                  onClick={() => {
+                    setSelectedHouseName('');
+                    setSelectedHouse(null);
+                    setHouseEditValues({ description: '', status: 'Active' });
+                  }}
+                  style={{ padding: '0.5rem 1rem', fontSize: '0.9rem', background: 'transparent', border: '1px solid #1f2937' }}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="btn"
+                  onClick={handleUpdateHouseDetails}
+                  style={{ padding: '0.5rem 1rem', fontSize: '0.9rem' }}
+                >
+                  Save Changes
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : selectedHouseName ? (
+          <div style={{ color: 'var(--muted)', textAlign: 'center', padding: '2rem' }}>
+            Loading house details...
+          </div>
+        ) : (
+          <div style={{ color: 'var(--muted)', textAlign: 'center', padding: '2rem' }}>
+            Select a house from the dropdown above to edit its details.
+          </div>
+        )}
+      </div>
+      
       {/* All Users Section */}
       <div className="card" style={{ marginBottom: '1rem' }}>
         <div
@@ -363,6 +543,7 @@ export default function Admin() {
               const isEditingPoints = editingUser.userId === userId && editingUser.field === 'points';
               const isEditingRank = editingUser.userId === userId && editingUser.field === 'rank';
               const isEditingHouse = editingUser.userId === userId && editingUser.field === 'house';
+              const isEditingMemberStatus = editingUser.userId === userId && editingUser.field === 'memberStatus';
               const userRank = u.rank || calculateRank(u.points || 0);
               const statusBadge = (
                 <span
@@ -572,6 +753,52 @@ export default function Admin() {
                           <button
                             className="btn"
                             onClick={() => startEdit(userId, 'points', { points: u.points || 0 })}
+                            style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem', background: 'transparent', border: '1px solid #1f2937' }}
+                          >
+                            Edit
+                          </button>
+                        </div>
+                      )}
+                    </div>
+
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', alignItems: 'center' }}>
+                      <span style={{ color: 'var(--muted)', fontSize: '0.85rem' }}>Member Status</span>
+                      {isEditingMemberStatus ? (
+                        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                          <select
+                            className="input"
+                            value={editValues.memberStatus}
+                            onChange={(e) => setEditValues({ ...editValues, memberStatus: e.target.value })}
+                            style={{ padding: '0.25rem 0.5rem', fontSize: '0.9rem' }}
+                          >
+                            <option value="">None</option>
+                            {MEMBER_STATUSES.map((status) => (
+                              <option key={status} value={status}>
+                                {status}
+                              </option>
+                            ))}
+                          </select>
+                          <button
+                            className="btn"
+                            onClick={() => handleUpdateMemberStatus(userId, editValues.memberStatus)}
+                            style={{ padding: '0.3rem 0.6rem', fontSize: '0.85rem' }}
+                          >
+                            ✓
+                          </button>
+                          <button
+                            className="btn"
+                            onClick={cancelEdit}
+                            style={{ padding: '0.3rem 0.6rem', fontSize: '0.85rem', background: 'transparent', border: '1px solid #1f2937' }}
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ) : (
+                        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                          <span>{u.memberStatus || 'None'}</span>
+                          <button
+                            className="btn"
+                            onClick={() => startEdit(userId, 'memberStatus', { memberStatus: u.memberStatus || '' })}
                             style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem', background: 'transparent', border: '1px solid #1f2937' }}
                           >
                             Edit
