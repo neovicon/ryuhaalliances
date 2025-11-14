@@ -18,7 +18,7 @@ function getHouseImageSrc(houseName) {
     'Obsidian Order': 'obsidian_order',
   };
   const fileName = houseMap[houseName] || houseName.toLowerCase().replace(/\s+/g, '_');
-  return `/assets/${fileName}.jpeg`;
+  return `../../assets/${fileName}.jpeg`;
 }
 
 export default function Profile() {
@@ -75,11 +75,8 @@ export default function Profile() {
       { label: 'Status', value: statusLabel },
       { label: 'Member Since', value: memberSince },
     ];
-    if (isSelf && profile.email) {
-      rows.splice(1, 0, { label: 'Email', value: profile.email });
-    }
     return rows.filter((row) => row.value !== undefined && row.value !== null && row.value !== '');
-  }, [profile, isSelf, memberSince, rankName, statusLabel]);
+  }, [profile, memberSince, rankName, statusLabel]);
 
   useEffect(() => {
     if (!authUser && localStorage.getItem('token')) {
@@ -456,6 +453,9 @@ export default function Profile() {
               alignItems: 'flex-start',
               border: '1px solid rgba(148,163,184,0.2)',
               marginBottom: '1.5rem',
+              backgroundImage: `linear-gradient(rgba(15,23,42,0.82), rgba(15,23,42,0.82)), url(${getHouseImageSrc(profile.house)})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
             }}
           >
             <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
