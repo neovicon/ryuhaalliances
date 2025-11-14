@@ -18,7 +18,7 @@ const app = express();
 
 const corsOptions = {
   origin: [
-    process.env.CLIENT_ORIGIN,
+    process.env.CLIENT_ORIGIN || 'https://ryuhaalliance.devsandbox.me',
   ],
   credentials: true,
   optionsSuccessStatus: 200
