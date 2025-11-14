@@ -330,7 +330,16 @@ export default function Admin() {
       
       {/* All Users Section */}
       <div className="card" style={{ marginBottom: '1rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '1rem',
+            gap: window.innerWidth < 600 ? '0.5rem' : '0.75rem 1.5rem',
+            flexDirection: window.innerWidth < 600 ? 'column' : 'row',
+          }}
+        >
           <h4 className="hdr" style={{ margin: 0 }}>All Users ({filteredUsers.length})</h4>
           <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
             <input 

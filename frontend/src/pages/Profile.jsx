@@ -44,15 +44,6 @@ export default function Profile() {
   const [uploadingHero, setUploadingHero] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
-  const [showPasswordChange, setShowPasswordChange] = useState(false);
-  const [passwordData, setPasswordData] = useState({
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: '',
-  });
-  const [passwordError, setPasswordError] = useState(null);
-  const [passwordSuccess, setPasswordSuccess] = useState(false);
-  const [changingPassword, setChangingPassword] = useState(false);
 
   const viewerId = authUser?.id || authUser?._id;
   const profileId = profile?.id || profile?._id;
@@ -249,42 +240,6 @@ export default function Profile() {
       alert(error?.response?.data?.error || 'Failed to upload profile picture');
     } finally {
       setUploadingAvatar(false);
-    }
-  };
-
-  const handlePasswordChange = async () => {
-    setPasswordError(null);
-    setPasswordSuccess(false);
-
-    if (!passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword) {
-      setPasswordError('All fields are required');
-      return;
-    }
-    if (passwordData.newPassword !== passwordData.confirmPassword) {
-      setPasswordError('New passwords do not match');
-      return;
-    }
-    if (passwordData.newPassword.length < 8) {
-      setPasswordError('New password must be at least 8 characters long');
-      return;
-    }
-
-    setChangingPassword(true);
-    try {
-      await client.post('/users/me/change-password', {
-        currentPassword: passwordData.currentPassword,
-        newPassword: passwordData.newPassword,
-      });
-      setPasswordSuccess(true);
-      setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
-      setTimeout(() => {
-        setShowPasswordChange(false);
-        setPasswordSuccess(false);
-      }, 1800);
-    } catch (error) {
-      setPasswordError(error?.response?.data?.error || 'Failed to change password');
-    } finally {
-      setChangingPassword(false);
     }
   };
 
@@ -631,98 +586,6 @@ export default function Profile() {
                     </div>
                   );
                 })}
-              </div>
-            )}
-          </div>
-
-          <div className="card" style={{ border: '1px solid rgba(148,163,184,0.2)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-              <h3 className="hdr" style={{ margin: 0, fontSize: '1.2rem' }}>Change Password</h3>
-              <button
-                className="btn"
-                onClick={() => {
-                  setShowPasswordChange(!showPasswordChange);
-                  setPasswordError(null);
-                  setPasswordSuccess(false);
-                  setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
-                }}
-                style={{ background: showPasswordChange ? 'transparent' : undefined, border: showPasswordChange ? '1px solid rgba(148,163,184,0.3)' : undefined }}
-              >
-                {showPasswordChange ? 'Close' : 'Change Password'}
-              </button>
-            </div>
-
-            {showPasswordChange && (
-              <div>
-                {passwordError && (
-                  <div
-                    style={{
-                      marginBottom: '0.75rem',
-                      padding: '0.75rem',
-                      borderRadius: '8px',
-                      background: 'rgba(239, 68, 68, 0.13)',
-                      border: '1px solid rgba(239, 68, 68, 0.35)',
-                      color: 'rgba(239, 68, 68, 1)',
-                    }}
-                  >
-                    {passwordError}
-                  </div>
-                )}
-                {passwordSuccess && (
-                  <div
-                    style={{
-                      marginBottom: '0.75rem',
-                      padding: '0.75rem',
-                      borderRadius: '8px',
-                      background: 'rgba(34, 197, 94, 0.13)',
-                      border: '1px solid rgba(34, 197, 94, 0.35)',
-                      color: 'rgba(34, 197, 94, 1)',
-                    }}
-                  >
-                    Password changed successfully!
-                  </div>
-                )}
-                <div className="grid" style={{ gridTemplateColumns: '1fr', gap: '0.75rem' }}>
-                  <div>
-                    <label style={{ display: 'block', color: 'var(--muted)', fontSize: '0.85rem', marginBottom: '0.25rem' }}>
-                      Current password
-                    </label>
-                    <input
-                      className="input"
-                      type="password"
-                      placeholder="Enter current password"
-                      value={passwordData.currentPassword}
-                      onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
-                    />
-                  </div>
-                  <div>
-                    <label style={{ display: 'block', color: 'var(--muted)', fontSize: '0.85rem', marginBottom: '0.25rem' }}>
-                      New password
-                    </label>
-                    <input
-                      className="input"
-                      type="password"
-                      placeholder="Enter new password (min 8 characters)"
-                      value={passwordData.newPassword}
-                      onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
-                    />
-                  </div>
-                  <div>
-                    <label style={{ display: 'block', color: 'var(--muted)', fontSize: '0.85rem', marginBottom: '0.25rem' }}>
-                      Confirm new password
-                    </label>
-                    <input
-                      className="input"
-                      type="password"
-                      placeholder="Confirm new password"
-                      value={passwordData.confirmPassword}
-                      onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
-                    />
-                  </div>
-                  <button className="btn" onClick={handlePasswordChange} disabled={changingPassword}>
-                    {changingPassword ? 'Changing...' : 'Update password'}
-                  </button>
-                </div>
               </div>
             )}
           </div>

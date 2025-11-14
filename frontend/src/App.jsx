@@ -11,6 +11,8 @@ import Profile from './pages/Profile.jsx'
 import Home from './pages/Home.jsx'
 import Codex from './pages/Codex.jsx'
 import Events from './pages/Events.jsx'
+import EventDetail from './pages/EventDetail.jsx'
+import HouseDetail from './pages/HouseDetail.jsx'
 
 function Nav() {
   const { pathname } = useLocation()
@@ -87,6 +89,8 @@ export default function App() {
         <Route path="/signup" element={<Signup />} />
         <Route path="/codex" element={<Codex />} />
         <Route path="/events" element={<Events />} />
+        <Route path="/events/:id" element={<EventDetail />} />
+        <Route path="/houses/:slug" element={<HouseDetail />} />
       </Routes>
       <Footer />
     </>

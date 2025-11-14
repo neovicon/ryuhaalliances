@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import client from '../api/client';
 import { useAuth } from '../store/auth';
 
 export default function Events() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -158,7 +160,7 @@ export default function Events() {
       ) : (
         <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem' }}>
           {events.map(event => (
-            <div key={event.id} className="card" style={{ padding: 0, overflow: 'hidden' }}>
+            <div key={event.id} className="card" style={{ padding: 0, overflow: 'hidden', cursor: 'pointer' }} onClick={() => navigate(`/events/${event.id}`)}>
               {event.imageUrl && (
                 <div style={{
                   width: '100%',
@@ -175,8 +177,11 @@ export default function Events() {
                   color: 'var(--muted)', 
                   fontSize: '0.85rem', 
                   marginBottom: '1rem',
-                  whiteSpace: 'pre-wrap',
-                  lineHeight: '1.6'
+                  lineHeight: '1.6',
+                  display: '-webkit-box',
+                  WebkitLineClamp: 3,
+                  WebkitBoxOrient: 'vertical',
+                  overflow: 'hidden'
                 }}>
                   {event.description}
                 </div>
@@ -187,20 +192,12 @@ export default function Events() {
                   fontSize: '0.85rem',
                   color: 'var(--muted)'
                 }}>
-                  <div>Created by: {event.createdBy?.displayName || event.createdBy?.username || 'Unknown'}</div>
-                  {event.lastEditedBy && event.lastEditedBy._id !== event.createdBy?._id && (
-                    <div style={{ marginTop: '0.25rem' }}>
-                      Last edited by: {event.lastEditedBy?.displayName || event.lastEditedBy?.username || 'Unknown'}
-                    </div>
-                  )}
                   {event.createdAt && (
-                    <div style={{ marginTop: '0.25rem' }}>
-                      {new Date(event.createdAt).toLocaleDateString()}
-                    </div>
+                    <div>{new Date(event.createdAt).toLocaleDateString()}</div>
                   )}
                 </div>
                 {isModeratorOrAdmin && (
-                  <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>
+                  <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }} onClick={(e) => e.stopPropagation()}>
                     <button 
                       className="btn" 
                       onClick={() => startEdit(event)}

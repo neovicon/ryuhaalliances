@@ -122,3 +122,98 @@ export async function deleteEvent(req, res) {
   }
 }
 
+export const validateGetEvent = [ param('id').isMongoId().withMessage('Invalid event ID') ];
+
+export async function getEventById(req, res) {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
+  try {
+    const { id } = req.params;
+    const event = await Event.findById(id)
+      .populate('createdBy', 'username displayName photoUrl')
+      .populate('lastEditedBy', 'username displayName')
+      .populate('comments.author', 'username displayName photoUrl');
+
+    if (!event) {
+      return res.status(404).json({ error: 'Event not found' });
+    }
+
+    const eventObj = event.toObject();
+    if (eventObj.imageUrl) {
+      eventObj.imageUrl = getPhotoUrl(eventObj.imageUrl, req);
+    }
+    if (eventObj.createdBy && eventObj.createdBy.photoUrl) {
+      eventObj.createdBy.photoUrl = getPhotoUrl(eventObj.createdBy.photoUrl, req);
+    }
+    if (eventObj.comments) {
+      eventObj.comments = eventObj.comments.map(comment => {
+        if (comment.author && comment.author.photoUrl) {
+          comment.author.photoUrl = getPhotoUrl(comment.author.photoUrl, req);
+        }
+        return comment;
+      });
+    }
+    const { _id, ...rest } = eventObj;
+    res.json({ event: { id: _id, ...rest } });
+  } catch (error) {
+    console.error('Error fetching event:', error);
+    if (error.name === 'CastError') {
+      return res.status(400).json({ error: 'Invalid event ID format' });
+    }
+    res.status(500).json({ error: 'Failed to fetch event' });
+  }
+}
+
+export const validateAddComment = [
+  param('id').isMongoId(),
+  body('content').isString().isLength({ min: 1, max: 1000 }).withMessage('Comment must be between 1 and 1000 characters'),
+];
+
+export async function addComment(req, res) {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+
+  try {
+    const { id } = req.params;
+    const event = await Event.findById(id);
+    
+    if (!event) {
+      return res.status(404).json({ error: 'Event not found' });
+    }
+
+    event.comments.push({
+      author: req.user.id,
+      content: req.body.content,
+    });
+
+    await event.save();
+    await event.populate('createdBy', 'username displayName photoUrl');
+    await event.populate('lastEditedBy', 'username displayName');
+    await event.populate('comments.author', 'username displayName photoUrl');
+
+    const eventObj = event.toObject();
+    if (eventObj.imageUrl) {
+      eventObj.imageUrl = getPhotoUrl(eventObj.imageUrl, req);
+    }
+    if (eventObj.createdBy && eventObj.createdBy.photoUrl) {
+      eventObj.createdBy.photoUrl = getPhotoUrl(eventObj.createdBy.photoUrl, req);
+    }
+    if (eventObj.comments) {
+      eventObj.comments = eventObj.comments.map(comment => {
+        if (comment.author && comment.author.photoUrl) {
+          comment.author.photoUrl = getPhotoUrl(comment.author.photoUrl, req);
+        }
+        return comment;
+      });
+    }
+    const { _id, ...rest } = eventObj;
+    res.status(201).json({ event: { id: _id, ...rest } });
+  } catch (error) {
+    console.error('Error adding comment:', error);
+    res.status(500).json({ error: 'Failed to add comment' });
+  }
+}
+
