@@ -135,6 +135,7 @@ function Footer() {
         <div style={{ color: 'var(--muted)' }}>© {new Date().getFullYear()} Ryuha Alliance. All rights reserved.</div>
         <div style={{ display: 'flex', gap: '.75rem' }}>
           <a href="https://docs.google.com/forms/d/e/1FAIpQLSfdvm7nvw912EFOQUqzQNnW9GUFHZc-Zfmz8Dwo6T097gnKPQ/formResponse">Privacy & Policies</a>
+          <a href="mailto:huancut1222010@gmail.com?subject=Error Report">Report Error</a>
         </div>
       </div>
     </footer>
