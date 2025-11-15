@@ -421,8 +421,24 @@ export default function Profile() {
                     padding: '0.5rem 0.75rem',
                     background: 'rgba(15, 23, 42, 0.9)',
                     border: '1px solid rgba(148,163,184,0.3)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    position: 'relative',
                   }}
                 >
+                  {uploadingHero && (
+                    <span
+                      style={{
+                        width: '12px',
+                        height: '12px',
+                        border: '2px solid rgba(255,255,255,0.3)',
+                        borderTop: '2px solid white',
+                        borderRadius: '50%',
+                        animation: 'spin 0.8s linear infinite',
+                      }}
+                    />
+                  )}
                   {profile.heroCardUrl ? 'Change' : 'Upload'}
                 </button>
                 <button
@@ -436,8 +452,23 @@ export default function Profile() {
                     border: profile.heroCardUrl ? '1px solid rgba(239, 68, 68, 0.5)' : '1px solid rgba(148, 163, 184, 0.3)',
                     opacity: profile.heroCardUrl ? 1 : 0.6,
                     cursor: profile.heroCardUrl ? 'pointer' : 'not-allowed',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
                   }}
                 >
+                  {deletingHero && (
+                    <span
+                      style={{
+                        width: '12px',
+                        height: '12px',
+                        border: '2px solid rgba(255,255,255,0.3)',
+                        borderTop: '2px solid white',
+                        borderRadius: '50%',
+                        animation: 'spin 0.8s linear infinite',
+                      }}
+                    />
+                  )}
                   {deletingHero ? 'Deleting...' : 'Delete'}
                 </button>
               </div>
@@ -522,8 +553,27 @@ export default function Profile() {
                 <button
                   className="btn"
                   onClick={selectAvatarFile}
-                  style={{ marginTop: '0.75rem', fontSize: '0.85rem' }}
+                  disabled={uploadingAvatar}
+                  style={{
+                    marginTop: '0.75rem',
+                    fontSize: '0.85rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                  }}
                 >
+                  {uploadingAvatar && (
+                    <span
+                      style={{
+                        width: '12px',
+                        height: '12px',
+                        border: '2px solid rgba(255,255,255,0.3)',
+                        borderTop: '2px solid white',
+                        borderRadius: '50%',
+                        animation: 'spin 0.8s linear infinite',
+                      }}
+                    />
+                  )}
                   Change picture
                 </button>
               )}
@@ -562,7 +612,19 @@ export default function Profile() {
               <h4 className="hdr" style={{ marginBottom: '0.5rem' }}>Upload hero license</h4>
               <div style={{ color: 'var(--muted)', marginBottom: '0.75rem' }}>Selected file: <strong>{heroFile.name}</strong></div>
               <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-                <button className="btn" onClick={handleHeroUpload} disabled={uploadingHero}>
+                <button className="btn" onClick={handleHeroUpload} disabled={uploadingHero} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  {uploadingHero && (
+                    <span
+                      style={{
+                        width: '12px',
+                        height: '12px',
+                        border: '2px solid rgba(255,255,255,0.3)',
+                        borderTop: '2px solid white',
+                        borderRadius: '50%',
+                        animation: 'spin 0.8s linear infinite',
+                      }}
+                    />
+                  )}
                   {uploadingHero ? 'Uploading...' : 'Upload license'}
                 </button>
                 <button
@@ -582,7 +644,19 @@ export default function Profile() {
               <h4 className="hdr" style={{ marginBottom: '0.5rem' }}>Upload profile picture</h4>
               <div style={{ color: 'var(--muted)', marginBottom: '0.75rem' }}>Selected file: <strong>{avatarFile.name}</strong></div>
               <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-                <button className="btn" onClick={handleAvatarUpload} disabled={uploadingAvatar}>
+                <button className="btn" onClick={handleAvatarUpload} disabled={uploadingAvatar} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  {uploadingAvatar && (
+                    <span
+                      style={{
+                        width: '12px',
+                        height: '12px',
+                        border: '2px solid rgba(255,255,255,0.3)',
+                        borderTop: '2px solid white',
+                        borderRadius: '50%',
+                        animation: 'spin 0.8s linear infinite',
+                      }}
+                    />
+                  )}
                   {uploadingAvatar ? 'Uploading...' : 'Upload picture'}
                 </button>
                 <button
@@ -628,7 +702,19 @@ export default function Profile() {
                 />
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
                   <span style={{ color: 'var(--muted)', fontSize: '0.85rem' }}>{newPostContent.length}/500</span>
-                  <button className="btn" onClick={handleCreatePost} disabled={creatingPost || !newPostContent.trim()}>
+                  <button className="btn" onClick={handleCreatePost} disabled={creatingPost || !newPostContent.trim()} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    {creatingPost && (
+                      <span
+                        style={{
+                          width: '12px',
+                          height: '12px',
+                          border: '2px solid rgba(255,255,255,0.3)',
+                          borderTop: '2px solid white',
+                          borderRadius: '50%',
+                          animation: 'spin 0.8s linear infinite',
+                        }}
+                      />
+                    )}
                     {creatingPost ? 'Posting...' : 'Post'}
                   </button>
                 </div>

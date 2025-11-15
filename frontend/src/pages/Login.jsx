@@ -9,11 +9,13 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState(null);
   const [adminMessage, setAdminMessage] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
     try {
       setError(null);
       setAdminMessage(null);
+      setLoading(true);
       await login(email, password);
       navigate('/profile');
     } catch (e) {
@@ -22,6 +24,8 @@ export default function Login() {
       if (errorData?.adminMessage) {
         setAdminMessage(errorData.adminMessage);
       }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -38,7 +42,26 @@ export default function Login() {
         <div className="grid">
           <input className="input" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} />
           <input className="input" placeholder="Password" type="password" value={password} onChange={e => setPassword(e.target.value)} />
-          <button className="btn" onClick={handleLogin}>Sign in</button>
+          <button 
+            className="btn" 
+            onClick={handleLogin}
+            disabled={loading}
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
+          >
+            {loading && (
+              <span
+                style={{
+                  width: '14px',
+                  height: '14px',
+                  border: '2px solid rgba(255,255,255,0.3)',
+                  borderTop: '2px solid white',
+                  borderRadius: '50%',
+                  animation: 'spin 0.8s linear infinite',
+                }}
+              />
+            )}
+            {loading ? 'Signing in...' : 'Sign in'}
+          </button>
         </div>
       </div>
     </div>
