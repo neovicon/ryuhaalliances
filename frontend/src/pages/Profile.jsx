@@ -375,55 +375,14 @@ export default function Profile() {
             onClick={isSelf && !profile.heroCardUrl ? selectHeroFile : undefined}
           >
             {profile.heroCardUrl ? (
-              <>
-                <img
-                  src={profile.heroCardUrl}
-                  alt={`${profile.username}'s hero banner`}
-                  style={{ width: '100%', aspectRatio: '16/6', objectFit: 'cover', display: 'block' }}
-                  onError={(e) => {
-                    e.currentTarget.style.display = 'none';
-                  }}
-                />
-                {isSelf && (
-                  <div
-                    style={{
-                      position: 'absolute',
-                      top: '0.75rem',
-                      right: '0.75rem',
-                      display: 'flex',
-                      gap: '0.5rem',
-                    }}
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <button
-                      className="btn"
-                      onClick={selectHeroFile}
-                      disabled={uploadingHero || deletingHero}
-                      style={{
-                        fontSize: '0.85rem',
-                        padding: '0.5rem 0.75rem',
-                        background: 'rgba(15, 23, 42, 0.9)',
-                        border: '1px solid rgba(148,163,184,0.3)',
-                      }}
-                    >
-                      Change
-                    </button>
-                    <button
-                      className="btn"
-                      onClick={handleDeleteHero}
-                      disabled={uploadingHero || deletingHero}
-                      style={{
-                        fontSize: '0.85rem',
-                        padding: '0.5rem 0.75rem',
-                        background: 'rgba(239, 68, 68, 0.9)',
-                        border: '1px solid rgba(239, 68, 68, 0.5)',
-                      }}
-                    >
-                      {deletingHero ? 'Deleting...' : 'Delete'}
-                    </button>
-                  </div>
-                )}
-              </>
+              <img
+                src={profile.heroCardUrl}
+                alt={`${profile.username}'s hero banner`}
+                style={{ width: '100%', aspectRatio: '16/6', objectFit: 'cover', display: 'block' }}
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                }}
+              />
             ) : (
               <div
                 style={{
@@ -440,6 +399,47 @@ export default function Profile() {
                 }}
               >
                 {isSelf ? 'Click to upload your hero license' : 'No hero license yet'}
+              </div>
+            )}
+            {isSelf && (
+              <div
+                style={{
+                  position: 'absolute',
+                  top: '0.75rem',
+                  right: '0.75rem',
+                  display: 'flex',
+                  gap: '0.5rem',
+                }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <button
+                  className="btn"
+                  onClick={selectHeroFile}
+                  disabled={uploadingHero || deletingHero}
+                  style={{
+                    fontSize: '0.85rem',
+                    padding: '0.5rem 0.75rem',
+                    background: 'rgba(15, 23, 42, 0.9)',
+                    border: '1px solid rgba(148,163,184,0.3)',
+                  }}
+                >
+                  {profile.heroCardUrl ? 'Change' : 'Upload'}
+                </button>
+                <button
+                  className="btn"
+                  onClick={handleDeleteHero}
+                  disabled={uploadingHero || deletingHero || !profile.heroCardUrl}
+                  style={{
+                    fontSize: '0.85rem',
+                    padding: '0.5rem 0.75rem',
+                    background: profile.heroCardUrl ? 'rgba(239, 68, 68, 0.9)' : 'rgba(148, 163, 184, 0.5)',
+                    border: profile.heroCardUrl ? '1px solid rgba(239, 68, 68, 0.5)' : '1px solid rgba(148, 163, 184, 0.3)',
+                    opacity: profile.heroCardUrl ? 1 : 0.6,
+                    cursor: profile.heroCardUrl ? 'pointer' : 'not-allowed',
+                  }}
+                >
+                  {deletingHero ? 'Deleting...' : 'Delete'}
+                </button>
               </div>
             )}
             {uploadingHero && (
