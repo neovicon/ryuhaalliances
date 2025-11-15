@@ -10,13 +10,13 @@ export async function getPendingUsers(req, res) {
       .select('-passwordHash')
       .sort({ createdAt: -1 });
     
-    const usersWithFullUrl = users.map(user => {
+    const usersWithFullUrl = await Promise.all(users.map(async user => {
       const userObj = user.toObject();
-      userObj.photoUrl = getPhotoUrl(userObj.photoUrl, req);
+      userObj.photoUrl = await getPhotoUrl(userObj.photoUrl, req);
       // Convert _id to id for consistency
       const { _id, ...rest } = userObj;
       return { id: _id, ...rest };
-    });
+    }));
     
     res.json({ users: usersWithFullUrl });
   } catch (error) {
@@ -46,7 +46,7 @@ export async function approveUser(req, res) {
     }
     
     const userObj = user.toObject();
-    userObj.photoUrl = getPhotoUrl(userObj.photoUrl, req);
+    userObj.photoUrl = await getPhotoUrl(userObj.photoUrl, req);
     // Convert _id to id for consistency
     const { _id, ...rest } = userObj;
     
@@ -84,7 +84,7 @@ export async function declineUser(req, res) {
     }
     
     const userObj = user.toObject();
-    userObj.photoUrl = getPhotoUrl(userObj.photoUrl, req);
+    userObj.photoUrl = await getPhotoUrl(userObj.photoUrl, req);
     // Convert _id to id for consistency
     const { _id, ...rest } = userObj;
     
@@ -117,7 +117,7 @@ export async function sendMessageToUser(req, res) {
     }
     
     const userObj = user.toObject();
-    userObj.photoUrl = getPhotoUrl(userObj.photoUrl, req);
+    userObj.photoUrl = await getPhotoUrl(userObj.photoUrl, req);
     // Convert _id to id for consistency
     const { _id, ...rest } = userObj;
     
@@ -135,14 +135,14 @@ export async function getAllUsers(req, res) {
       .select('-passwordHash')
       .sort({ points: -1, createdAt: -1 });
     
-    const usersWithFullUrl = users.map(user => {
+    const usersWithFullUrl = await Promise.all(users.map(async user => {
       const userObj = user.toObject();
-      userObj.photoUrl = getPhotoUrl(userObj.photoUrl, req);
-      userObj.heroCardUrl = getPhotoUrl(userObj.heroCardUrl, req);
+      userObj.photoUrl = await getPhotoUrl(userObj.photoUrl, req);
+      userObj.heroCardUrl = await getPhotoUrl(userObj.heroCardUrl, req);
       // Convert _id to id for consistency
       const { _id, ...rest } = userObj;
       return { id: _id, ...rest };
-    });
+    }));
     
     res.json({ users: usersWithFullUrl });
   } catch (error) {
@@ -179,7 +179,7 @@ export async function updateHouse(req, res) {
     }
     
     const userObj = user.toObject();
-    userObj.photoUrl = getPhotoUrl(userObj.photoUrl, req);
+    userObj.photoUrl = await getPhotoUrl(userObj.photoUrl, req);
     const { _id, ...rest } = userObj;
     
     res.json({ user: { id: _id, ...rest }, message: 'House updated successfully' });
@@ -210,7 +210,7 @@ export async function addModerator(req, res) {
     }
     
     const userObj = user.toObject();
-    userObj.photoUrl = getPhotoUrl(userObj.photoUrl, req);
+    userObj.photoUrl = await getPhotoUrl(userObj.photoUrl, req);
     const { _id, ...rest } = userObj;
     
     res.json({ user: { id: _id, ...rest }, message: 'User promoted to moderator successfully' });
@@ -285,7 +285,7 @@ export async function updateMemberStatus(req, res) {
     }
     
     const userObj = user.toObject();
-    userObj.photoUrl = getPhotoUrl(userObj.photoUrl, req);
+    userObj.photoUrl = await getPhotoUrl(userObj.photoUrl, req);
     const { _id, ...rest } = userObj;
     
     res.json({ user: { id: _id, ...rest }, message: 'Member status updated successfully' });
@@ -309,14 +309,14 @@ export async function getHouseMembers(req, res) {
       .select('-passwordHash')
       .sort({ memberStatus: 1, points: -1, createdAt: -1 });
     
-    const usersWithFullUrl = users.map(user => {
+    const usersWithFullUrl = await Promise.all(users.map(async user => {
       const userObj = user.toObject();
-      userObj.photoUrl = getPhotoUrl(userObj.photoUrl, req);
-      userObj.heroCardUrl = getPhotoUrl(userObj.heroCardUrl, req);
+      userObj.photoUrl = await getPhotoUrl(userObj.photoUrl, req);
+      userObj.heroCardUrl = await getPhotoUrl(userObj.heroCardUrl, req);
       // Convert _id to id for consistency
       const { _id, ...rest } = userObj;
       return { id: _id, ...rest };
-    });
+    }));
     
     res.json({ members: usersWithFullUrl });
   } catch (error) {
@@ -359,7 +359,7 @@ function getDefaultHouseDescription(houseName) {
     'Pendragon': 'A house of legendary warriors and noble knights, embodying honor, chivalry, and unwavering loyalty. Members of Pendragon stand as guardians of tradition and defenders of justice.',
     'Phantomhive': 'Masters of shadow and precision, Phantomhive represents elegance, intelligence, and strategic thinking. This house values perfection and the art of subtlety.',
     'Tempest': 'A force of nature and raw power, Tempest embodies strength, resilience, and the unstoppable spirit of those who rise above adversity.',
-    'Zodylk': 'The house of assassins and silent guardians, Zodlyck values discipline, precision, and the mastery of one\'s craft. Members are known for their dedication and skill.',
+    'Zoldyck': 'The house of assassins and silent guardians, Zoldyck values discipline, precision, and the mastery of one\'s craft. Members are known for their dedication and skill.',
     'Fritz': 'Warriors of justice and protectors of the innocent, Fritz represents courage, determination, and the unwavering pursuit of what is right.',
     'Elric': 'Scholars and alchemists, Elric embodies knowledge, transformation, and the pursuit of understanding. This house values wisdom and the power of learning.',
     'Dragneel': 'A house of fire and passion, Dragneel represents friendship, loyalty, and the burning spirit of those who never give up. Members are known for their fierce determination.',

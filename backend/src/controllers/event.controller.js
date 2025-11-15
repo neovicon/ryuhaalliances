@@ -26,7 +26,7 @@ export async function createEvent(req, res) {
     
     const eventObj = event.toObject();
     if (eventObj.imageUrl) {
-      eventObj.imageUrl = getPhotoUrl(eventObj.imageUrl, req);
+      eventObj.imageUrl = await getPhotoUrl(eventObj.imageUrl, req);
     }
     const { _id, ...rest } = eventObj;
     res.json({ event: { id: _id, ...rest } });
@@ -43,14 +43,14 @@ export async function listEvents(req, res) {
       .populate('lastEditedBy', 'username displayName')
       .sort({ createdAt: -1 });
 
-    const eventsWithFullUrl = events.map(event => {
+    const eventsWithFullUrl = await Promise.all(events.map(async event => {
       const eventObj = event.toObject();
       if (eventObj.imageUrl) {
-        eventObj.imageUrl = getPhotoUrl(eventObj.imageUrl, req);
+        eventObj.imageUrl = await getPhotoUrl(eventObj.imageUrl, req);
       }
       const { _id, ...rest } = eventObj;
       return { id: _id, ...rest };
-    });
+    }));
 
     res.json({ events: eventsWithFullUrl });
   } catch (error) {
@@ -91,7 +91,7 @@ export async function updateEvent(req, res) {
 
     const eventObj = event.toObject();
     if (eventObj.imageUrl) {
-      eventObj.imageUrl = getPhotoUrl(eventObj.imageUrl, req);
+      eventObj.imageUrl = await getPhotoUrl(eventObj.imageUrl, req);
     }
     const { _id, ...rest } = eventObj;
     res.json({ event: { id: _id, ...rest } });
@@ -143,18 +143,18 @@ export async function getEventById(req, res) {
 
     const eventObj = event.toObject();
     if (eventObj.imageUrl) {
-      eventObj.imageUrl = getPhotoUrl(eventObj.imageUrl, req);
+      eventObj.imageUrl = await getPhotoUrl(eventObj.imageUrl, req);
     }
     if (eventObj.createdBy && eventObj.createdBy.photoUrl) {
-      eventObj.createdBy.photoUrl = getPhotoUrl(eventObj.createdBy.photoUrl, req);
+      eventObj.createdBy.photoUrl = await getPhotoUrl(eventObj.createdBy.photoUrl, req);
     }
     if (eventObj.comments) {
-      eventObj.comments = eventObj.comments.map(comment => {
+      eventObj.comments = await Promise.all(eventObj.comments.map(async comment => {
         if (comment.author && comment.author.photoUrl) {
-          comment.author.photoUrl = getPhotoUrl(comment.author.photoUrl, req);
+          comment.author.photoUrl = await getPhotoUrl(comment.author.photoUrl, req);
         }
         return comment;
-      });
+      }));
     }
     const { _id, ...rest } = eventObj;
     res.json({ event: { id: _id, ...rest } });
@@ -196,18 +196,18 @@ export async function addComment(req, res) {
 
     const eventObj = event.toObject();
     if (eventObj.imageUrl) {
-      eventObj.imageUrl = getPhotoUrl(eventObj.imageUrl, req);
+      eventObj.imageUrl = await getPhotoUrl(eventObj.imageUrl, req);
     }
     if (eventObj.createdBy && eventObj.createdBy.photoUrl) {
-      eventObj.createdBy.photoUrl = getPhotoUrl(eventObj.createdBy.photoUrl, req);
+      eventObj.createdBy.photoUrl = await getPhotoUrl(eventObj.createdBy.photoUrl, req);
     }
     if (eventObj.comments) {
-      eventObj.comments = eventObj.comments.map(comment => {
+      eventObj.comments = await Promise.all(eventObj.comments.map(async comment => {
         if (comment.author && comment.author.photoUrl) {
-          comment.author.photoUrl = getPhotoUrl(comment.author.photoUrl, req);
+          comment.author.photoUrl = await getPhotoUrl(comment.author.photoUrl, req);
         }
         return comment;
-      });
+      }));
     }
     const { _id, ...rest } = eventObj;
     res.status(201).json({ event: { id: _id, ...rest } });

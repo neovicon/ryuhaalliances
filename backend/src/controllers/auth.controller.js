@@ -46,7 +46,7 @@ export async function signup(req, res) {
     displayName: cleanDisplayName
   });
   const token = signJwt({ id: user._id, role: user.role, username: user.username });
-  return res.status(201).json({ token, user: sanitizeUser(user, req) });
+  return res.status(201).json({ token, user: await sanitizeUser(user, req) });
 }
 
 export const validateLogin = [
@@ -66,7 +66,11 @@ export async function login(req, res) {
   
   // Check if user account is approved
   if (user.status === 'pending') {
-    return res.status(403).json({ error: 'Your account is pending approval. Please wait for an admin to review your account.' });
+    const message = user.adminMessage ? ` Message: ${user.adminMessage}` : '';
+    return res.status(403).json({ 
+      error: 'Your account is pending approval. Please wait for an admin to review your account.' + message,
+      adminMessage: user.adminMessage || null
+    });
   }
   if (user.status === 'declined') {
     const message = user.adminMessage ? ` Your account has been declined. Message: ${user.adminMessage}` : ' Your account has been declined.';
@@ -74,7 +78,7 @@ export async function login(req, res) {
   }
   
   const token = signJwt({ id: user._id, role: user.role, username: user.username });
-  res.json({ token, user: sanitizeUser(user, req) });
+  res.json({ token, user: await sanitizeUser(user, req) });
 }
 
 export async function verifyEmail(req, res) {
@@ -101,7 +105,7 @@ export async function resendVerification(req, res) {
   res.json({ ok: true });
 }
 
-function sanitizeUser(user, req = null) {
+async function sanitizeUser(user, req = null) {
   const userObj = user.toObject ? user.toObject() : user;
   const { _id, email, username, displayName, sigil, house, photoUrl, heroCardUrl, points, role, status, adminMessage, rank, createdAt, updatedAt } = userObj;
   return { 
@@ -111,8 +115,8 @@ function sanitizeUser(user, req = null) {
     displayName, 
     sigil, 
     house, 
-    photoUrl: getPhotoUrl(photoUrl, req), 
-    heroCardUrl: getPhotoUrl(heroCardUrl, req),
+    photoUrl: await getPhotoUrl(photoUrl, req), 
+    heroCardUrl: await getPhotoUrl(heroCardUrl, req),
     points, 
     role, 
     status,

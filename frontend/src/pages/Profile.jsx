@@ -10,7 +10,7 @@ function getHouseImageSrc(houseName) {
     Pendragon: 'pendragon',
     Phantomhive: 'phantomhive',
     Tempest: 'tempest',
-    Zodylk: 'zodlyck',
+    Zoldyck: 'zoldyck',
     Fritz: 'fritz',
     Elric: 'elric',
     Dragneel: 'dragneel',
@@ -52,7 +52,7 @@ export default function Profile() {
   const isSelf = Boolean(viewerId && profileId && String(viewerId) === String(profileId));
 
   const rankName = profile?.rank || calculateRank(profile?.points || 0);
-  const statusLabel = profile?.status ? profile.status[0].toUpperCase() + profile.status.slice(1) : 'Unknown';
+  const memberStatusLabel = profile?.memberStatus || 'Not assigned';
   const memberSince = profile?.createdAt
     ? new Date(profile.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
     : 'Unknown';
@@ -65,11 +65,11 @@ export default function Profile() {
       { label: 'Rank', value: rankName },
       { label: 'Points', value: profile.points ?? 0 },
       { label: 'Sigil', value: profile.sigil },
-      { label: 'Status', value: statusLabel },
+      { label: 'Member Status', value: memberStatusLabel },
       { label: 'Member Since', value: memberSince },
     ];
     return rows.filter((row) => row.value !== undefined && row.value !== null && row.value !== '');
-  }, [profile, memberSince, rankName, statusLabel]);
+  }, [profile, memberSince, rankName, memberStatusLabel]);
 
   useEffect(() => {
     if (!authUser && localStorage.getItem('token')) {

@@ -61,7 +61,7 @@ export default function Home() {
             { name: 'Pendragon', img: '/assets/pendragon.jpeg' },
             { name: 'Phantomhive', img: '/assets/phantomhive.jpeg' },
             { name: 'Tempest', img: '/assets/tempest.jpeg' },
-            { name: 'Zodlyck', img: '/assets/zodlyck.jpeg' },
+            { name: 'Zoldyck', img: '/assets/zoldyck.jpeg' },
             { name: 'Fritz', img: '/assets/fritz.jpeg' },
             { name: 'Elric', img: '/assets/elric.jpeg' },
             { name: 'Dragneel', img: '/assets/dragneel.jpeg' },

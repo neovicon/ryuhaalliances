@@ -33,11 +33,11 @@ export async function leaderboard(req, res) {
     .select('username house points photoUrl rank')
     .sort({ points: -1 })
     .limit(50);
-  const topWithFullUrl = top.map(user => {
+  const topWithFullUrl = await Promise.all(top.map(async user => {
     const userObj = user.toObject();
-    userObj.photoUrl = getPhotoUrl(userObj.photoUrl, req);
+    userObj.photoUrl = await getPhotoUrl(userObj.photoUrl, req);
     return userObj;
-  });
+  }));
   res.json({ top: topWithFullUrl });
 }
 

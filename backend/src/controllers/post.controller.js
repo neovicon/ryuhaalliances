@@ -12,20 +12,20 @@ export async function createPost(req, res) {
   await post.populate('author', 'username photoUrl');
   const postObj = post.toObject();
   if (postObj.author && postObj.author.photoUrl) {
-    postObj.author.photoUrl = getPhotoUrl(postObj.author.photoUrl, req);
+    postObj.author.photoUrl = await getPhotoUrl(postObj.author.photoUrl, req);
   }
   res.status(201).json({ post: postObj });
 }
 
 export async function listPosts(req, res) {
   const posts = await Post.find({}).populate('author', 'username photoUrl').sort({ createdAt: -1 }).limit(100);
-  const postsWithFullUrl = posts.map(post => {
+  const postsWithFullUrl = await Promise.all(posts.map(async post => {
     const postObj = post.toObject();
     if (postObj.author && postObj.author.photoUrl) {
-      postObj.author.photoUrl = getPhotoUrl(postObj.author.photoUrl, req);
+      postObj.author.photoUrl = await getPhotoUrl(postObj.author.photoUrl, req);
     }
     return postObj;
-  });
+  }));
   res.json({ posts: postsWithFullUrl });
 }
 
@@ -41,15 +41,15 @@ export async function addComment(req, res) {
   await post.populate('comments.author', 'username photoUrl');
   const postObj = post.toObject();
   if (postObj.author && postObj.author.photoUrl) {
-    postObj.author.photoUrl = getPhotoUrl(postObj.author.photoUrl, req);
+    postObj.author.photoUrl = await getPhotoUrl(postObj.author.photoUrl, req);
   }
   if (postObj.comments) {
-    postObj.comments = postObj.comments.map(comment => {
-      if (comment.author && comment.author.photoUrl) {
-        comment.author.photoUrl = getPhotoUrl(comment.author.photoUrl, req);
-      }
-      return comment;
-    });
+      postObj.comments = await Promise.all(postObj.comments.map(async comment => {
+        if (comment.author && comment.author.photoUrl) {
+          comment.author.photoUrl = await getPhotoUrl(comment.author.photoUrl, req);
+        }
+        return comment;
+      }));
   }
   res.status(201).json({ post: postObj });
 }
@@ -108,13 +108,13 @@ export async function listPostsByUser(req, res) {
       .sort({ createdAt: -1 })
       .limit(100);
 
-    const postsWithFullUrl = posts.map(post => {
+    const postsWithFullUrl = await Promise.all(posts.map(async post => {
       const postObj = post.toObject();
       if (postObj.author && postObj.author.photoUrl) {
-        postObj.author.photoUrl = getPhotoUrl(postObj.author.photoUrl, req);
+        postObj.author.photoUrl = await getPhotoUrl(postObj.author.photoUrl, req);
       }
       return postObj;
-    });
+    }));
 
     res.json({ posts: postsWithFullUrl });
   } catch (error) {

@@ -10,7 +10,7 @@ export async function updateDisplayName(req, res) {
   if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
   const user = await User.findByIdAndUpdate(req.user.id, { displayName: req.body.displayName }, { new: true });
   const userObj = user.toObject();
-  userObj.photoUrl = getPhotoUrl(userObj.photoUrl, req);
+  userObj.photoUrl = await getPhotoUrl(userObj.photoUrl, req);
   res.json({ user: userObj });
 }
 
@@ -22,11 +22,11 @@ export async function searchUsers(req, res) {
   if (q) filter.username = { $regex: q, $options: 'i' };
   if (house) filter.house = house;
   const users = await User.find(filter).select('username displayName house points photoUrl');
-  const usersWithFullUrl = users.map(user => {
+  const usersWithFullUrl = await Promise.all(users.map(async user => {
     const userObj = user.toObject();
-    userObj.photoUrl = getPhotoUrl(userObj.photoUrl, req);
+    userObj.photoUrl = await getPhotoUrl(userObj.photoUrl, req);
     return userObj;
-  });
+  }));
   res.json({ users: usersWithFullUrl });
 }
 
@@ -36,8 +36,8 @@ export async function getMe(req, res) {
     return res.status(404).json({ error: 'User not found' });
   }
   const userObj = me.toObject();
-  userObj.photoUrl = getPhotoUrl(userObj.photoUrl, req);
-  userObj.heroCardUrl = getPhotoUrl(userObj.heroCardUrl, req);
+  userObj.photoUrl = await getPhotoUrl(userObj.photoUrl, req);
+  userObj.heroCardUrl = await getPhotoUrl(userObj.heroCardUrl, req);
   // Convert _id to id for consistency
   const { _id, ...rest } = userObj;
   res.json({ user: { id: _id, ...rest } });
@@ -45,21 +45,23 @@ export async function getMe(req, res) {
 
 export async function updatePhoto(req, res) {
   if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
-  const url = `/uploads/${req.file.filename}`;
-  const user = await User.findByIdAndUpdate(req.user.id, { photoUrl: url }, { new: true });
-  // Return user with full photoUrl
+  // Use storagePath from Supabase (filename only), otherwise fall back to local path
+  const filePath = req.file.storagePath || `/uploads/${req.file.filename}`;
+  const user = await User.findByIdAndUpdate(req.user.id, { photoUrl: filePath }, { new: true });
+  // Return user with signed URL for photoUrl
   const userObj = user.toObject();
-  userObj.photoUrl = getPhotoUrl(userObj.photoUrl, req);
+  userObj.photoUrl = await getPhotoUrl(userObj.photoUrl, req);
   res.json({ user: userObj });
 }
 
 export async function updateHeroCard(req, res) {
   if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
-  const url = `/uploads/${req.file.filename}`;
-  const user = await User.findByIdAndUpdate(req.user.id, { heroCardUrl: url }, { new: true });
-  // Return user with full heroCardUrl
+  // Use storagePath from Supabase (filename only), otherwise fall back to local path
+  const filePath = req.file.storagePath || `/uploads/${req.file.filename}`;
+  const user = await User.findByIdAndUpdate(req.user.id, { heroCardUrl: filePath }, { new: true });
+  // Return user with signed URL for heroCardUrl
   const userObj = user.toObject();
-  userObj.heroCardUrl = getPhotoUrl(userObj.heroCardUrl, req);
+  userObj.heroCardUrl = await getPhotoUrl(userObj.heroCardUrl, req);
   res.json({ user: userObj });
 }
 
@@ -122,8 +124,8 @@ export async function getPublicProfile(req, res) {
     }
 
     const userObj = user.toObject();
-    userObj.photoUrl = getPhotoUrl(userObj.photoUrl, req);
-    userObj.heroCardUrl = getPhotoUrl(userObj.heroCardUrl, req);
+    userObj.photoUrl = await getPhotoUrl(userObj.photoUrl, req);
+    userObj.heroCardUrl = await getPhotoUrl(userObj.heroCardUrl, req);
 
     const { _id, email, adminMessage, ...rest } = userObj;
     const publicUser = {
@@ -136,6 +138,7 @@ export async function getPublicProfile(req, res) {
       rank: rest.rank,
       role: rest.role,
       status: rest.status,
+      memberStatus: rest.memberStatus,
       photoUrl: rest.photoUrl,
       heroCardUrl: rest.heroCardUrl,
       createdAt: rest.createdAt,
@@ -178,9 +181,9 @@ export async function publicSearch(req, res) {
       .select('username displayName sigil house photoUrl')
       .limit(10);
 
-    const results = users.map(user => {
+    const results = await Promise.all(users.map(async user => {
       const userObj = user.toObject();
-      userObj.photoUrl = getPhotoUrl(userObj.photoUrl, req);
+      userObj.photoUrl = await getPhotoUrl(userObj.photoUrl, req);
       return {
         id: userObj._id,
         username: userObj.username,
@@ -189,7 +192,7 @@ export async function publicSearch(req, res) {
         house: userObj.house,
         photoUrl: userObj.photoUrl
       };
-    });
+    }));
 
     res.json({ users: results });
   } catch (error) {

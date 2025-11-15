@@ -9,7 +9,7 @@ function getHouseImageSrc(houseName) {
     'Pendragon': 'pendragon',
     'Phantomhive': 'phantomhive',
     'Tempest': 'tempest',
-    'Zodylk': 'zodlyck', // Note: file is zodlyck.jpeg but house name is Zodylk
+    'Zoldyck': 'zoldyck',
     'Fritz': 'fritz',
     'Elric': 'elric',
     'Dragneel': 'dragneel',
