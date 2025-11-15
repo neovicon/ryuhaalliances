@@ -45,6 +45,7 @@ export default function Profile() {
   const [avatarFile, setAvatarFile] = useState(null);
   const [uploadingHero, setUploadingHero] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [deletingHero, setDeletingHero] = useState(false);
 
 
   const viewerId = authUser?.id || authUser?._id;
@@ -245,6 +246,23 @@ export default function Profile() {
     }
   };
 
+  const handleDeleteHero = async () => {
+    if (!isSelf || !profile.heroCardUrl) return;
+    if (!confirm('Are you sure you want to delete your hero license? This action cannot be undone.')) {
+      return;
+    }
+    setDeletingHero(true);
+    try {
+      await client.delete('/users/me/hero-card');
+      await loadSelfProfile();
+    } catch (error) {
+      console.error('Failed to delete hero license:', error);
+      alert(error?.response?.data?.error || 'Failed to delete hero license');
+    } finally {
+      setDeletingHero(false);
+    }
+  };
+
   return (
     <div className="container" style={{ padding: '2rem 1rem 3rem' }}>
       <div
@@ -354,17 +372,58 @@ export default function Profile() {
               cursor: isSelf ? 'pointer' : 'default',
               position: 'relative',
             }}
-            onClick={isSelf ? selectHeroFile : undefined}
+            onClick={isSelf && !profile.heroCardUrl ? selectHeroFile : undefined}
           >
             {profile.heroCardUrl ? (
-              <img
-                src={profile.heroCardUrl}
-                alt={`${profile.username}'s hero banner`}
-                style={{ width: '100%', aspectRatio: '16/6', objectFit: 'cover', display: 'block' }}
-                onError={(e) => {
-                  e.currentTarget.style.display = 'none';
-                }}
-              />
+              <>
+                <img
+                  src={profile.heroCardUrl}
+                  alt={`${profile.username}'s hero banner`}
+                  style={{ width: '100%', aspectRatio: '16/6', objectFit: 'cover', display: 'block' }}
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                  }}
+                />
+                {isSelf && (
+                  <div
+                    style={{
+                      position: 'absolute',
+                      top: '0.75rem',
+                      right: '0.75rem',
+                      display: 'flex',
+                      gap: '0.5rem',
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <button
+                      className="btn"
+                      onClick={selectHeroFile}
+                      disabled={uploadingHero || deletingHero}
+                      style={{
+                        fontSize: '0.85rem',
+                        padding: '0.5rem 0.75rem',
+                        background: 'rgba(15, 23, 42, 0.9)',
+                        border: '1px solid rgba(148,163,184,0.3)',
+                      }}
+                    >
+                      Change
+                    </button>
+                    <button
+                      className="btn"
+                      onClick={handleDeleteHero}
+                      disabled={uploadingHero || deletingHero}
+                      style={{
+                        fontSize: '0.85rem',
+                        padding: '0.5rem 0.75rem',
+                        background: 'rgba(239, 68, 68, 0.9)',
+                        border: '1px solid rgba(239, 68, 68, 0.5)',
+                      }}
+                    >
+                      {deletingHero ? 'Deleting...' : 'Delete'}
+                    </button>
+                  </div>
+                )}
+              </>
             ) : (
               <div
                 style={{
@@ -397,6 +456,22 @@ export default function Profile() {
                 }}
               >
                 Uploading...
+              </div>
+            )}
+            {deletingHero && (
+              <div
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  background: 'rgba(15, 23, 42, 0.6)',
+                  color: 'white',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontWeight: 600,
+                }}
+              >
+                Deleting...
               </div>
             )}
           </div>

@@ -65,6 +65,19 @@ export async function updateHeroCard(req, res) {
   res.json({ user: userObj });
 }
 
+export async function deleteHeroCard(req, res) {
+  try {
+    const user = await User.findByIdAndUpdate(req.user.id, { heroCardUrl: null }, { new: true });
+    // Return user with updated heroCardUrl (should be null)
+    const userObj = user.toObject();
+    userObj.heroCardUrl = await getPhotoUrl(userObj.heroCardUrl, req);
+    res.json({ user: userObj });
+  } catch (error) {
+    console.error('Error deleting hero card:', error);
+    res.status(500).json({ error: 'Failed to delete hero card' });
+  }
+}
+
 export const validateChangePassword = [
   body('currentPassword').notEmpty().withMessage('Current password is required'),
   body('newPassword').isLength({ min: 8 }).withMessage('New password must be at least 8 characters long'),
