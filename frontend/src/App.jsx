@@ -13,6 +13,8 @@ import Codex from './pages/Codex.jsx'
 import Events from './pages/Events.jsx'
 import EventDetail from './pages/EventDetail.jsx'
 import HouseDetail from './pages/HouseDetail.jsx'
+import Announcements from './pages/Announcements.jsx'
+import AnnouncementDetail from './pages/AnnouncementDetail.jsx'
 
 function Nav() {
   const { pathname } = useLocation()
@@ -91,6 +93,8 @@ export default function App() {
         <Route path="/events" element={<Events />} />
         <Route path="/events/:id" element={<EventDetail />} />
         <Route path="/houses/:slug" element={<HouseDetail />} />
+        <Route path="/announcements" element={<Announcements />} />
+        <Route path="/announcements/:id" element={<AnnouncementDetail />} />
       </Routes>
       <Footer />
     </>

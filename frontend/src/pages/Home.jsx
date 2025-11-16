@@ -6,9 +6,12 @@ export default function Home() {
   const navigate = useNavigate();
   const [events, setEvents] = useState([]);
   const [loadingEvents, setLoadingEvents] = useState(true);
+  const [announcements, setAnnouncements] = useState([]);
+  const [loadingAnnouncements, setLoadingAnnouncements] = useState(true);
 
   useEffect(() => {
     loadEvents();
+    loadAnnouncements();
   }, []);
 
   async function loadEvents() {
@@ -20,6 +23,18 @@ export default function Home() {
       console.error('Error loading events:', error);
     } finally {
       setLoadingEvents(false);
+    }
+  }
+
+  async function loadAnnouncements() {
+    try {
+      setLoadingAnnouncements(true);
+      const { data } = await client.get('/announcements', { params: { activeOnly: 'true' } });
+      setAnnouncements(data.announcements || []);
+    } catch (error) {
+      console.error('Error loading announcements:', error);
+    } finally {
+      setLoadingAnnouncements(false);
     }
   }
 
@@ -45,6 +60,50 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Announcements Section */}
+      {!loadingAnnouncements && announcements.length > 0 && (
+        <section className="container" style={{ padding: '2rem 1rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+            <h3 className="hdr" style={{ margin: 0 }}>Announcements</h3>
+            <button className="btn" onClick={() => navigate('/announcements')} style={{ background: 'transparent', border: '1px solid rgba(148,163,184,0.3)' }}>
+              View Announcements
+            </button>
+          </div>
+          <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))' }}>
+            {announcements.slice(0, 3).map((announcement) => (
+              <div key={announcement.id} className="card" style={{ cursor: 'pointer' }} onClick={() => navigate(`/announcements/${announcement.id}`)}>
+                <h4 className="hdr" style={{ marginBottom: '0.5rem', fontSize: '1.2rem' }}>{announcement.title}</h4>
+                {announcement.imageUrl && (
+                  <img
+                    src={announcement.imageUrl}
+                    alt={announcement.title}
+                    style={{ width: '100%', maxHeight: 200, borderRadius: '8px', marginBottom: '0.75rem', objectFit: 'cover' }}
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                    }}
+                  />
+                )}
+                <div style={{ 
+                  color: 'var(--muted)', 
+                  whiteSpace: 'pre-wrap', 
+                  lineHeight: 1.6,
+                  display: '-webkit-box',
+                  WebkitLineClamp: 3,
+                  WebkitBoxOrient: 'vertical',
+                  overflow: 'hidden'
+                }}>
+                  {announcement.content}
+                </div>
+                <div style={{ color: 'var(--muted)', fontSize: '0.8rem', marginTop: '0.75rem' }}>
+                  {new Date(announcement.createdAt).toLocaleDateString()}
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
       <section className="container" style={{ padding: '2rem 1rem' }}>
         <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))' }}>
           <div className="card"><h4 className="hdr">Our Motive</h4><p style={{ color: 'var(--muted)' }}></p></div>
