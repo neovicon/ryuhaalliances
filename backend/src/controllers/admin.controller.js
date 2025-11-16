@@ -191,6 +191,7 @@ export async function updateHouse(req, res) {
 
 export const validateAddModerator = [
   body('userId').notEmpty().withMessage('User ID is required'),
+  body('moderatorType').isIn(['Arbiter', 'Artisan', 'Vigil', 'Aesther', 'Gatekeeper', 'Overseer']).withMessage('Valid moderator type is required'),
 ];
 
 export async function addModerator(req, res) {
@@ -198,10 +199,10 @@ export async function addModerator(req, res) {
   if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
   try {
-    const { userId } = req.body;
+    const { userId, moderatorType } = req.body;
     const user = await User.findByIdAndUpdate(
       userId,
-      { role: 'moderator' },
+      { role: 'moderator', moderatorType },
       { new: true }
     ).select('-passwordHash');
     
@@ -418,6 +419,113 @@ export async function updateHouseDetails(req, res) {
   } catch (error) {
     console.error('Error updating house details:', error);
     res.status(500).json({ error: 'Failed to update house details' });
+  }
+}
+
+export const validateUpdateUsername = [
+  body('userId').notEmpty().withMessage('User ID is required'),
+  body('username').isString().isLength({ min: 1, max: 32 }).withMessage('Username must be between 1 and 32 characters'),
+];
+
+export async function updateUsername(req, res) {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+
+  try {
+    const { userId, username } = req.body;
+    const cleanUsername = username.trim();
+    
+    // Check if username is already taken by another user
+    const existingUser = await User.findOne({ username: cleanUsername, _id: { $ne: userId } });
+    if (existingUser) {
+      return res.status(409).json({ error: 'Username already in use' });
+    }
+    
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { username: cleanUsername },
+      { new: true }
+    ).select('-passwordHash');
+    
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    const userObj = user.toObject();
+    userObj.photoUrl = await getPhotoUrl(userObj.photoUrl, req);
+    const { _id, ...rest } = userObj;
+    
+    res.json({ user: { id: _id, ...rest }, message: 'Username updated successfully' });
+  } catch (error) {
+    console.error('Error updating username:', error);
+    res.status(500).json({ error: 'Failed to update username' });
+  }
+}
+
+export const validateUpdateDisplayName = [
+  body('userId').notEmpty().withMessage('User ID is required'),
+  body('displayName').optional().isString().isLength({ min: 1, max: 64 }).withMessage('Display name must be between 1 and 64 characters'),
+];
+
+export async function updateDisplayName(req, res) {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+
+  try {
+    const { userId, displayName } = req.body;
+    const cleanDisplayName = displayName?.trim() || null;
+    
+    const updateData = cleanDisplayName ? { displayName: cleanDisplayName } : { $unset: { displayName: 1 } };
+    
+    const user = await User.findByIdAndUpdate(
+      userId,
+      updateData,
+      { new: true }
+    ).select('-passwordHash');
+    
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    const userObj = user.toObject();
+    userObj.photoUrl = await getPhotoUrl(userObj.photoUrl, req);
+    const { _id, ...rest } = userObj;
+    
+    res.json({ user: { id: _id, ...rest }, message: 'Display name updated successfully' });
+  } catch (error) {
+    console.error('Error updating display name:', error);
+    res.status(500).json({ error: 'Failed to update display name' });
+  }
+}
+
+export const validateRemoveModerator = [
+  body('userId').notEmpty().withMessage('User ID is required'),
+];
+
+export async function removeModerator(req, res) {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+
+  try {
+    const { userId } = req.body;
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { role: 'user', moderatorType: null },
+      { new: true }
+    ).select('-passwordHash');
+    
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    const userObj = user.toObject();
+    userObj.photoUrl = await getPhotoUrl(userObj.photoUrl, req);
+    const { _id, ...rest } = userObj;
+    
+    res.json({ user: { id: _id, ...rest }, message: 'Moderator role removed successfully' });
+  } catch (error) {
+    console.error('Error removing moderator:', error);
+    res.status(500).json({ error: 'Failed to remove moderator' });
   }
 }
 

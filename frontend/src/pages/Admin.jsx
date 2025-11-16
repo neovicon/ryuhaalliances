@@ -7,6 +7,8 @@ const HOUSES = ['Pendragon', 'Phantomhive', 'Tempest', 'Zodylk', 'Fritz', 'Elric
 
 const MEMBER_STATUSES = ['Guardian', 'Lord of the House', 'General', 'Seeker', 'Herald', 'Watcher', 'Knight of Genesis', 'Knight of I', 'Knight of II', 'Knight of III', 'Knight of IV', 'Knight of V', 'Commoner'];
 
+const MODERATOR_TYPES = ['Arbiter', 'Artisan', 'Vigil', 'Aesther', 'Gatekeeper', 'Overseer'];
+
 export default function Admin() {
   const { user: authUser } = useAuth();
   const [q, setQ] = useState('');
@@ -16,8 +18,8 @@ export default function Admin() {
   const [messageModal, setMessageModal] = useState({ open: false, userId: null, message: '' });
   const [declineModal, setDeclineModal] = useState({ open: false, userId: null, message: '' });
   const [editingUser, setEditingUser] = useState({ userId: null, field: null });
-  const [editValues, setEditValues] = useState({ points: '', rank: '', house: '', memberStatus: '' });
-  const [moderatorModal, setModeratorModal] = useState({ open: false, userId: null });
+  const [editValues, setEditValues] = useState({ points: '', rank: '', house: '', memberStatus: '', username: '', displayName: '' });
+  const [moderatorModal, setModeratorModal] = useState({ open: false, userId: null, moderatorType: 'Vigil' });
   const [houses, setHouses] = useState([]);
   const [selectedHouseName, setSelectedHouseName] = useState('');
   const [selectedHouse, setSelectedHouse] = useState(null);
@@ -123,16 +125,54 @@ export default function Admin() {
     }
   };
 
-  const handleAddModerator = async () => {
-    if (!moderatorModal.userId) return;
+  const handleUpdateUsername = async (userId, newUsername) => {
     try {
-      await client.post('/admin/add-moderator', { userId: moderatorModal.userId });
+      await client.post('/admin/update-username', { userId, username: newUsername });
       await loadAllUsers();
-      setModeratorModal({ open: false, userId: null });
+      setEditingUser({ userId: null, field: null });
+      alert('Username updated successfully');
+    } catch (error) {
+      console.error('Error updating username:', error);
+      alert(error?.response?.data?.error || 'Failed to update username');
+    }
+  };
+
+  const handleUpdateDisplayName = async (userId, newDisplayName) => {
+    try {
+      await client.post('/admin/update-display-name', { userId, displayName: newDisplayName || null });
+      await loadAllUsers();
+      setEditingUser({ userId: null, field: null });
+      alert('Display name updated successfully');
+    } catch (error) {
+      console.error('Error updating display name:', error);
+      alert(error?.response?.data?.error || 'Failed to update display name');
+    }
+  };
+
+  const handleAddModerator = async () => {
+    if (!moderatorModal.userId || !moderatorModal.moderatorType) return;
+    try {
+      await client.post('/admin/add-moderator', { userId: moderatorModal.userId, moderatorType: moderatorModal.moderatorType });
+      await loadAllUsers();
+      setModeratorModal({ open: false, userId: null, moderatorType: 'Vigil' });
       alert('User promoted to moderator successfully');
     } catch (error) {
       console.error('Error adding moderator:', error);
       alert(error?.response?.data?.error || 'Failed to add moderator');
+    }
+  };
+
+  const handleRemoveModerator = async (userId) => {
+    if (!userId) return;
+    const confirmed = window.confirm('Are you sure you want to remove the moderator role from this user?');
+    if (!confirmed) return;
+    try {
+      await client.post('/admin/remove-moderator', { userId });
+      await loadAllUsers();
+      alert('Moderator role removed successfully');
+    } catch (error) {
+      console.error('Error removing moderator:', error);
+      alert(error?.response?.data?.error || 'Failed to remove moderator');
     }
   };
 
@@ -161,13 +201,15 @@ export default function Admin() {
       points: currentValue?.points || '', 
       rank: currentValue?.rank || '', 
       house: currentValue?.house || '',
-      memberStatus: currentValue?.memberStatus || ''
+      memberStatus: currentValue?.memberStatus || '',
+      username: currentValue?.username || '',
+      displayName: currentValue?.displayName || ''
     });
   };
   
   const cancelEdit = () => {
     setEditingUser({ userId: null, field: null });
-    setEditValues({ points: '', rank: '', house: '', memberStatus: '' });
+    setEditValues({ points: '', rank: '', house: '', memberStatus: '', username: '', displayName: '' });
   };
   
   const handleApprove = async (userId) => {
@@ -544,6 +586,8 @@ export default function Admin() {
               const isEditingRank = editingUser.userId === userId && editingUser.field === 'rank';
               const isEditingHouse = editingUser.userId === userId && editingUser.field === 'house';
               const isEditingMemberStatus = editingUser.userId === userId && editingUser.field === 'memberStatus';
+              const isEditingUsername = editingUser.userId === userId && editingUser.field === 'username';
+              const isEditingDisplayName = editingUser.userId === userId && editingUser.field === 'displayName';
               const userRank = u.rank || calculateRank(u.points || 0);
               const statusBadge = (
                 <span
@@ -592,7 +636,7 @@ export default function Admin() {
                         : 'rgba(107, 114, 128, 1)'
                   }}
                 >
-                  {u.role || 'user'}
+                  {u.role === 'moderator' && u.moderatorType ? `${u.moderatorType}` : (u.role || 'user')}
                 </span>
               );
 
@@ -623,6 +667,88 @@ export default function Admin() {
                   </div>
 
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', alignItems: 'center' }}>
+                      <span style={{ color: 'var(--muted)', fontSize: '0.85rem' }}>Username</span>
+                      {isEditingUsername ? (
+                        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                          <input
+                            type="text"
+                            className="input"
+                            value={editValues.username}
+                            onChange={(e) => setEditValues({ ...editValues, username: e.target.value })}
+                            style={{ padding: '0.25rem 0.5rem', fontSize: '0.9rem', width: 200 }}
+                            placeholder="Enter username"
+                          />
+                          <button
+                            className="btn"
+                            onClick={() => handleUpdateUsername(userId, editValues.username)}
+                            style={{ padding: '0.3rem 0.6rem', fontSize: '0.85rem' }}
+                          >
+                            ✓
+                          </button>
+                          <button
+                            className="btn"
+                            onClick={cancelEdit}
+                            style={{ padding: '0.3rem 0.6rem', fontSize: '0.85rem', background: 'transparent', border: '1px solid #1f2937' }}
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ) : (
+                        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                          <span>@{u.username}</span>
+                          <button
+                            className="btn"
+                            onClick={() => startEdit(userId, 'username', { username: u.username })}
+                            style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem', background: 'transparent', border: '1px solid #1f2937' }}
+                          >
+                            Edit
+                          </button>
+                        </div>
+                      )}
+                    </div>
+
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', alignItems: 'center' }}>
+                      <span style={{ color: 'var(--muted)', fontSize: '0.85rem' }}>Display Name</span>
+                      {isEditingDisplayName ? (
+                        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                          <input
+                            type="text"
+                            className="input"
+                            value={editValues.displayName}
+                            onChange={(e) => setEditValues({ ...editValues, displayName: e.target.value })}
+                            style={{ padding: '0.25rem 0.5rem', fontSize: '0.9rem', width: 200 }}
+                            placeholder="Enter display name"
+                          />
+                          <button
+                            className="btn"
+                            onClick={() => handleUpdateDisplayName(userId, editValues.displayName)}
+                            style={{ padding: '0.3rem 0.6rem', fontSize: '0.85rem' }}
+                          >
+                            ✓
+                          </button>
+                          <button
+                            className="btn"
+                            onClick={cancelEdit}
+                            style={{ padding: '0.3rem 0.6rem', fontSize: '0.85rem', background: 'transparent', border: '1px solid #1f2937' }}
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ) : (
+                        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                          <span>{u.displayName || 'None'}</span>
+                          <button
+                            className="btn"
+                            onClick={() => startEdit(userId, 'displayName', { displayName: u.displayName || '' })}
+                            style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem', background: 'transparent', border: '1px solid #1f2937' }}
+                          >
+                            Edit
+                          </button>
+                        </div>
+                      )}
+                    </div>
+
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', alignItems: 'center' }}>
                       <span style={{ color: 'var(--muted)', fontSize: '0.85rem' }}>House</span>
                       {isEditingHouse ? (
@@ -818,6 +944,15 @@ export default function Admin() {
                         Add Moderator
                       </button>
                     )}
+                    {u.role === 'moderator' && (
+                      <button
+                        className="btn"
+                        onClick={() => handleRemoveModerator(userId)}
+                        style={{ padding: '0.3rem 0.6rem', fontSize: '0.85rem', background: 'rgba(251, 191, 36, 0.2)', border: '1px solid rgba(251, 191, 36, 0.4)' }}
+                      >
+                        Remove Moderator
+                      </button>
+                    )}
                     {u.role !== 'admin' && (
                       <button
                         className="btn"
@@ -926,10 +1061,35 @@ export default function Admin() {
           <div className="card" style={{ maxWidth: 500, width: '90%' }}>
             <h4 className="hdr" style={{ marginBottom: '1rem' }}>Add Moderator</h4>
             <p style={{ color: 'var(--muted)', marginBottom: '1rem' }}>
-              Are you sure you want to promote this user to moderator? They will be able to manage events.
+              Select the moderator type for this user. Each type has different permissions.
             </p>
+            <div style={{ marginBottom: '1rem' }}>
+              <label style={{ display: 'block', color: 'var(--muted)', fontSize: '0.85rem', marginBottom: '0.5rem' }}>
+                Moderator Type
+              </label>
+              <select
+                className="input"
+                value={moderatorModal.moderatorType}
+                onChange={(e) => setModeratorModal({ ...moderatorModal, moderatorType: e.target.value })}
+                style={{ width: '100%' }}
+              >
+                {MODERATOR_TYPES.map((type) => (
+                  <option key={type} value={type}>
+                    {type}
+                  </option>
+                ))}
+              </select>
+              <div style={{ marginTop: '0.5rem', fontSize: '0.8rem', color: 'var(--muted)' }}>
+                {moderatorModal.moderatorType === 'Vigil' && 'Can edit, create and delete posts'}
+                {moderatorModal.moderatorType === 'Arbiter' && 'Can remove users'}
+                {moderatorModal.moderatorType === 'Artisan' && 'Can upload others Hero license and change that'}
+                {moderatorModal.moderatorType === 'Aesther' && 'Moderator permissions'}
+                {moderatorModal.moderatorType === 'Gatekeeper' && 'Moderator permissions'}
+                {moderatorModal.moderatorType === 'Overseer' && 'Moderator permissions'}
+              </div>
+            </div>
             <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
-              <button className="btn" onClick={() => setModeratorModal({ open: false, userId: null })}>
+              <button className="btn" onClick={() => setModeratorModal({ open: false, userId: null, moderatorType: 'Vigil' })}>
                 Cancel
               </button>
               <button 

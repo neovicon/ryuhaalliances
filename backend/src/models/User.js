@@ -16,6 +16,7 @@ const userSchema = new mongoose.Schema({
   heroCardUrl: { type: String },
   points: { type: Number, default: 0 },
   role: { type: String, enum: ['user', 'moderator', 'admin'], default: 'user' },
+  moderatorType: { type: String, enum: ['Arbiter', 'Artisan', 'Vigil', 'Aesther', 'Gatekeeper', 'Overseer'], default: null },
   status: { type: String, enum: ['pending', 'approved', 'declined'], default: 'pending' },
   adminMessage: { type: String },
   rank: { type: String, default: 'Novice' },
@@ -25,5 +26,6 @@ const userSchema = new mongoose.Schema({
 export default mongoose.model('User', userSchema);
 export const allowedHouses = houses;
 export const allowedMemberStatuses = memberStatuses;
+export const moderatorTypes = ['Arbiter', 'Artisan', 'Vigil', 'Aesther', 'Gatekeeper', 'Overseer'];
 
 

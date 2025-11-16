@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { requireAuth, requireAdmin } from '../middleware/auth.js';
-import { getPendingUsers, approveUser, declineUser, sendMessageToUser, validateApproveUser, validateDeclineUser, validateSendMessage, getAllUsers, updateHouse, validateUpdateHouse, addModerator, validateAddModerator, removeUser, validateRemoveUser, updateMemberStatus, validateUpdateMemberStatus, getHouseMembers, getHouse, getAllHouses, updateHouseDetails, validateUpdateHouseDetails } from '../controllers/admin.controller.js';
+import { getPendingUsers, approveUser, declineUser, sendMessageToUser, validateApproveUser, validateDeclineUser, validateSendMessage, getAllUsers, updateHouse, validateUpdateHouse, addModerator, validateAddModerator, removeUser, validateRemoveUser, updateMemberStatus, validateUpdateMemberStatus, getHouseMembers, getHouse, getAllHouses, updateHouseDetails, validateUpdateHouseDetails, updateUsername, validateUpdateUsername, updateDisplayName, validateUpdateDisplayName, removeModerator, validateRemoveModerator } from '../controllers/admin.controller.js';
 
 const router = Router();
 
@@ -18,6 +18,9 @@ router.get('/house-members', getHouseMembers);
 router.get('/house', getHouse);
 router.get('/all-houses', requireAuth, requireAdmin, getAllHouses);
 router.post('/update-house-details', requireAuth, requireAdmin, validateUpdateHouseDetails, updateHouseDetails);
+router.post('/update-username', requireAuth, requireAdmin, validateUpdateUsername, updateUsername);
+router.post('/update-display-name', requireAuth, requireAdmin, validateUpdateDisplayName, updateDisplayName);
+router.post('/remove-moderator', requireAuth, requireAdmin, validateRemoveModerator, removeModerator);
 
 export default router;
 

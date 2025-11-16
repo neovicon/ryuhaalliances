@@ -60,8 +60,12 @@ export default function Profile() {
 
   const detailRows = useMemo(() => {
     if (!profile) return [];
+    let roleValue = profile.role ? profile.role[0].toUpperCase() + profile.role.slice(1) : 'User';
+    if (profile.role === 'moderator' && profile.moderatorType) {
+      roleValue = `${profile.moderatorType} (Moderator)`;
+    }
     const rows = [
-      { label: 'Role', value: profile.role ? profile.role[0].toUpperCase() + profile.role.slice(1) : 'User' },
+      { label: 'Role', value: roleValue },
       { label: 'House', value: profile.house },
       { label: 'Rank', value: rankName },
       { label: 'Points', value: profile.points ?? 0 },
