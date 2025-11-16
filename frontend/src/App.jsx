@@ -43,6 +43,7 @@ function Nav() {
             </>
           )}
           <Link to="/events" className={`nav-link ${isActive('/events') ? 'active' : ''}`}>Events</Link>
+          <Link to="/announcements" className={`nav-link ${isActive('/announcements') ? 'active' : ''}`}>Announcements</Link>
           {user?.role === 'admin' && (
             <Link to="/admin" className={`nav-link ${isActive('/admin') ? 'active' : ''}`}>Admin</Link>
           )}

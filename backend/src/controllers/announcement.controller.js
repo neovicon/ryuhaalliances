@@ -1,6 +1,8 @@
 import { body, validationResult, param } from 'express-validator';
 import Announcement from '../models/Announcement.js';
+import User from '../models/User.js';
 import { getPhotoUrl } from '../utils/photoUrl.js';
+import { sendBulkEmails } from '../services/mailer.js';
 
 export const validateCreateAnnouncement = [
   body('title').notEmpty().withMessage('Title is required'),
@@ -24,14 +26,105 @@ export async function createAnnouncement(req, res) {
     await announcement.populate('createdBy', 'username displayName');
     
     const announcementObj = announcement.toObject();
+    const announcementId = announcementObj._id || announcementObj.id;
+    let fullImageUrl = null;
     if (announcementObj.imageUrl) {
-      announcementObj.imageUrl = await getPhotoUrl(announcementObj.imageUrl, req);
+      fullImageUrl = await getPhotoUrl(announcementObj.imageUrl, req);
+      announcementObj.imageUrl = fullImageUrl;
     }
     const { _id, ...rest } = announcementObj;
+    
+    // Send email notifications to all approved users (non-blocking)
+    sendAnnouncementEmails({
+      id: announcementId,
+      title: announcementObj.title,
+      content: announcementObj.content,
+      imageUrl: fullImageUrl
+    }).catch(error => {
+      console.error('Error sending announcement emails:', error);
+    });
+    
     res.status(201).json({ announcement: { id: _id, ...rest } });
   } catch (error) {
     console.error('Error creating announcement:', error);
     res.status(500).json({ error: 'Failed to create announcement' });
+  }
+}
+
+async function sendAnnouncementEmails(announcement) {
+  try {
+    // Get all approved users with verified emails
+    const users = await User.find({ status: 'approved', emailVerified: true }).select('email displayName username');
+    
+    if (users.length === 0) {
+      console.log('No approved users to send announcement emails to');
+      return;
+    }
+
+    const baseUrl = process.env.CLIENT_ORIGIN?.replace(/\/$/, '') || 'http://localhost:5173';
+    const announcementId = announcement.id || announcement._id;
+    const announcementUrl = `${baseUrl}/announcements/${announcementId}`;
+    
+    // Escape HTML in content to prevent XSS, but preserve line breaks
+    const escapedContent = announcement.content
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/\n/g, '<br>');
+    
+    // Create email HTML
+    const html = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background: linear-gradient(135deg, #b10f2e 0%, #8b0d26 100%); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
+            .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 8px 8px; }
+            .title { font-size: 24px; font-weight: bold; margin-bottom: 20px; color: #b10f2e; }
+            .announcement-content { background: white; padding: 20px; border-radius: 8px; margin: 20px 0; white-space: pre-wrap; }
+            .button { display: inline-block; background: #b10f2e; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin-top: 20px; }
+            .footer { text-align: center; margin-top: 30px; color: #666; font-size: 12px; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1 style="margin: 0;">Ryuha Alliance</h1>
+            </div>
+            <div class="content">
+              <div class="title">New Announcement: ${announcement.title}</div>
+              <div class="announcement-content">${escapedContent}</div>
+              ${announcement.imageUrl ? `<img src="${announcement.imageUrl}" alt="${announcement.title}" style="max-width: 100%; border-radius: 8px; margin: 20px 0;" />` : ''}
+              <a href="${announcementUrl}" class="button">View Full Announcement</a>
+              <div class="footer">
+                <p>You are receiving this email because you are a registered member of Ryuha Alliance.</p>
+                <p>© ${new Date().getFullYear()} Ryuha Alliance. All rights reserved.</p>
+              </div>
+            </div>
+          </div>
+        </body>
+      </html>
+    `;
+
+    const subject = `New Announcement: ${announcement.title}`;
+    const recipientEmails = users.map(user => user.email).filter(email => email);
+    
+    console.log(`Sending announcement email to ${recipientEmails.length} users...`);
+    const results = await sendBulkEmails({
+      recipients: recipientEmails,
+      subject,
+      html
+    });
+    
+    const successCount = results.filter(r => r.success).length;
+    const failCount = results.filter(r => !r.success).length;
+    console.log(`Announcement emails sent: ${successCount} successful, ${failCount} failed`);
+  } catch (error) {
+    console.error('Error in sendAnnouncementEmails:', error);
+    throw error;
   }
 }
 

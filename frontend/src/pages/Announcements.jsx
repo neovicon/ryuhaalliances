@@ -5,7 +5,7 @@ import { useAuth } from '../store/auth';
 
 export default function Announcements() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, loadUser } = useAuth();
   const [announcements, setAnnouncements] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -13,8 +13,14 @@ export default function Announcements() {
   const [formData, setFormData] = useState({ title: '', content: '', image: null, isActive: true });
   const [imagePreview, setImagePreview] = useState(null);
   const [uploading, setUploading] = useState(false);
+  const [showCodeInput, setShowCodeInput] = useState(false);
+  const [verificationCode, setVerificationCode] = useState('');
+  const [verificationLoading, setVerificationLoading] = useState(false);
+  const [verificationError, setVerificationError] = useState('');
+  const [verificationSuccess, setVerificationSuccess] = useState(false);
 
   const isAdmin = user && user.role === 'admin';
+  const showEmailVerification = user && !user.emailVerified;
 
   useEffect(() => {
     loadAnnouncements();
@@ -138,6 +144,57 @@ export default function Announcements() {
     setImagePreview(null);
   };
 
+  const handleSendVerificationCode = async () => {
+    setVerificationLoading(true);
+    setVerificationError('');
+    try {
+      await client.post('/auth/send-verification-code');
+      setShowCodeInput(true);
+    } catch (error) {
+      setVerificationError(error?.response?.data?.error || 'Failed to send verification code');
+    } finally {
+      setVerificationLoading(false);
+    }
+  };
+
+  const handleVerifyCode = async () => {
+    if (!verificationCode || verificationCode.length !== 6) {
+      setVerificationError('Please enter a 6-digit code');
+      return;
+    }
+
+    setVerificationLoading(true);
+    setVerificationError('');
+    try {
+      const { data } = await client.post('/auth/verify-email-code', { code: verificationCode });
+      setVerificationSuccess(true);
+      await loadUser();
+      setTimeout(() => {
+        setShowCodeInput(false);
+        setVerificationSuccess(false);
+        setVerificationCode('');
+      }, 2000);
+    } catch (error) {
+      setVerificationError(error?.response?.data?.error || 'Invalid verification code');
+    } finally {
+      setVerificationLoading(false);
+    }
+  };
+
+  const handleResendCode = async () => {
+    setVerificationLoading(true);
+    setVerificationError('');
+    try {
+      await client.post('/auth/send-verification-code');
+      setVerificationError('');
+      alert('Verification code resent to your email');
+    } catch (error) {
+      setVerificationError(error?.response?.data?.error || 'Failed to resend verification code');
+    } finally {
+      setVerificationLoading(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="container" style={{ padding: '2rem 1rem' }}>
@@ -156,6 +213,116 @@ export default function Announcements() {
           </button>
         )}
       </div>
+
+      {/* Email Verification Box */}
+      {showEmailVerification && (
+        <div className="card" style={{ 
+          marginBottom: '1.5rem', 
+          background: 'rgba(177, 15, 46, 0.1)',
+          border: '1px solid rgba(177, 15, 46, 0.3)'
+        }}>
+          {!showCodeInput ? (
+            <div>
+              <h3 className="hdr" style={{ marginBottom: '0.5rem', fontSize: '1.1rem' }}>
+                📧 Email Verification
+              </h3>
+              <p style={{ marginBottom: '1rem', color: 'var(--muted)', lineHeight: 1.6 }}>
+                Would you like to get updates on your mail? Verify your email to receive announcements and important notifications.
+              </p>
+              <button
+                className="btn"
+                onClick={handleSendVerificationCode}
+                disabled={verificationLoading}
+                style={{ fontSize: '0.9rem' }}
+              >
+                {verificationLoading ? 'Sending...' : 'Yes, Verify Email'}
+              </button>
+              {verificationError && (
+                <div style={{ marginTop: '0.75rem', padding: '0.75rem', background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.3)', borderRadius: '6px', color: 'rgba(239, 68, 68, 1)', fontSize: '0.9rem' }}>
+                  {verificationError}
+                </div>
+              )}
+            </div>
+          ) : (
+            <div>
+              <h3 className="hdr" style={{ marginBottom: '0.5rem', fontSize: '1.1rem' }}>
+                Enter Verification Code
+              </h3>
+              <p style={{ marginBottom: '1rem', color: 'var(--muted)', lineHeight: 1.6 }}>
+                We've sent a 6-digit verification code to <strong>{user.email}</strong>. Please enter it below.
+              </p>
+              
+              <div style={{ marginBottom: '1rem' }}>
+                <input
+                  type="text"
+                  className="input"
+                  placeholder="Enter 6-digit code"
+                  value={verificationCode}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/\D/g, '').slice(0, 6);
+                    setVerificationCode(value);
+                    setVerificationError('');
+                  }}
+                  style={{ 
+                    fontSize: '1.2rem', 
+                    textAlign: 'center', 
+                    letterSpacing: '0.3rem',
+                    fontFamily: 'monospace',
+                    width: '100%',
+                    maxWidth: '300px'
+                  }}
+                  maxLength={6}
+                  disabled={verificationLoading || verificationSuccess}
+                />
+              </div>
+
+              {verificationSuccess && (
+                <div style={{ marginBottom: '1rem', padding: '0.75rem', background: 'rgba(34, 197, 94, 0.1)', border: '1px solid rgba(34, 197, 94, 0.3)', borderRadius: '6px', color: 'rgba(34, 197, 94, 1)', fontSize: '0.9rem' }}>
+                  ✓ Email verified successfully!
+                </div>
+              )}
+
+              {verificationError && (
+                <div style={{ marginBottom: '1rem', padding: '0.75rem', background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.3)', borderRadius: '6px', color: 'rgba(239, 68, 68, 1)', fontSize: '0.9rem' }}>
+                  {verificationError}
+                </div>
+              )}
+
+              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                <button
+                  className="btn"
+                  onClick={() => {
+                    setShowCodeInput(false);
+                    setVerificationCode('');
+                    setVerificationError('');
+                    setVerificationSuccess(false);
+                  }}
+                  style={{ background: 'transparent', border: '1px solid #1f2937', fontSize: '0.9rem' }}
+                  disabled={verificationLoading}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="btn"
+                  onClick={handleResendCode}
+                  style={{ background: 'transparent', border: '1px solid #1f2937', fontSize: '0.9rem' }}
+                  disabled={verificationLoading || verificationSuccess}
+                >
+                  Resend Code
+                </button>
+                <button
+                  className="btn"
+                  onClick={handleVerifyCode}
+                  disabled={verificationLoading || verificationSuccess || verificationCode.length !== 6}
+                  style={{ fontSize: '0.9rem' }}
+                >
+                  {verificationLoading ? 'Verifying...' : verificationSuccess ? 'Verified!' : 'Verify'}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {announcements.length === 0 ? (
         <div className="card" style={{ textAlign: 'center', padding: '3rem', color: 'var(--muted)' }}>

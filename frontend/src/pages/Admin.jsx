@@ -25,11 +25,6 @@ export default function Admin() {
   const [selectedHouse, setSelectedHouse] = useState(null);
   const [loadingSelectedHouse, setLoadingSelectedHouse] = useState(false);
   const [houseEditValues, setHouseEditValues] = useState({ description: '', status: 'Active' });
-  const [announcements, setAnnouncements] = useState([]);
-  const [announcementModal, setAnnouncementModal] = useState({ open: false, editing: null });
-  const [announcementForm, setAnnouncementForm] = useState({ title: '', content: '', image: null, isActive: true });
-  const [announcementImagePreview, setAnnouncementImagePreview] = useState(null);
-  const [uploadingAnnouncement, setUploadingAnnouncement] = useState(false);
   
   async function loadAllUsers() {
     try {
@@ -75,20 +70,10 @@ export default function Admin() {
     }
   }
   
-  async function loadAnnouncements() {
-    try {
-      const { data } = await client.get('/announcements');
-      setAnnouncements(data.announcements || []);
-    } catch (error) {
-      console.error('Error loading announcements:', error);
-    }
-  }
-
   useEffect(() => { 
     loadPendingUsers();
     loadAllUsers();
     loadHouses();
-    loadAnnouncements();
   }, []);
   
   const handleUpdatePoints = async (userId, newPoints) => {
@@ -318,112 +303,6 @@ export default function Admin() {
     }
   };
 
-  const handleAnnouncementImageSelect = (e) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setAnnouncementForm({ ...announcementForm, image: file });
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setAnnouncementImagePreview(reader.result);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const handleCreateAnnouncement = async () => {
-    if (!announcementForm.title.trim() || !announcementForm.content.trim()) {
-      alert('Title and content are required');
-      return;
-    }
-
-    setUploadingAnnouncement(true);
-    try {
-      const form = new FormData();
-      form.append('title', announcementForm.title);
-      form.append('content', announcementForm.content);
-      if (announcementForm.image) {
-        form.append('image', announcementForm.image);
-      }
-
-      await client.post('/announcements', form, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
-
-      setAnnouncementForm({ title: '', content: '', image: null, isActive: true });
-      setAnnouncementImagePreview(null);
-      setAnnouncementModal({ open: false, editing: null });
-      await loadAnnouncements();
-      alert('Announcement created successfully');
-    } catch (error) {
-      console.error('Error creating announcement:', error);
-      alert(error?.response?.data?.error || 'Failed to create announcement');
-    } finally {
-      setUploadingAnnouncement(false);
-    }
-  };
-
-  const handleUpdateAnnouncement = async () => {
-    if (!announcementModal.editing || !announcementForm.title.trim() || !announcementForm.content.trim()) {
-      alert('Title and content are required');
-      return;
-    }
-
-    setUploadingAnnouncement(true);
-    try {
-      const form = new FormData();
-      form.append('title', announcementForm.title);
-      form.append('content', announcementForm.content);
-      form.append('isActive', announcementForm.isActive);
-      if (announcementForm.image) {
-        form.append('image', announcementForm.image);
-      }
-
-      await client.put(`/announcements/${announcementModal.editing.id}`, form, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
-
-      setAnnouncementForm({ title: '', content: '', image: null, isActive: true });
-      setAnnouncementImagePreview(null);
-      setAnnouncementModal({ open: false, editing: null });
-      await loadAnnouncements();
-      alert('Announcement updated successfully');
-    } catch (error) {
-      console.error('Error updating announcement:', error);
-      alert(error?.response?.data?.error || 'Failed to update announcement');
-    } finally {
-      setUploadingAnnouncement(false);
-    }
-  };
-
-  const handleDeleteAnnouncement = async (announcementId) => {
-    if (!window.confirm('Are you sure you want to delete this announcement?')) return;
-    try {
-      await client.delete(`/announcements/${announcementId}`);
-      await loadAnnouncements();
-      alert('Announcement deleted successfully');
-    } catch (error) {
-      console.error('Error deleting announcement:', error);
-      alert(error?.response?.data?.error || 'Failed to delete announcement');
-    }
-  };
-
-  const openAnnouncementModal = (announcement = null) => {
-    if (announcement) {
-      setAnnouncementForm({
-        title: announcement.title,
-        content: announcement.content,
-        image: null,
-        isActive: announcement.isActive
-      });
-      setAnnouncementImagePreview(announcement.imageUrl || null);
-      setAnnouncementModal({ open: true, editing: announcement });
-    } else {
-      setAnnouncementForm({ title: '', content: '', image: null, isActive: true });
-      setAnnouncementImagePreview(null);
-      setAnnouncementModal({ open: true, editing: null });
-    }
-  };
-  
   return (
     <div className="container">
       <h3 className="hdr">Admin Dashboard</h3>
@@ -671,85 +550,6 @@ export default function Admin() {
         )}
       </div>
 
-      {/* Announcements Management Section */}
-      <div className="card" style={{ marginBottom: '1rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
-          <h4 className="hdr" style={{ margin: 0 }}>Manage Announcements</h4>
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
-            <button className="btn" onClick={loadAnnouncements}>Refresh</button>
-            <button className="btn" onClick={() => openAnnouncementModal()}>Create Announcement</button>
-          </div>
-        </div>
-
-        {announcements.length === 0 ? (
-          <div style={{ color: 'var(--muted)', textAlign: 'center', padding: '2rem' }}>
-            No announcements yet. Create one to get started.
-          </div>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            {announcements.map((announcement) => (
-              <div
-                key={announcement.id}
-                style={{
-                  border: '1px solid #1f2937',
-                  borderRadius: '12px',
-                  padding: '1rem',
-                  background: announcement.isActive ? 'rgba(255,255,255,0.01)' : 'rgba(107, 114, 128, 0.1)',
-                  opacity: announcement.isActive ? 1 : 0.7,
-                }}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.75rem', flexWrap: 'wrap', gap: '0.5rem' }}>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginBottom: '0.5rem' }}>
-                      <h5 className="hdr" style={{ margin: 0, fontSize: '1.1rem' }}>{announcement.title}</h5>
-                      {announcement.isActive ? (
-                        <span style={{ padding: '0.2rem 0.5rem', borderRadius: '4px', fontSize: '0.75rem', background: 'rgba(34, 197, 94, 0.2)', color: 'rgba(34, 197, 94, 1)' }}>
-                          Active
-                        </span>
-                      ) : (
-                        <span style={{ padding: '0.2rem 0.5rem', borderRadius: '4px', fontSize: '0.75rem', background: 'rgba(107, 114, 128, 0.2)', color: 'rgba(107, 114, 128, 1)' }}>
-                          Inactive
-                        </span>
-                      )}
-                    </div>
-                    <div style={{ color: 'var(--muted)', fontSize: '0.85rem', marginBottom: '0.5rem' }}>
-                      Created: {new Date(announcement.createdAt).toLocaleString()}
-                    </div>
-                    {announcement.imageUrl && (
-                      <img
-                        src={announcement.imageUrl}
-                        alt={announcement.title}
-                        style={{ maxWidth: '100%', maxHeight: 200, borderRadius: '8px', marginBottom: '0.5rem', objectFit: 'cover' }}
-                        onError={(e) => {
-                          e.target.style.display = 'none';
-                        }}
-                      />
-                    )}
-                    <div style={{ whiteSpace: 'pre-wrap', lineHeight: 1.6 }}>{announcement.content}</div>
-                  </div>
-                </div>
-                <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', flexWrap: 'wrap', marginTop: '0.75rem' }}>
-                  <button
-                    className="btn"
-                    onClick={() => openAnnouncementModal(announcement)}
-                    style={{ padding: '0.3rem 0.6rem', fontSize: '0.85rem', background: 'rgba(59, 130, 246, 0.2)', border: '1px solid rgba(59, 130, 246, 0.4)' }}
-                  >
-                    Edit
-                  </button>
-                  <button
-                    className="btn"
-                    onClick={() => handleDeleteAnnouncement(announcement.id)}
-                    style={{ padding: '0.3rem 0.6rem', fontSize: '0.85rem', background: 'rgba(239, 68, 68, 0.2)', border: '1px solid rgba(239, 68, 68, 0.4)' }}
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-      
       {/* All Users Section */}
       <div className="card" style={{ marginBottom: '1rem' }}>
         <div
@@ -1304,124 +1104,6 @@ export default function Admin() {
         </div>
       )}
 
-      {/* Announcement Modal */}
-      {announcementModal.open && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: 'rgba(0, 0, 0, 0.7)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000,
-          padding: '1rem',
-        }}>
-          <div className="card" style={{ maxWidth: 700, width: '100%', maxHeight: '90vh', overflowY: 'auto' }}>
-            <h4 className="hdr" style={{ marginBottom: '1rem' }}>
-              {announcementModal.editing ? 'Edit Announcement' : 'Create Announcement'}
-            </h4>
-            
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <div>
-                <label style={{ display: 'block', color: 'var(--muted)', fontSize: '0.85rem', marginBottom: '0.5rem' }}>
-                  Title *
-                </label>
-                <input
-                  type="text"
-                  className="input"
-                  value={announcementForm.title}
-                  onChange={(e) => setAnnouncementForm({ ...announcementForm, title: e.target.value })}
-                  style={{ width: '100%' }}
-                  placeholder="Enter announcement title"
-                />
-              </div>
-
-              <div>
-                <label style={{ display: 'block', color: 'var(--muted)', fontSize: '0.85rem', marginBottom: '0.5rem' }}>
-                  Content *
-                </label>
-                <textarea
-                  className="input"
-                  value={announcementForm.content}
-                  onChange={(e) => setAnnouncementForm({ ...announcementForm, content: e.target.value })}
-                  style={{ width: '100%', minHeight: 150, resize: 'vertical' }}
-                  placeholder="Enter announcement content"
-                />
-              </div>
-
-              <div>
-                <label style={{ display: 'block', color: 'var(--muted)', fontSize: '0.85rem', marginBottom: '0.5rem' }}>
-                  Image (Optional)
-                </label>
-                <input
-                  type="file"
-                  accept="image/png,image/jpeg,image/webp"
-                  onChange={handleAnnouncementImageSelect}
-                  style={{ marginBottom: '0.5rem' }}
-                />
-                {announcementImagePreview && (
-                  <img
-                    src={announcementImagePreview}
-                    alt="Preview"
-                    style={{ maxWidth: '100%', maxHeight: 200, borderRadius: '8px', marginTop: '0.5rem', objectFit: 'cover' }}
-                  />
-                )}
-              </div>
-
-              {announcementModal.editing && (
-                <div>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
-                    <input
-                      type="checkbox"
-                      checked={announcementForm.isActive}
-                      onChange={(e) => setAnnouncementForm({ ...announcementForm, isActive: e.target.checked })}
-                    />
-                    <span style={{ color: 'var(--muted)', fontSize: '0.85rem' }}>Active</span>
-                  </label>
-                </div>
-              )}
-
-              <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
-                <button
-                  className="btn"
-                  onClick={() => {
-                    setAnnouncementModal({ open: false, editing: null });
-                    setAnnouncementForm({ title: '', content: '', image: null, isActive: true });
-                    setAnnouncementImagePreview(null);
-                  }}
-                  style={{ background: 'transparent', border: '1px solid #1f2937' }}
-                  disabled={uploadingAnnouncement}
-                >
-                  Cancel
-                </button>
-                <button
-                  className="btn"
-                  onClick={announcementModal.editing ? handleUpdateAnnouncement : handleCreateAnnouncement}
-                  disabled={uploadingAnnouncement || !announcementForm.title.trim() || !announcementForm.content.trim()}
-                  style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
-                >
-                  {uploadingAnnouncement && (
-                    <span
-                      style={{
-                        width: '12px',
-                        height: '12px',
-                        border: '2px solid rgba(255,255,255,0.3)',
-                        borderTop: '2px solid white',
-                        borderRadius: '50%',
-                        animation: 'spin 0.8s linear infinite',
-                      }}
-                    />
-                  )}
-                  {uploadingAnnouncement ? 'Saving...' : (announcementModal.editing ? 'Update' : 'Create')}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

@@ -3,6 +3,7 @@ import User from '../models/User.js';
 import { getPhotoUrl } from '../utils/photoUrl.js';
 import bcrypt from 'bcryptjs';
 import mongoose from 'mongoose';
+import { sanitizeUser } from './auth.controller.js';
 
 export const validateDisplayName = [ body('displayName').isString().isLength({ min: 1, max: 64 }) ];
 export async function updateDisplayName(req, res) {
@@ -31,16 +32,11 @@ export async function searchUsers(req, res) {
 }
 
 export async function getMe(req, res) {
-  const me = await User.findById(req.user.id).select('-passwordHash');
+  const me = await User.findById(req.user.id);
   if (!me) {
     return res.status(404).json({ error: 'User not found' });
   }
-  const userObj = me.toObject();
-  userObj.photoUrl = await getPhotoUrl(userObj.photoUrl, req);
-  userObj.heroCardUrl = await getPhotoUrl(userObj.heroCardUrl, req);
-  // Convert _id to id for consistency
-  const { _id, ...rest } = userObj;
-  res.json({ user: { id: _id, ...rest } });
+  res.json({ user: await sanitizeUser(me, req) });
 }
 
 export async function updatePhoto(req, res) {

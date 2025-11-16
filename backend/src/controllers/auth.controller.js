@@ -3,6 +3,7 @@ import { body, validationResult } from 'express-validator';
 import User, { allowedHouses } from '../models/User.js';
 import { signJwt, verifyJwt } from '../utils/jwt.js';
 import { getPhotoUrl } from '../utils/photoUrl.js';
+import { sendEmail } from '../services/mailer.js';
 
 export const validateSignup = [
   body('email').isEmail().withMessage('Please provide a valid email address'),
@@ -105,9 +106,9 @@ export async function resendVerification(req, res) {
   res.json({ ok: true });
 }
 
-async function sanitizeUser(user, req = null) {
+export async function sanitizeUser(user, req = null) {
   const userObj = user.toObject ? user.toObject() : user;
-  const { _id, email, username, displayName, sigil, house, photoUrl, heroCardUrl, points, role, status, adminMessage, rank, createdAt, updatedAt } = userObj;
+  const { _id, email, username, displayName, sigil, house, photoUrl, heroCardUrl, points, role, status, adminMessage, rank, emailVerified, createdAt, updatedAt } = userObj;
   return { 
     id: _id, 
     email, 
@@ -122,9 +123,123 @@ async function sanitizeUser(user, req = null) {
     status,
     adminMessage,
     rank,
+    emailVerified: emailVerified || false,
     createdAt, 
     updatedAt 
   };
 }
+
+export async function sendVerificationCode(req, res) {
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    if (user.emailVerified) return res.status(400).json({ error: 'Email already verified' });
+
+    // Generate 6-digit verification code
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = new Date();
+    expiresAt.setMinutes(expiresAt.getMinutes() + 15); // Code expires in 15 minutes
+
+    // Save code to user
+    user.emailVerificationCode = code;
+    user.emailVerificationCodeExpires = expiresAt;
+    await user.save();
+
+    // Send email with code
+    const html = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background: linear-gradient(135deg, #b10f2e 0%, #8b0d26 100%); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
+            .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 8px 8px; }
+            .code { background: white; padding: 20px; text-align: center; border-radius: 8px; margin: 20px 0; }
+            .code-number { font-size: 32px; font-weight: bold; color: #b10f2e; letter-spacing: 8px; }
+            .footer { text-align: center; margin-top: 30px; color: #666; font-size: 12px; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1 style="margin: 0;">Ryuha Alliance</h1>
+            </div>
+            <div class="content">
+              <h2>Email Verification Code</h2>
+              <p>Please use the following code to verify your email address:</p>
+              <div class="code">
+                <div class="code-number">${code}</div>
+              </div>
+              <p>This code will expire in 15 minutes.</p>
+              <div class="footer">
+                <p>If you didn't request this code, please ignore this email.</p>
+                <p>© ${new Date().getFullYear()} Ryuha Alliance. All rights reserved.</p>
+              </div>
+            </div>
+          </div>
+        </body>
+      </html>
+    `;
+
+    await sendEmail({ 
+      to: user.email, 
+      subject: 'Your Email Verification Code', 
+      html 
+    });
+
+    res.json({ ok: true, message: 'Verification code sent to your email' });
+  } catch (error) {
+    console.error('Error sending verification code:', error);
+    res.status(500).json({ error: 'Failed to send verification code' });
+  }
+}
+
+export async function verifyEmailCode(req, res) {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+
+  try {
+    const { code } = req.body;
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    if (user.emailVerified) return res.status(400).json({ error: 'Email already verified' });
+
+    // Check if code exists and is valid
+    if (!user.emailVerificationCode) {
+      return res.status(400).json({ error: 'No verification code found. Please request a new code.' });
+    }
+
+    // Check if code has expired
+    if (new Date() > user.emailVerificationCodeExpires) {
+      user.emailVerificationCode = undefined;
+      user.emailVerificationCodeExpires = undefined;
+      await user.save();
+      return res.status(400).json({ error: 'Verification code has expired. Please request a new code.' });
+    }
+
+    // Check if code matches
+    if (user.emailVerificationCode !== code) {
+      return res.status(400).json({ error: 'Invalid verification code' });
+    }
+
+    // Verify email
+    user.emailVerified = true;
+    user.emailVerificationCode = undefined;
+    user.emailVerificationCodeExpires = undefined;
+    await user.save();
+
+    res.json({ ok: true, message: 'Email verified successfully', user: await sanitizeUser(user, req) });
+  } catch (error) {
+    console.error('Error verifying email code:', error);
+    res.status(500).json({ error: 'Failed to verify email' });
+  }
+}
+
+export const validateVerifyEmailCode = [
+  body('code').isLength({ min: 6, max: 6 }).withMessage('Verification code must be 6 digits'),
+  body('code').matches(/^\d+$/).withMessage('Verification code must contain only numbers'),
+];
 
 

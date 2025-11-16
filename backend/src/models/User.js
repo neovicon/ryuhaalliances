@@ -7,6 +7,8 @@ const memberStatuses = ['Guardian', 'Lord of the House', 'General', 'Seeker', 'H
 const userSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true, index: true },
   emailVerified: { type: Boolean, default: false },
+  emailVerificationCode: { type: String },
+  emailVerificationCodeExpires: { type: Date },
   passwordHash: { type: String, required: true },
   username: { type: String, required: true, unique: true, index: true },
   displayName: { type: String },
