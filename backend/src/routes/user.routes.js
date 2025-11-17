@@ -3,14 +3,29 @@ import { requireAuth, requireAdmin, requireArtisan, requireArbiter } from '../mi
 import { updateDisplayName, validateDisplayName, searchUsers, validateSearch, getMe, updatePhoto, updateHeroCard, deleteHeroCard, changePassword, validateChangePassword, getPublicProfile, validatePublicProfile, publicSearch, validatePublicSearch, updateMemberHeroCard, validateUpdateMemberHeroCard, uploadCertificate, validateUploadCertificate, uploadWarningNotice, validateUploadWarningNotice } from '../controllers/user.controller.js';
 import { uploadImage, uploadToStorage } from '../middleware/upload.js';
 import { adjustPoints, leaderboard, validateAdjust, updateRank, validateUpdateRank } from '../controllers/points.controller.js';
+import multer from 'multer';
 
 const router = Router();
+
+// Error handler for multer file size errors
+const handleMulterError = (err, req, res, next) => {
+  if (err instanceof multer.MulterError) {
+    if (err.code === 'LIMIT_FILE_SIZE') {
+      return res.status(400).json({ error: 'File is too large, only 30MB is accepted' });
+    }
+    return res.status(400).json({ error: err.message });
+  }
+  if (err) {
+    return res.status(400).json({ error: err.message });
+  }
+  next();
+};
 router.get('/public/profile', validatePublicProfile, getPublicProfile);
 router.get('/public/search', validatePublicSearch, publicSearch);
 router.get('/me', requireAuth, getMe);
 router.patch('/me/display-name', requireAuth, validateDisplayName, updateDisplayName);
-router.post('/me/photo', requireAuth, uploadImage.single('photo'), uploadToStorage, updatePhoto);
-router.post('/me/hero-card', requireAuth, uploadImage.single('heroCard'), uploadToStorage, updateHeroCard);
+router.post('/me/photo', requireAuth, uploadImage.single('photo'), handleMulterError, uploadToStorage, updatePhoto);
+router.post('/me/hero-card', requireAuth, uploadImage.single('heroCard'), handleMulterError, uploadToStorage, updateHeroCard);
 router.delete('/me/hero-card', requireAuth, deleteHeroCard);
 router.post('/me/change-password', requireAuth, validateChangePassword, changePassword);
 router.get('/search', requireAuth, validateSearch, searchUsers);
@@ -19,11 +34,11 @@ router.patch('/:userId/rank', requireAuth, requireAdmin, validateUpdateRank, upd
 router.get('/leaderboard', requireAuth, leaderboard);
 
 // Artisan routes: Modify Hero License and upload Certificates for members
-router.post('/:userId/hero-card', requireAuth, requireArtisan, validateUpdateMemberHeroCard, uploadImage.single('heroCard'), uploadToStorage, updateMemberHeroCard);
-router.post('/:userId/certificate', requireAuth, requireArtisan, validateUploadCertificate, uploadImage.single('certificate'), uploadToStorage, uploadCertificate);
+router.post('/:userId/hero-card', requireAuth, requireArtisan, validateUpdateMemberHeroCard, uploadImage.single('heroCard'), handleMulterError, uploadToStorage, updateMemberHeroCard);
+router.post('/:userId/certificate', requireAuth, requireArtisan, validateUploadCertificate, uploadImage.single('certificate'), handleMulterError, uploadToStorage, uploadCertificate);
 
 // Arbiter routes: Upload warning notice for members (image optional, text optional, but at least one required)
-router.post('/:userId/warning-notice', requireAuth, requireArbiter, uploadImage.single('warningNotice'), uploadToStorage, validateUploadWarningNotice, uploadWarningNotice);
+router.post('/:userId/warning-notice', requireAuth, requireArbiter, uploadImage.single('warningNotice'), handleMulterError, uploadToStorage, validateUploadWarningNotice, uploadWarningNotice);
 
 export default router;
 

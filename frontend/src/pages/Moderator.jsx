@@ -428,7 +428,20 @@ export default function Moderator() {
                       <input
                         type="file"
                         accept="image/*"
-                        onChange={(e) => setHeroCardFile(e.target.files?.[0] || null)}
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const maxSize = 30 * 1024 * 1024; // 30MB
+                            if (file.size > maxSize) {
+                              alert('File is too large, only 30MB is accepted');
+                              e.target.value = '';
+                              return;
+                            }
+                            setHeroCardFile(file);
+                          } else {
+                            setHeroCardFile(null);
+                          }
+                        }}
                         style={{ marginBottom: '0.5rem' }}
                       />
                       {heroCardFile && (
@@ -475,7 +488,20 @@ export default function Moderator() {
                       <input
                         type="file"
                         accept="image/*"
-                        onChange={(e) => setCertificateFile(e.target.files?.[0] || null)}
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const maxSize = 30 * 1024 * 1024; // 30MB
+                            if (file.size > maxSize) {
+                              alert('File is too large, only 30MB is accepted');
+                              e.target.value = '';
+                              return;
+                            }
+                            setCertificateFile(file);
+                          } else {
+                            setCertificateFile(null);
+                          }
+                        }}
                         style={{ marginBottom: '0.5rem' }}
                       />
                       {certificateFile && (
@@ -613,7 +639,20 @@ export default function Moderator() {
                       <input
                         type="file"
                         accept="image/*"
-                        onChange={(e) => setWarningFile(e.target.files?.[0] || null)}
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const maxSize = 30 * 1024 * 1024; // 30MB
+                            if (file.size > maxSize) {
+                              alert('File is too large, only 30MB is accepted');
+                              e.target.value = '';
+                              return;
+                            }
+                            setWarningFile(file);
+                          } else {
+                            setWarningFile(null);
+                          }
+                        }}
                         style={{ marginBottom: '0.5rem' }}
                       />
                     </div>

@@ -35,6 +35,13 @@ export default function Events() {
   const handleImageChange = (e) => {
     const file = e.target.files?.[0];
     if (file) {
+      // Check file size (30MB = 30 * 1024 * 1024 bytes)
+      const maxSize = 30 * 1024 * 1024;
+      if (file.size > maxSize) {
+        alert('File is too large, only 30MB is accepted');
+        e.target.value = ''; // Clear the input
+        return;
+      }
       setFormData({ ...formData, image: file });
       const reader = new FileReader();
       reader.onloadend = () => {

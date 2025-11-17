@@ -11,7 +11,11 @@ function fileFilter(_req, file, cb) {
   if (allowed.includes(file.mimetype)) cb(null, true); else cb(new Error('Invalid file type'));
 }
 
-export const uploadImage = multer({ storage, fileFilter, limits: { fileSize: 2 * 1024 * 1024 } });
+export const uploadImage = multer({ 
+  storage, 
+  fileFilter, 
+  limits: { fileSize: 30 * 1024 * 1024 } // 30MB limit
+});
 
 /**
  * Upload file to Supabase Storage

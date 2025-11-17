@@ -199,7 +199,15 @@ export default function Profile() {
     input.accept = 'image/png,image/jpeg,image/webp';
     input.onchange = (e) => {
       const selected = e.target.files?.[0];
-      if (selected) setHeroFile(selected);
+      if (selected) {
+        const maxSize = 30 * 1024 * 1024; // 30MB
+        if (selected.size > maxSize) {
+          alert('File is too large, only 30MB is accepted');
+          input.value = '';
+          return;
+        }
+        setHeroFile(selected);
+      }
     };
     input.click();
   };
@@ -211,7 +219,15 @@ export default function Profile() {
     input.accept = 'image/png,image/jpeg,image/webp';
     input.onchange = (e) => {
       const selected = e.target.files?.[0];
-      if (selected) setAvatarFile(selected);
+      if (selected) {
+        const maxSize = 30 * 1024 * 1024; // 30MB
+        if (selected.size > maxSize) {
+          alert('File is too large, only 30MB is accepted');
+          input.value = '';
+          return;
+        }
+        setAvatarFile(selected);
+      }
     };
     input.click();
   };
