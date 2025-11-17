@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import client from '../api/client';
 import { getRankImageSrc, calculateRank } from '../utils/rank';
 
@@ -23,11 +24,23 @@ function getHouseImageSrc(houseName) {
 }
 
 export default function Leaderboard() {
+  const navigate = useNavigate();
   const [rows, setRows] = useState([]);
-  useEffect(() => { (async () => { const { data } = await client.get('/users/leaderboard'); setRows(data.top); })(); }, []);
+  const [search, setSearch] = useState('');
+
+  useEffect(() => { (async () => { const { data } = await client.get('/users/leaderboard'); setRows(data.top || []); })(); }, []);
   
+  // Apply search filter (by username or house) before grouping
+  const filteredRows = rows.filter((user) => {
+    if (!search) return true;
+    const q = search.toLowerCase();
+    const username = (user.username || '').toLowerCase();
+    const house = (user.house || '').toLowerCase();
+    return username.includes(q) || house.includes(q);
+  });
+
   // Group users by house name
-  const groupedUsers = rows.reduce((acc, user) => {
+  const groupedUsers = filteredRows.reduce((acc, user) => {
     const house = user.house || 'Unknown';
     if (!acc[house]) {
       acc[house] = [];
@@ -46,6 +59,24 @@ export default function Leaderboard() {
   return (
     <div className="container">
       <h3 className="hdr">Leaderboard</h3>
+      <div style={{ margin: '1rem 0', display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+        <input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search users or houses"
+          style={{
+            flex: 1,
+            padding: '0.5rem 0.75rem',
+            borderRadius: 6,
+            border: '1px solid rgba(148,163,184,0.12)',
+            background: 'transparent',
+            color: 'inherit'
+          }}
+        />
+        {search ? (
+          <button className="btn" onClick={() => setSearch('')} style={{ whiteSpace: 'nowrap' }}>Clear</button>
+        ) : null}
+      </div>
       
       {/* Houses Leaderboard */}
       {sortedHouses.map(([houseName, users]) => {
@@ -79,7 +110,14 @@ export default function Leaderboard() {
             {sortedUsers.map((r, i) => {
               const userRank = r.rank || calculateRank(r.points || 0);
               return (
-                <div key={r.username} style={{ display: 'flex', alignItems: 'center', gap: '1rem', justifyContent: 'space-between', padding: '.5rem 0', borderBottom: '1px solid #1f2937' }}>
+                <div
+                  key={r.username}
+                  onClick={() => navigate(`/profile?q=${encodeURIComponent(r.username)}`)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => { if (e.key === 'Enter') navigate(`/profile?q=${encodeURIComponent(r.username)}`); }}
+                  style={{ display: 'flex', alignItems: 'center', gap: '1rem', justifyContent: 'space-between', padding: '.5rem 0', borderBottom: '1px solid #1f2937', cursor: 'pointer' }}
+                >
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                     {r.photoUrl ? (
                       <img 
