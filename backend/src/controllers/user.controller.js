@@ -355,4 +355,29 @@ export async function uploadWarningNotice(req, res) {
   }
 }
 
+export async function removeWarningNotice(req, res) {
+  try {
+    const { userId } = req.params;
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    user.warningNotice = null;
+    user.warningText = null;
+    await user.save();
+
+    const userObj = user.toObject();
+    userObj.photoUrl = await getPhotoUrl(userObj.photoUrl, req);
+    userObj.heroCardUrl = await getPhotoUrl(userObj.heroCardUrl, req);
+    userObj.warningNotice = await getPhotoUrl(userObj.warningNotice, req);
+    if (userObj.certificates && userObj.certificates.length > 0) {
+      userObj.certificates = await Promise.all(userObj.certificates.map(cert => getPhotoUrl(cert, req)));
+    }
+    const { _id, ...rest } = userObj;
+    res.json({ user: { id: _id, ...rest }, message: 'Warning removed' });
+  } catch (error) {
+    console.error('Error removing warning notice:', error);
+    res.status(500).json({ error: 'Failed to remove warning notice' });
+  }
+}
+
 

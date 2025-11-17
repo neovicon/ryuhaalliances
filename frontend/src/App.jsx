@@ -12,6 +12,8 @@ import Home from './pages/Home.jsx'
 import Codex from './pages/Codex.jsx'
 import Events from './pages/Events.jsx'
 import EventDetail from './pages/EventDetail.jsx'
+import Blogs from './pages/Blogs.jsx'
+import BlogDetail from './pages/BlogDetail.jsx'
 import HouseDetail from './pages/HouseDetail.jsx'
 import Announcements from './pages/Announcements.jsx'
 import AnnouncementDetail from './pages/AnnouncementDetail.jsx'
@@ -41,6 +43,7 @@ function Nav() {
             <>
               <Link to="/feed" className={`nav-link ${isActive('/feed') ? 'active' : ''}`}>Feed</Link>
               <Link to="/leaderboard" className={`nav-link ${isActive('/leaderboard') ? 'active' : ''}`}>Leaderboard</Link>
+              <Link to="/blogs" className={`nav-link ${isActive('/blogs') ? 'active' : ''}`}>Blogs</Link>
             </>
           )}
           <Link to="/events" className={`nav-link ${isActive('/events') ? 'active' : ''}`}>Events</Link>
@@ -98,6 +101,8 @@ export default function App() {
         <Route path="/codex" element={<Codex />} />
         <Route path="/events" element={<Events />} />
         <Route path="/events/:id" element={<EventDetail />} />
+  <Route path="/blogs" element={<Blogs />} />
+  <Route path="/blogs/:id" element={<BlogDetail />} />
         <Route path="/houses/:slug" element={<HouseDetail />} />
         <Route path="/announcements" element={<Announcements />} />
         <Route path="/announcements/:id" element={<AnnouncementDetail />} />

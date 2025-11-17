@@ -160,6 +160,21 @@ export default function Profile() {
     }
   }, [location.search, authUser, loadPublicProfile, loadSelfProfile]);
 
+  const viewerIsAdminOrArbiter = authUser && (authUser.role === 'admin' || authUser.moderatorType === 'Arbiter');
+
+  const handleRemoveWarning = async () => {
+    if (!profile?.id) return;
+    if (!confirm('Remove the warning notice for this member?')) return;
+    try {
+      await client.delete(`/users/${profile.id}/warning-notice`);
+      // Reload the profile
+      if (isSelf) await loadSelfProfile(); else await loadPublicProfile(profile.username || profile.sigil || profile.id);
+    } catch (error) {
+      console.error('Failed to remove warning:', error);
+      alert(error?.response?.data?.error || 'Failed to remove warning');
+    }
+  };
+
   const handleSearchSubmit = (event) => {
     event.preventDefault();
     const value = searchTerm.trim();
@@ -379,6 +394,30 @@ export default function Profile() {
               {profile.adminMessage && (
                 <div style={{ marginTop: '0.5rem', color: 'var(--text)' }}><strong>Reason:</strong> {profile.adminMessage}</div>
               )}
+            </div>
+          )}
+
+          {/* Warning notice (if any) */}
+          { (profile.warningNotice || profile.warningText) && (
+            <div className="card" style={{ marginBottom: '1.5rem', padding: '1rem', border: '1px solid rgba(239,68,68,0.3)', background: 'linear-gradient(90deg, rgba(239,68,68,0.06), rgba(239,68,68,0.03))' }}>
+              <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
+                {profile.warningNotice ? (
+                  <img src={profile.warningNotice} alt="Warning" style={{ width: 120, height: 80, objectFit: 'cover', borderRadius: 6, border: '1px solid rgba(239,68,68,0.2)' }} />
+                ) : null}
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontWeight: 700, color: 'rgba(239,68,68,1)' }}>Warning notice</div>
+                  {profile.warningText ? (
+                    <div style={{ color: 'var(--muted)', marginTop: 6, whiteSpace: 'pre-wrap' }}>{profile.warningText}</div>
+                  ) : (
+                    <div style={{ color: 'var(--muted)', marginTop: 6 }}>There is a warning on this account.</div>
+                  )}
+                </div>
+                {viewerIsAdminOrArbiter && (
+                  <div style={{ display: 'flex', alignItems: 'center' }}>
+                    <button className="btn" onClick={handleRemoveWarning} style={{ background: 'rgba(239,68,68,0.9)', border: '1px solid rgba(239,68,68,0.5)' }}>Remove Warning</button>
+                  </div>
+                )}
+              </div>
             </div>
           )}
 
@@ -631,6 +670,25 @@ export default function Profile() {
                 ))}
               </div>
             </div>
+          </div>
+          {/* Certificates section */}
+          <div className="card" style={{ marginBottom: '1.5rem', border: '1px solid rgba(148,163,184,0.2)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+              <h3 className="hdr" style={{ margin: 0, fontSize: '1.2rem' }}>Certificates</h3>
+              <div style={{ color: 'var(--muted)', fontSize: '0.9rem' }}>{profile.certificates?.length || 0} item{(profile.certificates?.length || 0) !== 1 ? 's' : ''}</div>
+            </div>
+            {(!profile.certificates || profile.certificates.length === 0) ? (
+              <div style={{ textAlign: 'center', color: 'var(--muted)', padding: '1rem' }}>No certificates uploaded.</div>
+            ) : (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '0.75rem' }}>
+                {profile.certificates.map((cert, idx) => (
+                  <a key={idx} href={cert} target="_blank" rel="noreferrer" style={{ display: 'block', border: '1px solid rgba(148,163,184,0.12)', borderRadius: 8, overflow: 'hidden', textDecoration: 'none', color: 'inherit' }}>
+                    <div style={{ width: '100%', aspectRatio: '16/10', background: `url(${cert}) center/cover no-repeat`, backgroundSize: 'cover' }} />
+                    <div style={{ padding: '0.5rem', fontSize: '0.9rem', color: 'var(--muted)' }}>View certificate</div>
+                  </a>
+                ))}
+              </div>
+            )}
           </div>
 
           {heroFile && (

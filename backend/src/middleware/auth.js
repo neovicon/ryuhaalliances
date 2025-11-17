@@ -91,6 +91,19 @@ export const requireArbiter = requireModeratorType(['Arbiter']);
 export const requireOverseer = requireModeratorType(['Overseer']);
 export const requireGatekeeper = requireModeratorType(['Gatekeeper']);
 
+// Allow either admin or Arbiter moderators
+export async function requireArbiterOrAdmin(req, res, next) {
+  if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
+  // Load full user data to ensure role and moderatorType are available
+  const user = await loadUserData(req);
+  if (!user) return res.status(401).json({ error: 'User not found' });
+
+  if (user.role === 'admin') return next();
+  if (user.role === 'moderator' && user.moderatorType === 'Arbiter') return next();
+
+  return res.status(403).json({ error: 'Forbidden' });
+}
+
 // Combined permissions (multiple moderator types can access)
 export const requireAestherOrOverseer = requireModeratorType(['Aesther', 'Overseer']);
 export const requireAestherOrVigilOrOverseer = requireModeratorType(['Aesther', 'Vigil', 'Overseer']);

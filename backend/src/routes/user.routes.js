@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import { requireAuth, requireAdmin, requireArtisan, requireArbiter } from '../middleware/auth.js';
-import { updateDisplayName, validateDisplayName, searchUsers, validateSearch, getMe, updatePhoto, updateHeroCard, deleteHeroCard, changePassword, validateChangePassword, getPublicProfile, validatePublicProfile, publicSearch, validatePublicSearch, updateMemberHeroCard, validateUpdateMemberHeroCard, uploadCertificate, validateUploadCertificate, uploadWarningNotice, validateUploadWarningNotice } from '../controllers/user.controller.js';
+import { requireAuth, requireAdmin, requireArtisan, requireArbiter, requireArbiterOrAdmin } from '../middleware/auth.js';
+import { updateDisplayName, validateDisplayName, searchUsers, validateSearch, getMe, updatePhoto, updateHeroCard, deleteHeroCard, changePassword, validateChangePassword, getPublicProfile, validatePublicProfile, publicSearch, validatePublicSearch, updateMemberHeroCard, validateUpdateMemberHeroCard, uploadCertificate, validateUploadCertificate, uploadWarningNotice, validateUploadWarningNotice, removeWarningNotice } from '../controllers/user.controller.js';
 import { uploadImage, uploadToStorage } from '../middleware/upload.js';
 import { adjustPoints, leaderboard, validateAdjust, updateRank, validateUpdateRank } from '../controllers/points.controller.js';
 import multer from 'multer';
@@ -39,6 +39,8 @@ router.post('/:userId/certificate', requireAuth, requireArtisan, validateUploadC
 
 // Arbiter routes: Upload warning notice for members (image optional, text optional, but at least one required)
 router.post('/:userId/warning-notice', requireAuth, requireArbiter, uploadImage.single('warningNotice'), handleMulterError, uploadToStorage, validateUploadWarningNotice, uploadWarningNotice);
+// Allow Arbiter or Admin to remove warnings
+router.delete('/:userId/warning-notice', requireAuth, requireArbiterOrAdmin, validateUploadWarningNotice, removeWarningNotice);
 
 export default router;
 
