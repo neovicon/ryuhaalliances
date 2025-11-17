@@ -400,9 +400,9 @@ export default function Profile() {
           {/* Warning notice (if any) */}
           { (profile.warningNotice || profile.warningText) && (
             <div className="card" style={{ marginBottom: '1.5rem', padding: '1rem', border: '1px solid rgba(239,68,68,0.3)', background: 'linear-gradient(90deg, rgba(239,68,68,0.06), rgba(239,68,68,0.03))' }}>
-              <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
+                <div className="warning-notice-inner" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 {profile.warningNotice ? (
-                  <img src={profile.warningNotice} alt="Warning" style={{ width: 120, height: 80, objectFit: 'cover', borderRadius: 6, border: '1px solid rgba(239,68,68,0.2)' }} />
+                    <img src={profile.warningNotice} alt="Warning" className="warning-notice-img" />
                 ) : null}
                 <div style={{ flex: 1 }}>
                   <div style={{ fontWeight: 700, color: 'rgba(239,68,68,1)' }}>Warning notice</div>
