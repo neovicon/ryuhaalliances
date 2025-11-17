@@ -398,7 +398,13 @@ export default function Profile() {
               <img
                 src={profile.heroCardUrl}
                 alt={`${profile.username}'s hero banner`}
-                style={{ width: '100%', aspectRatio: '16/6', objectFit: 'cover', display: 'block' }}
+                style={{ 
+                  width: '100%', 
+                  aspectRatio: '16/9', 
+                  objectFit: 'contain', 
+                  display: 'block',
+                  background: 'var(--surface)'
+                }}
                 onError={(e) => {
                   e.currentTarget.style.display = 'none';
                 }}
@@ -407,7 +413,7 @@ export default function Profile() {
               <div
                 style={{
                   width: '100%',
-                  aspectRatio: '16/6',
+                  aspectRatio: '16/9',
                   backgroundImage: `url(${getHouseImageSrc(profile.house)})`,
                   backgroundSize: 'cover',
                   backgroundPosition: 'center',
