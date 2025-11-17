@@ -82,12 +82,18 @@ export default function AnnouncementDetail() {
 
       <div className="card" style={{ marginBottom: '1.5rem', border: '1px solid rgba(148,163,184,0.2)', padding: 0, overflow: 'hidden' }}>
         {announcement.imageUrl && (
-          <div style={{
-            width: '100%',
-            height: 400,
-            background: `url(${announcement.imageUrl}) center/cover no-repeat`,
-            backgroundSize: 'cover'
-          }} />
+          <div
+            style={{
+              width: '100%',
+              aspectRatio: '16 / 10',
+              maxWidth: 960,
+              maxHeight: 600,
+              margin: '0 auto',
+              background: `url(${announcement.imageUrl}) center/cover no-repeat`,
+              backgroundSize: 'cover',
+              borderBottom: '1px solid rgba(148,163,184,0.12)'
+            }}
+          />
         )}
         <div style={{ padding: '2rem' }}>
           <h1 className="hdr" style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>

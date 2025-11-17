@@ -16,6 +16,9 @@ const userSchema = new mongoose.Schema({
   house: { type: String, enum: houses, required: true },
   photoUrl: { type: String },
   heroCardUrl: { type: String },
+  certificates: [{ type: String }], // Array of certificate file paths
+  warningNotice: { type: String }, // Warning notice file path (image)
+  warningText: { type: String }, // Warning notice text
   points: { type: Number, default: 0 },
   role: { type: String, enum: ['user', 'moderator', 'admin'], default: 'user' },
   moderatorType: { type: String, enum: ['Arbiter', 'Artisan', 'Vigil', 'Aesther', 'Gatekeeper', 'Overseer'], default: null },

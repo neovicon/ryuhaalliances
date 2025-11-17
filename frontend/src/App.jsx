@@ -15,6 +15,7 @@ import EventDetail from './pages/EventDetail.jsx'
 import HouseDetail from './pages/HouseDetail.jsx'
 import Announcements from './pages/Announcements.jsx'
 import AnnouncementDetail from './pages/AnnouncementDetail.jsx'
+import Moderator from './pages/Moderator.jsx'
 
 function Nav() {
   const { pathname } = useLocation()
@@ -46,6 +47,9 @@ function Nav() {
           <Link to="/announcements" className={`nav-link ${isActive('/announcements') ? 'active' : ''}`}>Announcements</Link>
           {user?.role === 'admin' && (
             <Link to="/admin" className={`nav-link ${isActive('/admin') ? 'active' : ''}`}>Admin</Link>
+          )}
+          {user?.role === 'moderator' && (
+            <Link to="/moderator" className={`nav-link ${isActive('/moderator') ? 'active' : ''}`}>Moderator</Link>
           )}
           {user && (
             <Link to="/profile" className={`nav-link ${isActive('/profile') ? 'active' : ''}`}>Profile</Link>
@@ -87,6 +91,7 @@ export default function App() {
         <Route path="/feed" element={<Feed />} />
         <Route path="/leaderboard" element={<Leaderboard />} />
         <Route path="/admin" element={<Admin />} />
+        <Route path="/moderator" element={<Moderator />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />

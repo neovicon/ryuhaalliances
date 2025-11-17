@@ -75,14 +75,18 @@ export default function Home() {
               <div key={announcement.id} className="card" style={{ cursor: 'pointer' }} onClick={() => navigate(`/announcements/${announcement.id}`)}>
                 <h4 className="hdr" style={{ marginBottom: '0.5rem', fontSize: '1.2rem' }}>{announcement.title}</h4>
                 {announcement.imageUrl && (
-                  <img
-                    src={announcement.imageUrl}
-                    alt={announcement.title}
-                    style={{ width: '100%', maxHeight: 200, borderRadius: '8px', marginBottom: '0.75rem', objectFit: 'cover' }}
-                    onError={(e) => {
-                      e.target.style.display = 'none';
-                    }}
-                  />
+                  <div
+            style={{
+              width: '100%',
+              aspectRatio: '16 / 10',
+              maxWidth: 960,
+              maxHeight: 600,
+              margin: '0 auto',
+              background: `url(${announcement.imageUrl}) center/cover no-repeat`,
+              backgroundSize: 'cover',
+              borderBottom: '1px solid rgba(148,163,184,0.12)'
+            }}
+          />
                 )}
                 <div style={{ 
                   color: 'var(--muted)', 

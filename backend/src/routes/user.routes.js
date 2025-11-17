@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import { requireAuth, requireAdmin } from '../middleware/auth.js';
-import { updateDisplayName, validateDisplayName, searchUsers, validateSearch, getMe, updatePhoto, updateHeroCard, deleteHeroCard, changePassword, validateChangePassword, getPublicProfile, validatePublicProfile, publicSearch, validatePublicSearch } from '../controllers/user.controller.js';
+import { requireAuth, requireAdmin, requireArtisan, requireArbiter } from '../middleware/auth.js';
+import { updateDisplayName, validateDisplayName, searchUsers, validateSearch, getMe, updatePhoto, updateHeroCard, deleteHeroCard, changePassword, validateChangePassword, getPublicProfile, validatePublicProfile, publicSearch, validatePublicSearch, updateMemberHeroCard, validateUpdateMemberHeroCard, uploadCertificate, validateUploadCertificate, uploadWarningNotice, validateUploadWarningNotice } from '../controllers/user.controller.js';
 import { uploadImage, uploadToStorage } from '../middleware/upload.js';
 import { adjustPoints, leaderboard, validateAdjust, updateRank, validateUpdateRank } from '../controllers/points.controller.js';
 
@@ -17,6 +17,14 @@ router.get('/search', requireAuth, validateSearch, searchUsers);
 router.post('/:userId/points', requireAuth, requireAdmin, validateAdjust, adjustPoints);
 router.patch('/:userId/rank', requireAuth, requireAdmin, validateUpdateRank, updateRank);
 router.get('/leaderboard', requireAuth, leaderboard);
+
+// Artisan routes: Modify Hero License and upload Certificates for members
+router.post('/:userId/hero-card', requireAuth, requireArtisan, validateUpdateMemberHeroCard, uploadImage.single('heroCard'), uploadToStorage, updateMemberHeroCard);
+router.post('/:userId/certificate', requireAuth, requireArtisan, validateUploadCertificate, uploadImage.single('certificate'), uploadToStorage, uploadCertificate);
+
+// Arbiter routes: Upload warning notice for members (image optional, text optional, but at least one required)
+router.post('/:userId/warning-notice', requireAuth, requireArbiter, uploadImage.single('warningNotice'), uploadToStorage, validateUploadWarningNotice, uploadWarningNotice);
+
 export default router;
 
 

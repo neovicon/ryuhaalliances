@@ -1,4 +1,4 @@
-import { body, validationResult, query } from 'express-validator';
+import { body, validationResult, query, param } from 'express-validator';
 import User from '../models/User.js';
 import { getPhotoUrl } from '../utils/photoUrl.js';
 import bcrypt from 'bcryptjs';
@@ -135,6 +135,13 @@ export async function getPublicProfile(req, res) {
     const userObj = user.toObject();
     userObj.photoUrl = await getPhotoUrl(userObj.photoUrl, req);
     userObj.heroCardUrl = await getPhotoUrl(userObj.heroCardUrl, req);
+    // Convert certificate paths to full URLs
+    if (userObj.certificates && userObj.certificates.length > 0) {
+      userObj.certificates = await Promise.all(
+        userObj.certificates.map(cert => getPhotoUrl(cert, req))
+      );
+    }
+    userObj.warningNotice = await getPhotoUrl(userObj.warningNotice, req);
 
     const { _id, email, adminMessage, ...rest } = userObj;
     const publicUser = {
@@ -150,6 +157,9 @@ export async function getPublicProfile(req, res) {
       memberStatus: rest.memberStatus,
       photoUrl: rest.photoUrl,
       heroCardUrl: rest.heroCardUrl,
+      certificates: rest.certificates || [],
+      warningNotice: rest.warningNotice,
+      warningText: rest.warningText,
       createdAt: rest.createdAt,
       updatedAt: rest.updatedAt
     };
@@ -207,6 +217,141 @@ export async function publicSearch(req, res) {
   } catch (error) {
     console.error('Error searching users:', error);
     res.status(500).json({ error: 'Failed to search users' });
+  }
+}
+
+// Artisan endpoints: Modify Hero License and upload Certificates for members
+export const validateUpdateMemberHeroCard = [
+  param('userId').isMongoId().withMessage('Valid user ID is required'),
+];
+
+export async function updateMemberHeroCard(req, res) {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+
+  if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+
+  try {
+    const { userId } = req.params;
+    const filePath = req.file.storagePath || `/uploads/${req.file.filename}`;
+    const user = await User.findByIdAndUpdate(userId, { heroCardUrl: filePath }, { new: true }).select('-passwordHash');
+    
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const userObj = user.toObject();
+    userObj.photoUrl = await getPhotoUrl(userObj.photoUrl, req);
+    userObj.heroCardUrl = await getPhotoUrl(userObj.heroCardUrl, req);
+    const { _id, ...rest } = userObj;
+
+    res.json({ user: { id: _id, ...rest }, message: 'Hero License updated successfully' });
+  } catch (error) {
+    console.error('Error updating member hero card:', error);
+    res.status(500).json({ error: 'Failed to update hero license' });
+  }
+}
+
+export const validateUploadCertificate = [
+  param('userId').isMongoId().withMessage('Valid user ID is required'),
+];
+
+export async function uploadCertificate(req, res) {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+
+  if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+
+  try {
+    const { userId } = req.params;
+    const filePath = req.file.storagePath || `/uploads/${req.file.filename}`;
+    
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Add certificate to the array
+    const certificates = user.certificates || [];
+    certificates.push(filePath);
+    
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { certificates },
+      { new: true }
+    ).select('-passwordHash');
+
+    const userObj = updatedUser.toObject();
+    userObj.photoUrl = await getPhotoUrl(userObj.photoUrl, req);
+    userObj.heroCardUrl = await getPhotoUrl(userObj.heroCardUrl, req);
+    // Convert certificate paths to full URLs
+    if (userObj.certificates && userObj.certificates.length > 0) {
+      userObj.certificates = await Promise.all(
+        userObj.certificates.map(cert => getPhotoUrl(cert, req))
+      );
+    }
+    const { _id, ...rest } = userObj;
+
+    res.json({ user: { id: _id, ...rest }, message: 'Certificate uploaded successfully' });
+  } catch (error) {
+    console.error('Error uploading certificate:', error);
+    res.status(500).json({ error: 'Failed to upload certificate' });
+  }
+}
+
+// Arbiter endpoints: Upload warning notice for members
+export const validateUploadWarningNotice = [
+  param('userId').isMongoId().withMessage('Valid user ID is required'),
+  body('warningText').optional().isString().withMessage('Warning text must be a string'),
+];
+
+export async function uploadWarningNotice(req, res) {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+
+  const { warningText } = req.body;
+  const hasFile = !!req.file;
+  const hasText = warningText && warningText.trim().length > 0;
+
+  if (!hasFile && !hasText) {
+    return res.status(400).json({ error: 'Either warning text or warning image must be provided' });
+  }
+
+  try {
+    const { userId } = req.params;
+    const updateData = {};
+    
+    if (hasFile) {
+      const filePath = req.file.storagePath || `/uploads/${req.file.filename}`;
+      updateData.warningNotice = filePath;
+    }
+    
+    if (hasText) {
+      updateData.warningText = warningText.trim();
+    }
+
+    const user = await User.findByIdAndUpdate(userId, updateData, { new: true }).select('-passwordHash');
+    
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const userObj = user.toObject();
+    userObj.photoUrl = await getPhotoUrl(userObj.photoUrl, req);
+    userObj.heroCardUrl = await getPhotoUrl(userObj.heroCardUrl, req);
+    userObj.warningNotice = await getPhotoUrl(userObj.warningNotice, req);
+    // Convert certificate paths to full URLs if they exist
+    if (userObj.certificates && userObj.certificates.length > 0) {
+      userObj.certificates = await Promise.all(
+        userObj.certificates.map(cert => getPhotoUrl(cert, req))
+      );
+    }
+    const { _id, ...rest } = userObj;
+
+    res.json({ user: { id: _id, ...rest }, message: 'Warning notice updated successfully' });
+  } catch (error) {
+    console.error('Error uploading warning notice:', error);
+    res.status(500).json({ error: 'Failed to upload warning notice' });
   }
 }
 

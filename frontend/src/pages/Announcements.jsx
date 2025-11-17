@@ -333,12 +333,18 @@ export default function Announcements() {
           {announcements.map(announcement => (
             <div key={announcement.id} className="card" style={{ padding: 0, overflow: 'hidden', cursor: 'pointer' }} onClick={() => navigate(`/announcements/${announcement.id}`)}>
               {announcement.imageUrl && (
-                <div style={{
-                  width: '100%',
-                  height: 200,
-                  background: `url(${announcement.imageUrl}) center/cover no-repeat`,
-                  backgroundSize: 'cover'
-                }} />
+                <div
+            style={{
+              width: '100%',
+              aspectRatio: '16 / 10',
+              maxWidth: 960,
+              maxHeight: 600,
+              margin: '0 auto',
+              background: `url(${announcement.imageUrl}) center/cover no-repeat`,
+              backgroundSize: 'cover',
+              borderBottom: '1px solid rgba(148,163,184,0.12)'
+            }}
+          />
               )}
               <div style={{ padding: '1.5rem' }}>
                 <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginBottom: '0.5rem' }}>
