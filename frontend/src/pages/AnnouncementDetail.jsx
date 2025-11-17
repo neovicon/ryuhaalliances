@@ -86,9 +86,6 @@ export default function AnnouncementDetail() {
             style={{
               width: '100%',
               aspectRatio: '16 / 10',
-              maxWidth: 960,
-              maxHeight: 600,
-              margin: '0 auto',
               background: `url(${announcement.imageUrl}) center/cover no-repeat`,
               backgroundSize: 'cover',
               borderBottom: '1px solid rgba(148,163,184,0.12)'

@@ -164,9 +164,10 @@ export default function Events() {
               {event.imageUrl && (
                 <div style={{
                   width: '100%',
-                  height: 200,
+                  aspectRatio: '16 / 10',
                   background: `url(${event.imageUrl}) center/cover no-repeat`,
-                  backgroundSize: 'cover'
+                  backgroundSize: 'cover',
+                  borderBottom: '1px solid rgba(148,163,184,0.12)'
                 }} />
               )}
               <div style={{ padding: '1.5rem' }}>
@@ -266,16 +267,19 @@ export default function Events() {
                   style={{ marginBottom: '0.5rem' }}
                 />
                 {imagePreview && (
-                  <img 
-                    src={imagePreview} 
-                    alt="Preview" 
-                    style={{ 
-                      maxWidth: '100%', 
-                      maxHeight: 200, 
+                  <div style={{ marginTop: '0.5rem' }}>
+                    <div style={{
+                      width: '100%',
+                      aspectRatio: '16 / 10',
+                      background: `url(${imagePreview}) center/cover no-repeat`,
+                      backgroundSize: 'cover',
                       borderRadius: '8px',
-                      marginTop: '0.5rem'
-                    }} 
-                  />
+                      border: '1px solid rgba(148,163,184,0.2)'
+                    }} />
+                    <div style={{ marginTop: '0.5rem', fontSize: '0.85rem', color: 'var(--muted)' }}>
+                      Recommended: 3088x1890 (16:10 ratio)
+                    </div>
+                  </div>
                 )}
               </div>
               <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
@@ -344,16 +348,19 @@ export default function Events() {
                   style={{ marginBottom: '0.5rem' }}
                 />
                 {imagePreview && (
-                  <img 
-                    src={imagePreview} 
-                    alt="Preview" 
-                    style={{ 
-                      maxWidth: '100%', 
-                      maxHeight: 200, 
+                  <div style={{ marginTop: '0.5rem' }}>
+                    <div style={{
+                      width: '100%',
+                      aspectRatio: '16 / 10',
+                      background: `url(${imagePreview}) center/cover no-repeat`,
+                      backgroundSize: 'cover',
                       borderRadius: '8px',
-                      marginTop: '0.5rem'
-                    }} 
-                  />
+                      border: '1px solid rgba(148,163,184,0.2)'
+                    }} />
+                    <div style={{ marginTop: '0.5rem', fontSize: '0.85rem', color: 'var(--muted)' }}>
+                      Recommended: 3088x1890 (16:10 ratio)
+                    </div>
+                  </div>
                 )}
               </div>
               <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>

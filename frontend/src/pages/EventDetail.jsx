@@ -86,9 +86,10 @@ export default function EventDetail() {
         {event.imageUrl && (
           <div style={{
             width: '100%',
-            height: 400,
+            aspectRatio: '16 / 10',
             background: `url(${event.imageUrl}) center/cover no-repeat`,
-            backgroundSize: 'cover'
+            backgroundSize: 'cover',
+            borderBottom: '1px solid rgba(148,163,184,0.12)'
           }} />
         )}
         <div style={{ padding: '2rem' }}>
