@@ -8,10 +8,19 @@ export default function Home() {
   const [loadingEvents, setLoadingEvents] = useState(true);
   const [announcements, setAnnouncements] = useState([]);
   const [loadingAnnouncements, setLoadingAnnouncements] = useState(true);
+  const [blogs, setBlogs] = useState([]);
+  const [loadingBlogs, setLoadingBlogs] = useState(true);
+  const [articles, setArticles] = useState([]);
+  const [loadingArticles, setLoadingArticles] = useState(true);
+  const [stories, setStories] = useState([]);
+  const [loadingStories, setLoadingStories] = useState(true);
 
   useEffect(() => {
     loadEvents();
     loadAnnouncements();
+    loadBlogs();
+    loadArticles();
+    loadStories();
   }, []);
 
   async function loadEvents() {
@@ -35,6 +44,42 @@ export default function Home() {
       console.error('Error loading announcements:', error);
     } finally {
       setLoadingAnnouncements(false);
+    }
+  }
+
+  async function loadBlogs() {
+    try {
+      setLoadingBlogs(true);
+      const { data } = await client.get('/blogs', { params: { activeOnly: 'true' } });
+      setBlogs(data.blogs || []);
+    } catch (err) {
+      console.error('Error loading blogs:', err);
+    } finally {
+      setLoadingBlogs(false);
+    }
+  }
+
+  async function loadArticles() {
+    try {
+      setLoadingArticles(true);
+      const { data } = await client.get('/articles', { params: { activeOnly: 'true' } });
+      setArticles(data.articles || []);
+    } catch (err) {
+      console.error('Error loading articles:', err);
+    } finally {
+      setLoadingArticles(false);
+    }
+  }
+
+  async function loadStories() {
+    try {
+      setLoadingStories(true);
+      const { data } = await client.get('/stories', { params: { activeOnly: 'true' } });
+      setStories(data.stories || []);
+    } catch (err) {
+      console.error('Error loading stories:', err);
+    } finally {
+      setLoadingStories(false);
     }
   }
 
@@ -102,6 +147,78 @@ export default function Home() {
                 <div style={{ color: 'var(--muted)', fontSize: '0.8rem', marginTop: '0.75rem' }}>
                   {new Date(announcement.createdAt).toLocaleDateString()}
                 </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Blogs Section */}
+      {!loadingBlogs && blogs.length > 0 && (
+        <section className="container" style={{ padding: '2rem 1rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+            <h3 className="hdr" style={{ margin: 0 }}>Blogs</h3>
+            <a className="btn" onClick={() => navigate('/blogs')} style={{ background: 'transparent', border: '1px solid rgba(148,163,184,0.3)' }}>
+              View more
+            </a>
+          </div>
+          <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))' }}>
+            {blogs.slice(0, 3).map((b) => (
+              <div key={b.id} className="card" style={{ cursor: 'pointer' }} onClick={() => navigate(`/blogs/${b.id}`)}>
+                <h4 className="hdr" style={{ marginBottom: '0.5rem', fontSize: '1.1rem' }}>{b.title}</h4>
+                {b.imageUrl && (
+                  <div style={{ width: '100%', aspectRatio: '16 / 10', background: `url(${b.imageUrl}) center/cover no-repeat`, backgroundSize: 'cover', borderBottom: '1px solid rgba(148,163,184,0.12)' }} />
+                )}
+                <div style={{ color: 'var(--muted)', whiteSpace: 'pre-wrap', lineHeight: 1.6, display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{b.excerpt || b.content}</div>
+                <div style={{ color: 'var(--muted)', fontSize: '0.8rem', marginTop: '0.75rem' }}>{b.createdAt && new Date(b.createdAt).toLocaleDateString()}</div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Articles Section */}
+      {!loadingArticles && articles.length > 0 && (
+        <section className="container" style={{ padding: '2rem 1rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+            <h3 className="hdr" style={{ margin: 0 }}>Articles</h3>
+            <a className="btn" onClick={() => navigate('/articles')} style={{ background: 'transparent', border: '1px solid rgba(148,163,184,0.3)' }}>
+              View more
+            </a>
+          </div>
+          <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))' }}>
+            {articles.slice(0, 3).map((it) => (
+              <div key={it.id} className="card" style={{ cursor: 'pointer' }} onClick={() => navigate(`/articles/${it.id}`)}>
+                <h4 className="hdr" style={{ marginBottom: '0.5rem', fontSize: '1.1rem' }}>{it.title}</h4>
+                {it.imageUrl && (
+                  <div style={{ width: '100%', aspectRatio: '16 / 10', background: `url(${it.imageUrl}) center/cover no-repeat`, backgroundSize: 'cover', borderBottom: '1px solid rgba(148,163,184,0.12)' }} />
+                )}
+                <div style={{ color: 'var(--muted)', whiteSpace: 'pre-wrap', lineHeight: 1.6, display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{it.content}</div>
+                <div style={{ color: 'var(--muted)', fontSize: '0.8rem', marginTop: '0.75rem' }}>{it.createdAt && new Date(it.createdAt).toLocaleDateString()}</div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Stories Section */}
+      {!loadingStories && stories.length > 0 && (
+        <section className="container" style={{ padding: '2rem 1rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+            <h3 className="hdr" style={{ margin: 0 }}>Stories</h3>
+            <a className="btn" onClick={() => navigate('/stories')} style={{ background: 'transparent', border: '1px solid rgba(148,163,184,0.3)' }}>
+              View more
+            </a>
+          </div>
+          <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))' }}>
+            {stories.slice(0, 3).map((s) => (
+              <div key={s.id} className="card" style={{ cursor: 'pointer' }} onClick={() => navigate(`/stories/${s.id}`)}>
+                <h4 className="hdr" style={{ marginBottom: '0.5rem', fontSize: '1.1rem' }}>{s.title}</h4>
+                {s.imageUrl && (
+                  <div style={{ width: '100%', aspectRatio: '16 / 10', background: `url(${s.imageUrl}) center/cover no-repeat`, backgroundSize: 'cover', borderBottom: '1px solid rgba(148,163,184,0.12)' }} />
+                )}
+                <div style={{ color: 'var(--muted)', whiteSpace: 'pre-wrap', lineHeight: 1.6, display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{s.content}</div>
+                <div style={{ color: 'var(--muted)', fontSize: '0.8rem', marginTop: '0.75rem' }}>{s.createdAt && new Date(s.createdAt).toLocaleDateString()}</div>
               </div>
             ))}
           </div>

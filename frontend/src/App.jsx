@@ -19,6 +19,11 @@ import HouseDetail from './pages/HouseDetail.jsx'
 import Announcements from './pages/Announcements.jsx'
 import AnnouncementDetail from './pages/AnnouncementDetail.jsx'
 import Moderator from './pages/Moderator.jsx'
+import Articles from './pages/Articles.jsx'
+import Stories from './pages/Stories.jsx'
+import ArticleDetail from './pages/ArticleDetail.jsx'
+import StoryDetail from './pages/StoryDetail.jsx'
+// Attendance feature removed
 
 
 
@@ -45,11 +50,16 @@ export default function App() {
         <Route path="/profile" element={<Profile />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
+  {/* Attendance route removed */}
         <Route path="/codex" element={<Codex />} />
         <Route path="/events" element={<Events />} />
         <Route path="/events/:id" element={<EventDetail />} />
-  <Route path="/blogs" element={<Blogs />} />
-  <Route path="/blogs/:id" element={<BlogDetail />} />
+        <Route path="/blogs" element={<Blogs />} />
+        <Route path="/blogs/:id" element={<BlogDetail />} />
+  <Route path="/articles" element={<Articles />} />
+        <Route path="/articles/:id" element={<ArticleDetail />} />
+  <Route path="/stories" element={<Stories />} />
+        <Route path="/stories/:id" element={<StoryDetail />} />
         <Route path="/houses/:slug" element={<HouseDetail />} />
         <Route path="/announcements" element={<Announcements />} />
         <Route path="/announcements/:id" element={<AnnouncementDetail />} />

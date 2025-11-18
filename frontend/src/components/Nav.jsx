@@ -42,19 +42,20 @@ export default function Nav() {
     { to: '/feed', label: 'Feed', Icon: Home },
     { to: '/leaderboard', label: 'Leaderboard', Icon: Trophy },
     { to: '/blogs', label: 'Blogs', Icon: BookOpen },
-    { to: '/attendance', label: 'Attendance', Icon: ClipboardList },
     { to: '/events', label: 'Events', Icon: Calendar }
   ]
 
   // Hide certain main links for anonymous users
   const visibleMainLinks = mainLinks.filter(l => {
-    // hide feed, leaderboard and attendance for anonymous users
-    if (!user && (l.to === '/feed' || l.to === '/leaderboard' || l.to === '/attendance')) return false
+    // hide feed and leaderboard for anonymous users
+    if (!user && (l.to === '/feed' || l.to === '/leaderboard')) return false
     return true
   })
 
   const secondaryLinks = [
     { to: '/announcements', label: 'Announcements' },
+    { to: '/articles', label: 'Articles' },
+    { to: '/stories', label: 'Stories' }
   ]
 
   return (
@@ -131,6 +132,14 @@ export default function Nav() {
                 <Link to="/announcements" className="mobile-link" onClick={() => setOpen(false)}>
                   <span style={{ width: 20 }} />
                   <span>Announcements</span>
+                </Link>
+                <Link to="/articles" className="mobile-link" onClick={() => setOpen(false)}>
+                  <span style={{ width: 20 }} />
+                  <span>Articles</span>
+                </Link>
+                <Link to="/stories" className="mobile-link" onClick={() => setOpen(false)}>
+                  <span style={{ width: 20 }} />
+                  <span>Stories</span>
                 </Link>
                 {user?.role === 'admin' && (
                   <Link to="/admin" className="mobile-link" onClick={() => setOpen(false)}>Admin</Link>
