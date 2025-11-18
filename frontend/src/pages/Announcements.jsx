@@ -20,6 +20,8 @@ export default function Announcements() {
   const [verificationSuccess, setVerificationSuccess] = useState(false);
 
   const isAdmin = user && user.role === 'admin';
+  const isAestherOrVigil = user && user.role === 'moderator' && (user.moderatorType === 'Aesther' || user.moderatorType === 'Vigil');
+  const isPrivileged = isAdmin || isAestherOrVigil;
   const showEmailVerification = user && !user.emailVerified;
 
   useEffect(() => {
@@ -30,7 +32,8 @@ export default function Announcements() {
     try {
       setLoading(true);
       // Admins see all announcements, others see only active
-      const params = (user && user.role === 'admin') ? {} : { activeOnly: 'true' };
+  // Admins and specific moderator types can see all announcements; others only see active ones
+  const params = (isPrivileged) ? {} : { activeOnly: 'true' };
       const { data } = await client.get('/announcements', { params });
       setAnnouncements(data.announcements || []);
     } catch (error) {
@@ -214,7 +217,7 @@ export default function Announcements() {
     <div className="container" style={{ padding: '2rem 1rem' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
         <h2 className="hdr">Announcements</h2>
-        {isAdmin && (
+        {isPrivileged && (
           <button className="btn" onClick={() => setShowCreateModal(true)}>
             Create Announcement
           </button>
@@ -355,7 +358,7 @@ export default function Announcements() {
                   <h3 className="hdr" style={{ margin: 0, fontSize: '1.25rem' }}>
                     {announcement.title}
                   </h3>
-                  {isAdmin && !announcement.isActive && (
+                  {isPrivileged && !announcement.isActive && (
                     <span style={{ padding: '0.2rem 0.5rem', borderRadius: '4px', fontSize: '0.75rem', background: 'rgba(107, 114, 128, 0.2)', color: 'rgba(107, 114, 128, 1)' }}>
                       Inactive
                     </span>
@@ -384,7 +387,7 @@ export default function Announcements() {
                     <div>{new Date(announcement.createdAt).toLocaleDateString()}</div>
                   )}
                 </div>
-                {isAdmin && (
+                {isPrivileged && (
                   <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }} onClick={(e) => e.stopPropagation()}>
                     <button 
                       className="btn" 
