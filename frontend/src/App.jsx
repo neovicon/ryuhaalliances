@@ -15,7 +15,6 @@ import Events from './pages/Events.jsx'
 import EventDetail from './pages/EventDetail.jsx'
 import Blogs from './pages/Blogs.jsx'
 import BlogDetail from './pages/BlogDetail.jsx'
-import Attendance from './pages/Attendance.jsx'
 import HouseDetail from './pages/HouseDetail.jsx'
 import Announcements from './pages/Announcements.jsx'
 import AnnouncementDetail from './pages/AnnouncementDetail.jsx'
@@ -51,7 +50,6 @@ export default function App() {
         <Route path="/events/:id" element={<EventDetail />} />
   <Route path="/blogs" element={<Blogs />} />
   <Route path="/blogs/:id" element={<BlogDetail />} />
-  <Route path="/attendance" element={<Attendance />} />
         <Route path="/houses/:slug" element={<HouseDetail />} />
         <Route path="/announcements" element={<Announcements />} />
         <Route path="/announcements/:id" element={<AnnouncementDetail />} />
