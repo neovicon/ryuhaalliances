@@ -110,6 +110,18 @@ export default function Profile() {
       setProfile(data.user);
       setSearchTerm(data.user.username || '');
       await loadPostsForIdentifier(data.user.username || data.user.sigil || data.user.id);
+      // Some servers may expose warning notices only via the public profile endpoint.
+      // If the self profile does not contain warning fields but the public profile does,
+      // prefer the public profile so the user can see their own warning (matches what others see).
+      try {
+        const pub = await client.get('/users/public/profile', { params: { identifier: data.user.username } });
+        const pubUser = pub?.data?.user;
+        if (pubUser && (pubUser.warningNotice || pubUser.warningText)) {
+          setProfile(pubUser);
+        }
+      } catch (e) {
+        // ignore public profile fetch errors
+      }
     } catch (error) {
       console.error('Failed to load profile:', error);
       setProfile(null);
