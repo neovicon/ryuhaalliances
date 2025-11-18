@@ -2,6 +2,7 @@ import { Route, Routes, Link, useLocation, useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import { useAuth } from './store/auth'
 import './styles/theme.css'
+import Nav from './components/Nav'
 import Login from './pages/Login.jsx'
 import Signup from './pages/Signup.jsx'
 import Feed from './pages/Feed.jsx'
@@ -14,66 +15,13 @@ import Events from './pages/Events.jsx'
 import EventDetail from './pages/EventDetail.jsx'
 import Blogs from './pages/Blogs.jsx'
 import BlogDetail from './pages/BlogDetail.jsx'
+import Attendance from './pages/Attendance.jsx'
 import HouseDetail from './pages/HouseDetail.jsx'
 import Announcements from './pages/Announcements.jsx'
 import AnnouncementDetail from './pages/AnnouncementDetail.jsx'
 import Moderator from './pages/Moderator.jsx'
 
-function Nav() {
-  const { pathname } = useLocation()
-  const navigate = useNavigate()
-  const [open, setOpen] = useState(false)
-  const isActive = (p) => pathname === p
-  const { user, logout } = useAuth()
-  
-  const handleLogout = () => {
-    logout()
-    navigate('/login')
-  }
-  
-  return (
-    <div className="nav">
-      <div className="container nav-inner">
-        <Link to="/" className="nav-brand link" onClick={() => setOpen(false)}>
-          <div className="nav-logo" />
-          <h2 className="hdr nav-title">Ryuha Alliance</h2>
-        </Link>
-        <div className={`nav-links ${open ? 'open' : ''}`} onClick={() => setOpen(false)}>
-          {user && (
-            <>
-              <Link to="/feed" className={`nav-link ${isActive('/feed') ? 'active' : ''}`}>Feed</Link>
-              <Link to="/leaderboard" className={`nav-link ${isActive('/leaderboard') ? 'active' : ''}`}>Leaderboard</Link>
-              <Link to="/blogs" className={`nav-link ${isActive('/blogs') ? 'active' : ''}`}>Blogs</Link>
-            </>
-          )}
-          <Link to="/events" className={`nav-link ${isActive('/events') ? 'active' : ''}`}>Events</Link>
-          <Link to="/announcements" className={`nav-link ${isActive('/announcements') ? 'active' : ''}`}>Announcements</Link>
-          {user?.role === 'admin' && (
-            <Link to="/admin" className={`nav-link ${isActive('/admin') ? 'active' : ''}`}>Admin</Link>
-          )}
-          {user?.role === 'moderator' && (
-            <Link to="/moderator" className={`nav-link ${isActive('/moderator') ? 'active' : ''}`}>Moderator</Link>
-          )}
-          {user && (
-            <Link to="/profile" className={`nav-link ${isActive('/profile') ? 'active' : ''}`}>Profile</Link>
-          )}
-          {!user ? (
-            <>
-              <Link to="/login" className="btn nav-cta">Sign in</Link>
-              <Link to="/signup" className="btn nav-cta" style={{ background: 'transparent', border: '1px solid #2a2a2d', marginLeft: 6 }}>Sign up</Link>
-            </>
-          ) : (
-            <button className="btn nav-cta" onClick={handleLogout}>Logout</button>
-          )}
-        </div>
-        <button className="nav-toggle" onClick={() => setOpen(!open)} aria-label="Toggle navigation">
-          <span>Menu</span>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
-        </button>
-      </div>
-    </div>
-  )
-}
+
 
 export default function App() {
   const { token, loadUser } = useAuth();
@@ -103,6 +51,7 @@ export default function App() {
         <Route path="/events/:id" element={<EventDetail />} />
   <Route path="/blogs" element={<Blogs />} />
   <Route path="/blogs/:id" element={<BlogDetail />} />
+  <Route path="/attendance" element={<Attendance />} />
         <Route path="/houses/:slug" element={<HouseDetail />} />
         <Route path="/announcements" element={<Announcements />} />
         <Route path="/announcements/:id" element={<AnnouncementDetail />} />

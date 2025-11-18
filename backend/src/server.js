@@ -14,6 +14,7 @@ import blogRoutes from './routes/blog.routes.js';
 import adminRoutes from './routes/admin.routes.js';
 import eventRoutes from './routes/event.routes.js';
 import announcementRoutes from './routes/announcement.routes.js';
+import attendanceRoutes from './routes/attendance.routes.js';
 
 const app = express();
 
@@ -52,6 +53,7 @@ app.use('/api/blogs', blogRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/events', eventRoutes);
 app.use('/api/announcements', announcementRoutes);
+app.use('/api/attendance', attendanceRoutes);
 
 const PORT = process.env.PORT || 5000;
 connectDB().then(() => {
