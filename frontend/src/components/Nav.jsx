@@ -78,8 +78,8 @@ export default function Nav() {
           </div>
 
           <div className="nav-secondary" ref={moreRef}>
-        <div className={`more-dropdown ${moreOpen ? 'open' : ''}`}>
-          <button className="nav-link more-btn" onClick={() => setMoreOpen(s => !s)} aria-haspopup="true" aria-expanded={moreOpen}>
+            <div className={`more-dropdown ${moreOpen ? 'open' : ''}`} onMouseEnter={() => setMoreOpen(true)} onMouseLeave={() => setMoreOpen(false)}>
+              <button className="nav-link more-btn" onClick={() => setMoreOpen(s => !s)} aria-haspopup="true" aria-expanded={moreOpen}>
                 <span className="more-label">More</span>
                 <ChevronDown size={14} style={{ marginLeft: 6 }} />
               </button>
