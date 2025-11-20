@@ -55,7 +55,7 @@ export default function Nav() {
   const secondaryLinks = [
     { to: '/announcements', label: 'Announcements' },
     { to: '/articles', label: 'Articles' },
-    { to: '/stories', label: 'Stories' }
+    { to: '/stories', label: 'Stories' },
   ]
 
   return (
@@ -141,7 +141,7 @@ export default function Nav() {
                   <span style={{ width: 20 }} />
                   <span>Stories</span>
                 </Link>
-                {user?.role === 'admin' && (
+                                {user?.role === 'admin' && (
                   <Link to="/admin" className="mobile-link" onClick={() => setOpen(false)}>Admin</Link>
                 )}
                 {user?.role === 'moderator' && (

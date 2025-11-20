@@ -17,6 +17,11 @@ export async function updateDisplayName(req, res) {
 
 export const validateSearch = [ query('q').optional().isString(), query('house').optional().isString() ];
 
+export async function getHouses(req, res) {
+  const houses = await User.distinct('house');
+  res.json({ houses: houses.filter(Boolean).sort() });
+}
+
 export async function searchUsers(req, res) {
   const { q, house } = req.query;
   const filter = {};

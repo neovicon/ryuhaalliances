@@ -1,13 +1,10 @@
-import { Router } from 'express';
-import { requireAuth } from '../middleware/auth.js';
+import express from 'express';
+import { requireAuth as authMiddleware } from '../middleware/auth.js';
 import { getAttendance, updateAttendance } from '../controllers/attendance.controller.js';
 
-const router = Router();
+const attendanceRouter = express.Router();
 
-// GET /api/attendance?house=HouseName&weekStart=YYYY-MM-DD
-router.get('/', requireAuth, getAttendance);
+attendanceRouter.get('/', authMiddleware, getAttendance);
+attendanceRouter.patch('/:id', authMiddleware, updateAttendance);
 
-// PATCH /api/attendance/:id  (Overseer only enforced in controller)
-router.patch('/:id', requireAuth, updateAttendance);
-
-export default router;
+export default attendanceRouter;

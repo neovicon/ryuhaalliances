@@ -57,8 +57,7 @@ export default function ArticleDetail() {
 
       <div className="card" style={{ marginBottom: '1.5rem', border: '1px solid rgba(148,163,184,0.2)', padding: 0, overflow: 'hidden' }}>
         {article.imageUrl && (
-          // Use poster aspect ratio 1414x1999 so article poster displays as intended
-          <div style={{ width: '100%', aspectRatio: '1414 / 1999', background: `url(${article.imageUrl}) center/cover no-repeat`, backgroundSize: 'cover', borderBottom: '1px solid rgba(148,163,184,0.12)' }} />
+          <div style={{ width: '100%', aspectRatio: '16 / 10', background: `url(${article.imageUrl}) center/cover no-repeat`, backgroundSize: 'cover', borderBottom: '1px solid rgba(148,163,184,0.12)' }} />
         )}
         <div style={{ padding: '2rem' }}>
           <h1 className="hdr" style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>{article.title}</h1>

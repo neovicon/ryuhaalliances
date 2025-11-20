@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { requireAuth, requireAdmin, requireArtisan, requireArbiter, requireArbiterOrAdmin } from '../middleware/auth.js';
-import { updateDisplayName, validateDisplayName, searchUsers, validateSearch, getMe, updatePhoto, updateHeroCard, deleteHeroCard, changePassword, validateChangePassword, getPublicProfile, validatePublicProfile, publicSearch, validatePublicSearch, updateMemberHeroCard, validateUpdateMemberHeroCard, uploadCertificate, validateUploadCertificate, uploadWarningNotice, validateUploadWarningNotice, removeWarningNotice } from '../controllers/user.controller.js';
+import { updateDisplayName, validateDisplayName, searchUsers, validateSearch, getMe, updatePhoto, updateHeroCard, deleteHeroCard, changePassword, validateChangePassword, getPublicProfile, validatePublicProfile, publicSearch, validatePublicSearch, updateMemberHeroCard, validateUpdateMemberHeroCard, uploadCertificate, validateUploadCertificate, uploadWarningNotice, validateUploadWarningNotice, removeWarningNotice, getHouses } from '../controllers/user.controller.js';
 import { uploadImage, uploadToStorage } from '../middleware/upload.js';
 import { adjustPoints, leaderboard, validateAdjust, updateRank, validateUpdateRank } from '../controllers/points.controller.js';
 import multer from 'multer';
@@ -29,6 +29,7 @@ router.post('/me/hero-card', requireAuth, uploadImage.single('heroCard'), handle
 router.delete('/me/hero-card', requireAuth, deleteHeroCard);
 router.post('/me/change-password', requireAuth, validateChangePassword, changePassword);
 router.get('/search', requireAuth, validateSearch, searchUsers);
+router.get('/houses', requireAuth, getHouses);
 router.post('/:userId/points', requireAuth, requireAdmin, validateAdjust, adjustPoints);
 router.patch('/:userId/rank', requireAuth, requireAdmin, validateUpdateRank, updateRank);
 router.get('/leaderboard', requireAuth, leaderboard);
