@@ -23,7 +23,7 @@ import Articles from './pages/Articles.jsx'
 import Stories from './pages/Stories.jsx'
 import ArticleDetail from './pages/ArticleDetail.jsx'
 import StoryDetail from './pages/StoryDetail.jsx'
-
+import AttendanceBoard from './pages/Attendance.jsx'
 
 
 export default function App() {
@@ -49,7 +49,7 @@ export default function App() {
         <Route path="/profile" element={<Profile />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
-
+        <Route path='/attendance' element={<AttendanceBoard />} />
         <Route path="/codex" element={<Codex />} />
         <Route path="/events" element={<Events />} />
         <Route path="/events/:id" element={<EventDetail />} />
