@@ -21,7 +21,7 @@ body { margin: 0; background: var(--bg); color: var(--text); font-family: Inter,
 .link:hover { color: var(--primary) }
 .input { background: #0f1012; color: var(--text); border: 1px solid #1f2937; border-radius: 8px; padding: .6rem .8rem }
 .input:focus { outline: 1px solid var(--primary) }
-.nav { display: flex; align-items: center; justify-content: space-between; padding:0; position: sticky; top: 0; backdrop-filter: blur(6px); background: rgba(11,11,12,.6); border-bottom: 1px solid #1f2937; z-index: 10 }
+.nav { display: flex; align-items: center; justify-content: space-between; padding:0; position: sticky; top: 0; backdrop-filter: blur(6px); background: rgba(11,11,12,.6); border-bottom: 1px solid #1f2937; z-index: 100 }
 .container { max-width: 1100px; margin: 0 auto; padding: 0}
 .grid { display: grid; gap: 1rem }
 

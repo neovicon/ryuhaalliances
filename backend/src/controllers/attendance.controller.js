@@ -1,73 +1,115 @@
-import mongoose from 'mongoose';
 import Attendance from '../models/Attendance.js';
 import User from '../models/User.js';
 
-const ALLOWED = new Set(['present','absent','excused','no_card']);
+// Helper to get start of week (Saturday)
+const getSaturday = (d) => {
+  d = new Date(d);
+  const day = d.getDay();
+  const diff = d.getDate() - ((day + 1) % 7);
+  return new Date(d.setDate(diff)).setHours(0, 0, 0, 0);
+};
 
-export async function getAttendance(req, res) {
-  try {
-    const { weekStart } = req.query;
-    const house = req.query.house || req.user?.house;
-    if (!weekStart) return res.status(400).json({ error: 'weekStart is required' });
-    if (!house) return res.status(400).json({ error: 'house is required' });
-
-    const week = new Date(weekStart);
-    // Normalize to start of day UTC
-    const doc = await Attendance.findOne({ house, weekStart: week }).populate('records.userId', 'username displayName house');
-    if (!doc) return res.status(404).json({ error: 'Attendance not found' });
-    res.json({ attendance: doc });
-  } catch (err) {
-    console.error('getAttendance error', err);
-    res.status(500).json({ error: 'Server error' });
-  }
-}
-
-function isValidStatusMap(status) {
-  if (!status || typeof status !== 'object') return false;
-  const keys = ['M','T','W','Th','F'];
-  for (const k of keys) {
-    if (!Object.prototype.hasOwnProperty.call(status, k)) return false;
-    if (!ALLOWED.has(status[k])) return false;
-  }
-  return true;
-}
 
 export async function updateAttendance(req, res) {
   try {
-    const user = req.user;
-    if (!user || user.role !== 'OVERSEER') return res.status(403).json({ error: 'Forbidden' });
+    // 1. FETCH REAL USER DATA FROM DB
+    // The token usually only has ID, so we must fetch the user to check moderatorType
+    const user = await User.findById(req.user.id);
 
-    const { id } = req.params;
-    if (!mongoose.Types.ObjectId.isValid(id)) return res.status(400).json({ error: 'Invalid attendance id' });
-
-    const { records } = req.body;
-    if (!Array.isArray(records)) return res.status(400).json({ error: 'records must be an array' });
-
-    // Validate each record: userId valid and exists, status map valid
-    const userIds = [];
-    for (const r of records) {
-      if (!r.userId || !mongoose.Types.ObjectId.isValid(r.userId)) return res.status(400).json({ error: 'Invalid userId in records' });
-      if (!isValidStatusMap(r.status)) return res.status(400).json({ error: 'Invalid status map in records' });
-      userIds.push(r.userId);
+    if (!user) {
+      return res.status(401).json({ error: 'User not found' });
     }
 
-    // Ensure all userIds exist
-    const uniqueUserIds = [...new Set(userIds.map(String))];
-    const found = await User.find({ _id: { $in: uniqueUserIds } }).select('_id');
-    if (found.length !== uniqueUserIds.length) return res.status(400).json({ error: 'One or more userIds are invalid' });
+    // 2. CHECK PERMISSIONS
+    const isOverseer = user.moderatorType === 'Overseer' || user.role === 'admin';
 
-    const attendance = await Attendance.findById(id);
-    if (!attendance) return res.status(404).json({ error: 'Attendance not found' });
+    if (!isOverseer) {
+      return res.status(403).json({ error: 'Forbidden: Only Overseers or Admins can update attendance' });
+    }
 
-    // Map incoming records into shape
-    attendance.records = records.map(r => ({ userId: r.userId, status: r.status }));
-    attendance.updatedBy = user._id || user.id;
+    const { id } = req.params;
+    const { house, weekStart, records } = req.body;
 
-    await attendance.save();
-    const out = await Attendance.findById(attendance._id).populate('records.userId', 'username displayName house');
-    res.json({ attendance: out });
-  } catch (err) {
-    console.error('updateAttendance error', err);
+    if (!records || !Array.isArray(records)) {
+      return res.status(400).json({ error: 'Invalid records format' });
+    }
+
+    const updateData = {
+      records,
+      updatedBy: user._id
+    };
+
+    let doc;
+    if (id && id !== 'new' && id !== 'undefined') {
+      // Update existing
+      doc = await Attendance.findByIdAndUpdate(
+        id,
+        { $set: updateData },
+        { new: true, runValidators: true }
+      );
+    } else {
+      // Create new
+      if (!house || !weekStart) {
+        return res.status(400).json({ error: 'House and WeekStart required for creating records' });
+      }
+
+      const startDate = new Date(getSaturday(weekStart));
+
+      doc = await Attendance.findOneAndUpdate(
+        { house, weekStart: startDate },
+        {
+          $set: updateData,
+          $setOnInsert: { createdBy: user._id }
+        },
+        { new: true, upsert: true, runValidators: true }
+      );
+    }
+
+    res.json({ attendance: doc });
+
+  } catch (error) {
+    console.error('Update Attendance Error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+}
+export async function getAttendance(req, res) {
+  try {
+    const { house, weekStart } = req.query;
+
+    if (!weekStart) {
+      return res.status(400).json({ error: 'weekStart is required' });
+    }
+
+    const targetHouse = house || req.user.house;
+    const startDate = new Date(getSaturday(weekStart));
+
+    let attendance = await Attendance.findOne({
+      house: targetHouse,
+      weekStart: startDate
+    }).populate('records.userId', 'displayName username photoUrl rank');
+
+    // --- Auto-create if missing ---
+    if (!attendance) {
+      const members = await User.find({ house: targetHouse }).select('_id displayName username photoUrl rank');
+      const records = members.map(user => ({
+        userId: user._id,
+        status: { Sa: 'absent', Su: 'absent', M: 'absent', T: 'absent', W: 'absent', Th: 'absent', F: 'absent' }
+      }));
+
+      attendance = await Attendance.create({
+        house: targetHouse,
+        weekStart: startDate,
+        records,
+        createdBy: req.user.id
+      });
+
+      attendance = await attendance.populate('records.userId', 'displayName username photoUrl rank');
+    }
+
+    res.json({ attendance });
+
+  } catch (error) {
+    console.error('Get Attendance Error:', error);
     res.status(500).json({ error: 'Server error' });
   }
 }

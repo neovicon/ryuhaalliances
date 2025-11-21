@@ -7,6 +7,8 @@ const StatusEnum = ['present', 'absent', 'excused', 'no_card'];
 const RecordSchema = new Schema({
   userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
   status: {
+    Sa: { type: String, enum: StatusEnum, default: 'absent' },
+    Su: { type: String, enum: StatusEnum, default: 'absent' },
     M: { type: String, enum: StatusEnum, default: 'absent' },
     T: { type: String, enum: StatusEnum, default: 'absent' },
     W: { type: String, enum: StatusEnum, default: 'absent' },

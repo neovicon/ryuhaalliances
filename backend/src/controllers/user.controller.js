@@ -36,6 +36,26 @@ export async function searchUsers(req, res) {
   res.json({ users: usersWithFullUrl });
 }
 
+// New function to fetch users by house parameter
+export async function getUsersByHouse(req, res) {
+  const { house } = req.params;
+  try {
+    // Fetch users belonging to the specific house
+    const users = await User.find({ house }).select('username displayName house points photoUrl rank memberStatus');
+    
+    const usersWithFullUrl = await Promise.all(users.map(async user => {
+      const userObj = user.toObject();
+      userObj.photoUrl = await getPhotoUrl(userObj.photoUrl, req);
+      return userObj;
+    }));
+    
+    res.json({ users: usersWithFullUrl });
+  } catch (error) {
+    console.error('Error fetching users by house:', error);
+    res.status(500).json({ error: 'Failed to fetch users' });
+  }
+}
+
 export async function getMe(req, res) {
   const me = await User.findById(req.user.id);
   if (!me) {
@@ -46,10 +66,8 @@ export async function getMe(req, res) {
 
 export async function updatePhoto(req, res) {
   if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
-  // Use storagePath from Supabase (filename only), otherwise fall back to local path
   const filePath = req.file.storagePath || `/uploads/${req.file.filename}`;
   const user = await User.findByIdAndUpdate(req.user.id, { photoUrl: filePath }, { new: true });
-  // Return user with signed URL for photoUrl
   const userObj = user.toObject();
   userObj.photoUrl = await getPhotoUrl(userObj.photoUrl, req);
   res.json({ user: userObj });
@@ -57,10 +75,8 @@ export async function updatePhoto(req, res) {
 
 export async function updateHeroCard(req, res) {
   if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
-  // Use storagePath from Supabase (filename only), otherwise fall back to local path
   const filePath = req.file.storagePath || `/uploads/${req.file.filename}`;
   const user = await User.findByIdAndUpdate(req.user.id, { heroCardUrl: filePath }, { new: true });
-  // Return user with signed URL for heroCardUrl
   const userObj = user.toObject();
   userObj.heroCardUrl = await getPhotoUrl(userObj.heroCardUrl, req);
   res.json({ user: userObj });
@@ -69,7 +85,6 @@ export async function updateHeroCard(req, res) {
 export async function deleteHeroCard(req, res) {
   try {
     const user = await User.findByIdAndUpdate(req.user.id, { heroCardUrl: null }, { new: true });
-    // Return user with updated heroCardUrl (should be null)
     const userObj = user.toObject();
     userObj.heroCardUrl = await getPhotoUrl(userObj.heroCardUrl, req);
     res.json({ user: userObj });
@@ -93,13 +108,11 @@ export async function changePassword(req, res) {
     const user = await User.findById(req.user.id);
     if (!user) return res.status(404).json({ error: 'User not found' });
 
-    // Verify current password
     const isValid = await bcrypt.compare(currentPassword, user.passwordHash);
     if (!isValid) {
       return res.status(400).json({ error: 'Current password is incorrect' });
     }
 
-    // Hash new password
     const passwordHash = await bcrypt.hash(newPassword, 12);
     await User.findByIdAndUpdate(req.user.id, { passwordHash });
 
@@ -140,7 +153,6 @@ export async function getPublicProfile(req, res) {
     const userObj = user.toObject();
     userObj.photoUrl = await getPhotoUrl(userObj.photoUrl, req);
     userObj.heroCardUrl = await getPhotoUrl(userObj.heroCardUrl, req);
-    // Convert certificate paths to full URLs
     if (userObj.certificates && userObj.certificates.length > 0) {
       userObj.certificates = await Promise.all(
         userObj.certificates.map(cert => getPhotoUrl(cert, req))
@@ -225,7 +237,6 @@ export async function publicSearch(req, res) {
   }
 }
 
-// Artisan endpoints: Modify Hero License and upload Certificates for members
 export const validateUpdateMemberHeroCard = [
   param('userId').isMongoId().withMessage('Valid user ID is required'),
 ];
@@ -276,7 +287,6 @@ export async function uploadCertificate(req, res) {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    // Add certificate to the array
     const certificates = user.certificates || [];
     certificates.push(filePath);
     
@@ -289,7 +299,6 @@ export async function uploadCertificate(req, res) {
     const userObj = updatedUser.toObject();
     userObj.photoUrl = await getPhotoUrl(userObj.photoUrl, req);
     userObj.heroCardUrl = await getPhotoUrl(userObj.heroCardUrl, req);
-    // Convert certificate paths to full URLs
     if (userObj.certificates && userObj.certificates.length > 0) {
       userObj.certificates = await Promise.all(
         userObj.certificates.map(cert => getPhotoUrl(cert, req))
@@ -304,7 +313,6 @@ export async function uploadCertificate(req, res) {
   }
 }
 
-// Arbiter endpoints: Upload warning notice for members
 export const validateUploadWarningNotice = [
   param('userId').isMongoId().withMessage('Valid user ID is required'),
   body('warningText').optional().isString().withMessage('Warning text must be a string'),
@@ -345,7 +353,6 @@ export async function uploadWarningNotice(req, res) {
     userObj.photoUrl = await getPhotoUrl(userObj.photoUrl, req);
     userObj.heroCardUrl = await getPhotoUrl(userObj.heroCardUrl, req);
     userObj.warningNotice = await getPhotoUrl(userObj.warningNotice, req);
-    // Convert certificate paths to full URLs if they exist
     if (userObj.certificates && userObj.certificates.length > 0) {
       userObj.certificates = await Promise.all(
         userObj.certificates.map(cert => getPhotoUrl(cert, req))
@@ -384,5 +391,3 @@ export async function removeWarningNotice(req, res) {
     res.status(500).json({ error: 'Failed to remove warning notice' });
   }
 }
-
-

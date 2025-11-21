@@ -14,6 +14,17 @@ export const validateSignup = [
   body('displayName').optional({ nullable: true, checkFalsy: true }).isLength({ max: 64 }).withMessage('Display name must be less than 64 characters'),
 ];
 
+export const getMe = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    res.json({ user: await sanitizeUser(user, req) });
+  } catch (error) {
+    console.error('Get Me Error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
 export async function signup(req, res) {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -26,24 +37,24 @@ export async function signup(req, res) {
   }
 
   const { email, password, username, sigil, house, displayName } = req.body;
-  
+
   // Trim and clean up input
   const cleanEmail = email?.trim();
   const cleanUsername = username?.trim();
   const cleanSigil = sigil?.trim();
   const cleanDisplayName = displayName?.trim() || undefined;
-  
+
   const existing = await User.findOne({ $or: [{ email: cleanEmail }, { username: cleanUsername }] });
   if (existing) return res.status(409).json({ error: 'Email or username already in use' });
 
   const passwordHash = await bcrypt.hash(password, 12);
   // All new signups start as pending (status defaults to 'pending' in the model)
-  const user = await User.create({ 
-    email: cleanEmail, 
-    passwordHash, 
-    username: cleanUsername, 
-    sigil: cleanSigil, 
-    house, 
+  const user = await User.create({
+    email: cleanEmail,
+    passwordHash,
+    username: cleanUsername,
+    sigil: cleanSigil,
+    house,
     displayName: cleanDisplayName
   });
   const token = signJwt({ id: user._id, role: user.role, username: user.username });
@@ -64,11 +75,11 @@ export async function login(req, res) {
   if (!user) return res.status(400).json({ error: 'Invalid credentials' });
   const ok = await bcrypt.compare(password, user.passwordHash);
   if (!ok) return res.status(400).json({ error: 'Invalid credentials' });
-  
+
   // Check if user account is approved
   if (user.status === 'pending') {
     const message = user.adminMessage ? ` Message: ${user.adminMessage}` : '';
-    return res.status(403).json({ 
+    return res.status(403).json({
       error: 'Your account is pending approval. Please wait for an admin to review your account.' + message,
       adminMessage: user.adminMessage || null
     });
@@ -77,7 +88,7 @@ export async function login(req, res) {
     const message = user.adminMessage ? ` Your account has been declined. Message: ${user.adminMessage}` : ' Your account has been declined.';
     return res.status(403).json({ error: `Account declined.${message}` });
   }
-  
+
   const token = signJwt({ id: user._id, role: user.role, username: user.username });
   res.json({ token, user: await sanitizeUser(user, req) });
 }
@@ -109,24 +120,24 @@ export async function resendVerification(req, res) {
 export async function sanitizeUser(user, req = null) {
   const userObj = user.toObject ? user.toObject() : user;
   const { _id, email, username, displayName, sigil, house, photoUrl, heroCardUrl, points, role, moderatorType, status, adminMessage, rank, emailVerified, createdAt, updatedAt } = userObj;
-  return { 
-    id: _id, 
-    email, 
-    username, 
-    displayName, 
-    sigil, 
-    house, 
-    photoUrl: await getPhotoUrl(photoUrl, req), 
+  return {
+    id: _id,
+    email,
+    username,
+    displayName,
+    sigil,
+    house,
+    photoUrl: await getPhotoUrl(photoUrl, req),
     heroCardUrl: await getPhotoUrl(heroCardUrl, req),
-    points, 
-    role, 
+    points,
+    role,
     moderatorType: moderatorType || null,
     status,
     adminMessage,
     rank,
     emailVerified: emailVerified || false,
-    createdAt, 
-    updatedAt 
+    createdAt,
+    updatedAt
   };
 }
 
@@ -184,10 +195,10 @@ export async function sendVerificationCode(req, res) {
       </html>
     `;
 
-    await sendEmail({ 
-      to: user.email, 
-      subject: 'Your Email Verification Code', 
-      html 
+    await sendEmail({
+      to: user.email,
+      subject: 'Your Email Verification Code',
+      html
     });
 
     res.json({ ok: true, message: 'Verification code sent to your email' });

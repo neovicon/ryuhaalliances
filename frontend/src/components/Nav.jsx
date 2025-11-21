@@ -56,6 +56,7 @@ export default function Nav() {
     { to: '/announcements', label: 'Announcements' },
     { to: '/articles', label: 'Articles' },
     { to: '/stories', label: 'Stories' },
+    { to: '/attendance', label: 'Attendance' },
   ]
 
   return (
@@ -78,7 +79,7 @@ export default function Nav() {
           </div>
 
           <div className="nav-secondary" ref={moreRef}>
-            <div className={`more-dropdown ${moreOpen ? 'open' : ''}`} onMouseEnter={() => setMoreOpen(true)} onMouseLeave={() => setMoreOpen(false)}>
+            <div className={`more-dropdown ${moreOpen ? 'open' : ''}`}>
               <button className="nav-link more-btn" onClick={() => setMoreOpen(s => !s)} aria-haspopup="true" aria-expanded={moreOpen}>
                 <span className="more-label">More</span>
                 <ChevronDown size={14} style={{ marginLeft: 6 }} />
@@ -129,6 +130,10 @@ export default function Nav() {
                   </Link>
                 ))}
                 {/* Secondary + conditional links */}
+                <Link to="/attendance" className="mobile-link" onClick={() => setOpen(false)}>
+                  <span style={{ width: 20 }} />
+                  <span>Attendance</span>
+                </Link>
                 <Link to="/announcements" className="mobile-link" onClick={() => setOpen(false)}>
                   <span style={{ width: 20 }} />
                   <span>Announcements</span>
@@ -141,7 +146,7 @@ export default function Nav() {
                   <span style={{ width: 20 }} />
                   <span>Stories</span>
                 </Link>
-                                {user?.role === 'admin' && (
+                {user?.role === 'admin' && (
                   <Link to="/admin" className="mobile-link" onClick={() => setOpen(false)}>Admin</Link>
                 )}
                 {user?.role === 'moderator' && (
