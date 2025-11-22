@@ -5,7 +5,7 @@ import { useAuth } from '../store/auth';
 
 const HOUSES = ['Pendragon', 'Phantomhive', 'Tempest', 'Zoldyck', 'Fritz', 'Elric', 'Dragneel', 'Hellsing', 'Obsidian Order', 'Council of IV', 'Abyssal IV'];
 
-const MEMBER_STATUSES = ['Guardian', 'Lord of the House', 'General', 'Seeker', 'Herald', 'Watcher', 'Knight of Genesis', 'Knight of I', 'Knight of II', 'Knight of III', 'Knight of IV', 'Knight of V', 'Commoner'];
+const MEMBER_STATUSES = ['Creator of the Realm', 'Guardian', 'Lord of the House', 'General', 'Seeker', 'Herald', 'Watcher', 'Knight of Genesis', 'Knight of I', 'Knight of II', 'Knight of III', 'Knight of IV', 'Knight of V', 'Commoner'];
 
 const MODERATOR_TYPES = ['Arbiter', 'Artisan', 'Vigil', 'Aesther', 'Gatekeeper', 'Overseer'];
 
@@ -25,7 +25,7 @@ export default function Admin() {
   const [selectedHouse, setSelectedHouse] = useState(null);
   const [loadingSelectedHouse, setLoadingSelectedHouse] = useState(false);
   const [houseEditValues, setHouseEditValues] = useState({ description: '', status: 'Active' });
-  
+
   async function loadAllUsers() {
     try {
       const { data } = await client.get('/admin/all-users');
@@ -35,14 +35,14 @@ export default function Admin() {
       console.error('Error loading all users:', error);
     }
   }
-  
+
   useEffect(() => {
     // Filter users based on search query
     if (!q.trim()) {
       setFilteredUsers(allUsers);
     } else {
       const query = q.toLowerCase();
-      const filtered = allUsers.filter(u => 
+      const filtered = allUsers.filter(u =>
         u.username?.toLowerCase().includes(query) ||
         u.displayName?.toLowerCase().includes(query) ||
         u.email?.toLowerCase().includes(query) ||
@@ -51,7 +51,7 @@ export default function Admin() {
       setFilteredUsers(filtered);
     }
   }, [q, allUsers]);
-  
+
   async function loadPendingUsers() {
     try {
       const { data } = await client.get('/admin/pending-users');
@@ -60,7 +60,7 @@ export default function Admin() {
       console.error('Error loading pending users:', error);
     }
   }
-  
+
   async function loadHouses() {
     try {
       const { data } = await client.get('/admin/all-houses');
@@ -69,13 +69,13 @@ export default function Admin() {
       console.error('Error loading houses:', error);
     }
   }
-  
-  useEffect(() => { 
+
+  useEffect(() => {
     loadPendingUsers();
     loadAllUsers();
     loadHouses();
   }, []);
-  
+
   const handleUpdatePoints = async (userId, newPoints) => {
     try {
       const currentUser = allUsers.find(u => (u.id || u._id) === userId);
@@ -89,7 +89,7 @@ export default function Admin() {
       alert(error?.response?.data?.error || 'Failed to update points');
     }
   };
-  
+
   const handleUpdateRank = async (userId, newRank) => {
     try {
       await client.patch(`/users/${userId}/rank`, { rank: newRank });
@@ -194,24 +194,24 @@ export default function Admin() {
       alert(error?.response?.data?.error || 'Failed to remove user');
     }
   };
-  
+
   const startEdit = (userId, field, currentValue) => {
     setEditingUser({ userId, field });
-    setEditValues({ 
-      points: currentValue?.points || '', 
-      rank: currentValue?.rank || '', 
+    setEditValues({
+      points: currentValue?.points || '',
+      rank: currentValue?.rank || '',
       house: currentValue?.house || '',
       memberStatus: currentValue?.memberStatus || '',
       username: currentValue?.username || '',
       displayName: currentValue?.displayName || ''
     });
   };
-  
+
   const cancelEdit = () => {
     setEditingUser({ userId: null, field: null });
     setEditValues({ points: '', rank: '', house: '', memberStatus: '', username: '', displayName: '' });
   };
-  
+
   const handleApprove = async (userId) => {
     try {
       await client.post('/admin/approve-user', { userId });
@@ -222,13 +222,13 @@ export default function Admin() {
       alert(error?.response?.data?.error || 'Failed to approve user');
     }
   };
-  
+
   const handleDecline = async () => {
     if (!declineModal.userId) return;
     try {
-      await client.post('/admin/decline-user', { 
-        userId: declineModal.userId, 
-        message: declineModal.message || undefined 
+      await client.post('/admin/decline-user', {
+        userId: declineModal.userId,
+        message: declineModal.message || undefined
       });
       await loadPendingUsers();
       setDeclineModal({ open: false, userId: null, message: '' });
@@ -238,13 +238,13 @@ export default function Admin() {
       alert(error?.response?.data?.error || 'Failed to decline user');
     }
   };
-  
+
   const handleSendMessage = async () => {
     if (!messageModal.userId || !messageModal.message.trim()) return;
     try {
-      await client.post('/admin/send-message', { 
-        userId: messageModal.userId, 
-        message: messageModal.message 
+      await client.post('/admin/send-message', {
+        userId: messageModal.userId,
+        message: messageModal.message
       });
       setMessageModal({ open: false, userId: null, message: '' });
       alert('Message sent successfully');
@@ -306,7 +306,7 @@ export default function Admin() {
   return (
     <div className="container">
       <h3 className="hdr">Admin Dashboard</h3>
-      
+
       {/* Pending Users Section */}
       <div className="card" style={{ marginBottom: '1rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
@@ -448,14 +448,14 @@ export default function Admin() {
           </div>
         )}
       </div>
-      
+
       {/* Houses Management Section */}
       <div className="card" style={{ marginBottom: '1rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
           <h4 className="hdr" style={{ margin: 0 }}>Manage Houses</h4>
           <button className="btn" onClick={loadHouses}>Refresh</button>
         </div>
-        
+
         <div style={{ marginBottom: '1.5rem' }}>
           <label style={{ display: 'block', color: 'var(--muted)', fontSize: '0.85rem', marginBottom: '0.5rem' }}>
             Select House to Edit
@@ -564,10 +564,10 @@ export default function Admin() {
         >
           <h4 className="hdr" style={{ margin: 0 }}>All Users ({filteredUsers.length})</h4>
           <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-            <input 
-              className="input" 
-              placeholder="Search users..." 
-              value={q} 
+            <input
+              className="input"
+              placeholder="Search users..."
+              value={q}
               onChange={e => setQ(e.target.value)}
               style={{ minWidth: '200px' }}
             />
@@ -601,14 +601,14 @@ export default function Admin() {
                       u.status === 'approved'
                         ? 'rgba(34, 197, 94, 0.2)'
                         : u.status === 'pending'
-                        ? 'rgba(251, 191, 36, 0.2)'
-                        : 'rgba(239, 68, 68, 0.2)',
+                          ? 'rgba(251, 191, 36, 0.2)'
+                          : 'rgba(239, 68, 68, 0.2)',
                     color:
                       u.status === 'approved'
                         ? 'rgba(34, 197, 94, 1)'
                         : u.status === 'pending'
-                        ? 'rgba(251, 191, 36, 1)'
-                        : 'rgba(239, 68, 68, 1)'
+                          ? 'rgba(251, 191, 36, 1)'
+                          : 'rgba(239, 68, 68, 1)'
                   }}
                 >
                   {u.status || 'pending'}
@@ -626,14 +626,14 @@ export default function Admin() {
                       u.role === 'admin'
                         ? 'rgba(177, 15, 46, 0.2)'
                         : u.role === 'moderator'
-                        ? 'rgba(59, 130, 246, 0.2)'
-                        : 'rgba(107, 114, 128, 0.2)',
+                          ? 'rgba(59, 130, 246, 0.2)'
+                          : 'rgba(107, 114, 128, 0.2)',
                     color:
                       u.role === 'admin'
                         ? 'rgba(177, 15, 46, 1)'
                         : u.role === 'moderator'
-                        ? 'rgba(59, 130, 246, 1)'
-                        : 'rgba(107, 114, 128, 1)'
+                          ? 'rgba(59, 130, 246, 1)'
+                          : 'rgba(107, 114, 128, 1)'
                   }}
                 >
                   {u.role === 'moderator' && u.moderatorType ? `${u.moderatorType}` : (u.role || 'user')}
@@ -969,7 +969,7 @@ export default function Admin() {
           </div>
         )}
       </div>
-      
+
       {/* Message Modal */}
       {messageModal.open && (
         <div style={{
@@ -986,12 +986,12 @@ export default function Admin() {
         }}>
           <div className="card" style={{ maxWidth: 500, width: '90%' }}>
             <h4 className="hdr" style={{ marginBottom: '1rem' }}>Send Message to User</h4>
-            <textarea 
-              className="input" 
-              style={{ width: '100%', minHeight: 120, marginBottom: '1rem' }} 
-              placeholder="Enter your message..." 
-              value={messageModal.message} 
-              onChange={e => setMessageModal({ ...messageModal, message: e.target.value })} 
+            <textarea
+              className="input"
+              style={{ width: '100%', minHeight: 120, marginBottom: '1rem' }}
+              placeholder="Enter your message..."
+              value={messageModal.message}
+              onChange={e => setMessageModal({ ...messageModal, message: e.target.value })}
             />
             <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
               <button className="btn" onClick={() => setMessageModal({ open: false, userId: null, message: '' })}>
@@ -1004,7 +1004,7 @@ export default function Admin() {
           </div>
         </div>
       )}
-      
+
       {/* Decline Modal */}
       {declineModal.open && (
         <div style={{
@@ -1021,19 +1021,19 @@ export default function Admin() {
         }}>
           <div className="card" style={{ maxWidth: 500, width: '90%' }}>
             <h4 className="hdr" style={{ marginBottom: '1rem' }}>Decline User</h4>
-            <textarea 
-              className="input" 
-              style={{ width: '100%', minHeight: 120, marginBottom: '1rem' }} 
-              placeholder="Optional: Enter a message explaining why the account was declined..." 
-              value={declineModal.message} 
-              onChange={e => setDeclineModal({ ...declineModal, message: e.target.value })} 
+            <textarea
+              className="input"
+              style={{ width: '100%', minHeight: 120, marginBottom: '1rem' }}
+              placeholder="Optional: Enter a message explaining why the account was declined..."
+              value={declineModal.message}
+              onChange={e => setDeclineModal({ ...declineModal, message: e.target.value })}
             />
             <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
               <button className="btn" onClick={() => setDeclineModal({ open: false, userId: null, message: '' })}>
                 Cancel
               </button>
-              <button 
-                className="btn" 
+              <button
+                className="btn"
                 onClick={handleDecline}
                 style={{ background: 'rgba(239, 68, 68, 0.2)', border: '1px solid rgba(239, 68, 68, 0.4)' }}
               >
@@ -1092,8 +1092,8 @@ export default function Admin() {
               <button className="btn" onClick={() => setModeratorModal({ open: false, userId: null, moderatorType: 'Vigil' })}>
                 Cancel
               </button>
-              <button 
-                className="btn" 
+              <button
+                className="btn"
                 onClick={handleAddModerator}
                 style={{ background: 'rgba(59, 130, 246, 0.2)', border: '1px solid rgba(59, 130, 246, 0.4)' }}
               >
