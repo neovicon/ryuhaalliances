@@ -92,7 +92,7 @@ export default function Nav() {
                     </Link>
                   ))}
                   {user?.role === 'admin' && <Link to="/admin" className="more-item" onClick={() => setMoreOpen(false)}>Admin</Link>}
-                  {user?.role === 'moderator' && <Link to="/moderator" className="more-item" onClick={() => setMoreOpen(false)}>Moderator</Link>}
+                  {(user?.role === 'moderator' || user?.role === 'admin') && <Link to="/moderator" className="more-item" onClick={() => setMoreOpen(false)}>Moderator</Link>}
                   {user && <Link to="/profile" className="more-item" onClick={() => setMoreOpen(false)}>Profile</Link>}
                 </div>
               )}
@@ -149,7 +149,7 @@ export default function Nav() {
                 {user?.role === 'admin' && (
                   <Link to="/admin" className="mobile-link" onClick={() => setOpen(false)}>Admin</Link>
                 )}
-                {user?.role === 'moderator' && (
+                {(user?.role === 'moderator' || user?.role === 'admin') && (
                   <Link to="/moderator" className="mobile-link" onClick={() => setOpen(false)}>Moderator</Link>
                 )}
                 {user && (

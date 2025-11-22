@@ -105,10 +105,8 @@ export default function Moderator() {
     setCertificateFile(null);
     setWarningFile(null);
     setWarningText('');
-    // Load full profile for Artisan to show existing heroCardUrl and certificates
-    if (moderatorType === 'Artisan') {
-      loadUserFullProfile(user.id || user._id);
-    } else if (moderatorType === 'Arbiter') {
+    // Load full profile for Artisan, Arbiter, or Admin to show existing heroCardUrl, certificates, and warnings
+    if (moderatorType === 'Artisan' || moderatorType === 'Arbiter' || user.role === 'admin') {
       loadUserFullProfile(user.id || user._id);
     }
   };
@@ -299,9 +297,9 @@ export default function Moderator() {
             <button className="btn" onClick={() => navigate('/announcements')}>
               Manage Announcements
             </button>
-            <div style={{ color: 'var(--muted)', fontSize: '0.9rem', marginTop: '0.5rem' }}>
-              Blog management is available through the API. Use the blog endpoints to manage blog posts.
-            </div>
+            <button className="btn" onClick={() => navigate('/blogs')}>
+              Manage Blogs
+            </button>
           </div>
         </div>
       )}
