@@ -7,11 +7,11 @@ export default function Moderator() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const moderatorType = user?.moderatorType;
-  
+
   // Gatekeeper state
   const [pendingUsers, setPendingUsers] = useState([]);
   const [loadingPending, setLoadingPending] = useState(false);
-  
+
   // Artisan & Arbiter state
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
@@ -19,7 +19,7 @@ export default function Moderator() {
   const [selectedUserFull, setSelectedUserFull] = useState(null); // Full user data with heroCardUrl and certificates
   const [loadingSearch, setLoadingSearch] = useState(false);
   const [loadingUserFull, setLoadingUserFull] = useState(false);
-  
+
   // File upload states
   const [uploadingHeroCard, setUploadingHeroCard] = useState(false);
   const [uploadingCertificate, setUploadingCertificate] = useState(false);
@@ -30,10 +30,22 @@ export default function Moderator() {
   const [warningText, setWarningText] = useState('');
 
   useEffect(() => {
-    if (moderatorType === 'Gatekeeper') {
+    if (moderatorType === 'Gatekeeper' || user?.role === 'admin') {
       loadPendingUsers();
     }
-  }, [moderatorType]);
+  }, [moderatorType, user]);
+
+  // Debounced search effect
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (searchQuery.trim()) {
+        searchUsers();
+      } else {
+        setSearchResults([]);
+      }
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   async function loadPendingUsers() {
     try {
@@ -53,7 +65,7 @@ export default function Moderator() {
       setSearchResults([]);
       return;
     }
-    
+
     try {
       setLoadingSearch(true);
       const { data } = await client.get('/users/search', { params: { q: searchQuery } });
@@ -72,7 +84,7 @@ export default function Moderator() {
       // Use the public profile endpoint to get full user data
       const user = searchResults.find(u => (u.id || u._id) === userId);
       if (!user) return;
-      
+
       // Try to get full profile using username or id
       const identifier = user.username || userId;
       const { data } = await client.get('/users/public/profile', { params: { identifier } });
@@ -114,7 +126,7 @@ export default function Moderator() {
 
   const handleRemoveUser = async (userId) => {
     if (!confirm('Are you sure you want to remove this user? This action cannot be undone.')) return;
-    
+
     try {
       await client.delete(`/admin/user/${userId}`);
       setSearchResults(searchResults.filter(u => (u.id || u._id) !== userId));
@@ -128,7 +140,7 @@ export default function Moderator() {
 
   const handleUploadHeroCard = async () => {
     if (!selectedUser || !heroCardFile) return;
-    
+
     setUploadingHeroCard(true);
     try {
       const form = new FormData();
@@ -152,7 +164,7 @@ export default function Moderator() {
 
   const handleUploadCertificate = async () => {
     if (!selectedUser || !certificateFile) return;
-    
+
     setUploadingCertificate(true);
     try {
       const form = new FormData();
@@ -180,7 +192,7 @@ export default function Moderator() {
       alert('Please provide either warning text or warning image');
       return;
     }
-    
+
     setUploadingWarning(true);
     try {
       const form = new FormData();
@@ -208,12 +220,12 @@ export default function Moderator() {
     }
   };
 
-  if (!user || user.role !== 'moderator') {
+  if (!user || (user.role !== 'moderator' && user.role !== 'admin')) {
     return (
       <div className="container" style={{ padding: '2rem 1rem' }}>
         <div className="card" style={{ textAlign: 'center', padding: '2rem' }}>
           <h2 className="hdr">Access Denied</h2>
-          <p style={{ color: 'var(--muted)' }}>You must be a moderator to access this page.</p>
+          <p style={{ color: 'var(--muted)' }}>You must be a moderator or admin to access this page.</p>
         </div>
       </div>
     );
@@ -263,7 +275,7 @@ export default function Moderator() {
       </div>
 
       {/* Aesther: Events & Announcements */}
-      {(moderatorType === 'Aesther' || moderatorType === 'Overseer') && (
+      {(moderatorType === 'Aesther' || moderatorType === 'Overseer' || user.role === 'admin') && (
         <div className="card" style={{ marginBottom: '1.5rem' }}>
           <h3 className="hdr" style={{ marginBottom: '1rem' }}>
             {moderatorType === 'Aesther' ? 'Events & Announcements' : 'Announcements'}
@@ -280,7 +292,7 @@ export default function Moderator() {
       )}
 
       {/* Vigil: Announcements & Blogs */}
-      {moderatorType === 'Vigil' && (
+      {(moderatorType === 'Vigil' || user.role === 'admin') && (
         <div className="card" style={{ marginBottom: '1.5rem' }}>
           <h3 className="hdr" style={{ marginBottom: '1rem' }}>Content Management</h3>
           <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
@@ -295,7 +307,7 @@ export default function Moderator() {
       )}
 
       {/* Gatekeeper: Approve Members */}
-      {moderatorType === 'Gatekeeper' && (
+      {(moderatorType === 'Gatekeeper' || user.role === 'admin') && (
         <div className="card" style={{ marginBottom: '1.5rem' }}>
           <h3 className="hdr" style={{ marginBottom: '1rem' }}>Pending Members</h3>
           {loadingPending ? (
@@ -346,10 +358,10 @@ export default function Moderator() {
       )}
 
       {/* Artisan: Manage Hero Licenses & Certificates */}
-      {moderatorType === 'Artisan' && (
+      {(moderatorType === 'Artisan' || user.role === 'admin') && (
         <div className="card" style={{ marginBottom: '1.5rem' }}>
           <h3 className="hdr" style={{ marginBottom: '1rem' }}>Member Profile Management</h3>
-          
+
           {/* Search Users */}
           <div style={{ marginBottom: '1.5rem' }}>
             <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
@@ -358,7 +370,6 @@ export default function Moderator() {
                 placeholder="Search by username, display name, or sigil..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && searchUsers()}
                 style={{ flex: 1 }}
               />
               <button className="btn" onClick={searchUsers} disabled={loadingSearch}>
@@ -393,7 +404,7 @@ export default function Moderator() {
             {selectedUser && (
               <div className="card" style={{ background: 'rgba(177, 15, 46, 0.05)' }}>
                 <h4 style={{ marginBottom: '1rem' }}>Manage: {selectedUser.username}</h4>
-                
+
                 {loadingUserFull ? (
                   <div style={{ textAlign: 'center', color: 'var(--muted)', padding: '1rem' }}>
                     Loading user profile...
@@ -524,10 +535,10 @@ export default function Moderator() {
       )}
 
       {/* Arbiter: Remove Members & Upload Warnings */}
-      {moderatorType === 'Arbiter' && (
+      {(moderatorType === 'Arbiter' || user.role === 'admin') && (
         <div className="card" style={{ marginBottom: '1.5rem' }}>
           <h3 className="hdr" style={{ marginBottom: '1rem' }}>Member Discipline</h3>
-          
+
           {/* Search Users */}
           <div style={{ marginBottom: '1.5rem' }}>
             <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
@@ -536,7 +547,6 @@ export default function Moderator() {
                 placeholder="Search by username, display name, or sigil..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && searchUsers()}
                 style={{ flex: 1 }}
               />
               <button className="btn" onClick={searchUsers} disabled={loadingSearch}>
@@ -571,7 +581,7 @@ export default function Moderator() {
             {selectedUser && (
               <div className="card" style={{ background: 'rgba(239, 68, 68, 0.05)' }}>
                 <h4 style={{ marginBottom: '1rem' }}>Manage: {selectedUser.username}</h4>
-                
+
                 {loadingUserFull ? (
                   <div style={{ textAlign: 'center', color: 'var(--muted)', padding: '1rem' }}>
                     Loading user profile...

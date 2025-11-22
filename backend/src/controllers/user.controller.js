@@ -5,7 +5,7 @@ import bcrypt from 'bcryptjs';
 import mongoose from 'mongoose';
 import { sanitizeUser } from './auth.controller.js';
 
-export const validateDisplayName = [ body('displayName').isString().isLength({ min: 1, max: 64 }) ];
+export const validateDisplayName = [body('displayName').isString().isLength({ min: 1, max: 64 })];
 export async function updateDisplayName(req, res) {
   const errors = validationResult(req);
   if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
@@ -15,7 +15,7 @@ export async function updateDisplayName(req, res) {
   res.json({ user: userObj });
 }
 
-export const validateSearch = [ query('q').optional().isString(), query('house').optional().isString() ];
+export const validateSearch = [query('q').optional().isString(), query('house').optional().isString()];
 
 export async function getHouses(req, res) {
   const houses = await User.distinct('house');
@@ -25,7 +25,13 @@ export async function getHouses(req, res) {
 export async function searchUsers(req, res) {
   const { q, house } = req.query;
   const filter = {};
-  if (q) filter.username = { $regex: q, $options: 'i' };
+  if (q) {
+    filter.$or = [
+      { username: { $regex: q, $options: 'i' } },
+      { displayName: { $regex: q, $options: 'i' } },
+      { sigil: { $regex: q, $options: 'i' } }
+    ];
+  }
   if (house) filter.house = house;
   const users = await User.find(filter).select('username displayName house points photoUrl');
   const usersWithFullUrl = await Promise.all(users.map(async user => {
@@ -42,13 +48,13 @@ export async function getUsersByHouse(req, res) {
   try {
     // Fetch users belonging to the specific house
     const users = await User.find({ house }).select('username displayName house points photoUrl rank memberStatus');
-    
+
     const usersWithFullUrl = await Promise.all(users.map(async user => {
       const userObj = user.toObject();
       userObj.photoUrl = await getPhotoUrl(userObj.photoUrl, req);
       return userObj;
     }));
-    
+
     res.json({ users: usersWithFullUrl });
   } catch (error) {
     console.error('Error fetching users by house:', error);
@@ -251,7 +257,7 @@ export async function updateMemberHeroCard(req, res) {
     const { userId } = req.params;
     const filePath = req.file.storagePath || `/uploads/${req.file.filename}`;
     const user = await User.findByIdAndUpdate(userId, { heroCardUrl: filePath }, { new: true }).select('-passwordHash');
-    
+
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
@@ -281,7 +287,7 @@ export async function uploadCertificate(req, res) {
   try {
     const { userId } = req.params;
     const filePath = req.file.storagePath || `/uploads/${req.file.filename}`;
-    
+
     const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
@@ -289,7 +295,7 @@ export async function uploadCertificate(req, res) {
 
     const certificates = user.certificates || [];
     certificates.push(filePath);
-    
+
     const updatedUser = await User.findByIdAndUpdate(
       userId,
       { certificates },
@@ -333,18 +339,18 @@ export async function uploadWarningNotice(req, res) {
   try {
     const { userId } = req.params;
     const updateData = {};
-    
+
     if (hasFile) {
       const filePath = req.file.storagePath || `/uploads/${req.file.filename}`;
       updateData.warningNotice = filePath;
     }
-    
+
     if (hasText) {
       updateData.warningText = warningText.trim();
     }
 
     const user = await User.findByIdAndUpdate(userId, updateData, { new: true }).select('-passwordHash');
-    
+
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
