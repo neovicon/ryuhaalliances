@@ -3,7 +3,7 @@ import User from '../models/User.js';
 import { getPhotoUrl } from '../utils/photoUrl.js';
 import { RANKS } from '../utils/rank.js';
 
-export const validateAdjust = [ param('userId').isMongoId(), body('delta').isInt({ min: -100000, max: 100000 }).toInt() ];
+export const validateAdjust = [param('userId').isMongoId(), body('delta').isInt({ min: -100000, max: 100000 }).toInt()];
 export async function adjustPoints(req, res) {
   const errors = validationResult(req);
   if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
@@ -12,8 +12,8 @@ export async function adjustPoints(req, res) {
   res.json({ user });
 }
 
-export const validateUpdateRank = [ 
-  param('userId').isMongoId(), 
+export const validateUpdateRank = [
+  param('userId').isMongoId(),
   body('rank').isIn(RANKS).withMessage(`Rank must be one of: ${RANKS.join(', ')}`)
 ];
 export async function updateRank(req, res) {
@@ -26,13 +26,12 @@ export async function updateRank(req, res) {
 
 export async function leaderboard(req, res) {
   // Exclude pending users and admins from leaderboard
-  const top = await User.find({ 
+  const top = await User.find({
     status: 'approved',
     role: { $ne: 'admin' }
   })
     .select('username house points photoUrl rank')
-    .sort({ points: -1 })
-    .limit(50);
+    .sort({ points: -1 });
   const topWithFullUrl = await Promise.all(top.map(async user => {
     const userObj = user.toObject();
     userObj.photoUrl = await getPhotoUrl(userObj.photoUrl, req);
