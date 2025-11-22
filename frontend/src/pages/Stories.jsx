@@ -14,7 +14,7 @@ export default function Stories() {
   const [imagePreview, setImagePreview] = useState(null);
   const [uploading, setUploading] = useState(false);
 
-  const isVigil = user && user.role === 'moderator' && user.moderatorType === 'Vigil';
+  const isVigil = user && (user.role === 'admin' || (user.role === 'moderator' && user.moderatorType === 'Vigil'));
   const isUser = !!user;
 
   useEffect(() => {
