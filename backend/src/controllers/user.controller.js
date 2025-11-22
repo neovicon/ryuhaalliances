@@ -319,6 +319,58 @@ export async function uploadCertificate(req, res) {
   }
 }
 
+export const validateDeleteCertificate = [
+  param('userId').isMongoId().withMessage('Valid user ID is required'),
+  body('certificateUrl').isString().notEmpty().withMessage('Certificate URL is required'),
+];
+
+export async function deleteCertificate(req, res) {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+
+  try {
+    const { userId } = req.params;
+    const { certificateUrl } = req.body;
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Extract relative path from full URL if needed, or assume it matches what's stored
+    // The frontend sends the full URL, but we store relative paths or full paths depending on implementation.
+    // Let's try to match by checking if the stored path is part of the URL.
+
+    const certificates = user.certificates || [];
+    const newCertificates = certificates.filter(cert => !certificateUrl.includes(cert));
+
+    if (certificates.length === newCertificates.length) {
+      return res.status(404).json({ error: 'Certificate not found' });
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { certificates: newCertificates },
+      { new: true }
+    ).select('-passwordHash');
+
+    const userObj = updatedUser.toObject();
+    userObj.photoUrl = await getPhotoUrl(userObj.photoUrl, req);
+    userObj.heroCardUrl = await getPhotoUrl(userObj.heroCardUrl, req);
+    if (userObj.certificates && userObj.certificates.length > 0) {
+      userObj.certificates = await Promise.all(
+        userObj.certificates.map(cert => getPhotoUrl(cert, req))
+      );
+    }
+    const { _id, ...rest } = userObj;
+
+    res.json({ user: { id: _id, ...rest }, message: 'Certificate deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting certificate:', error);
+    res.status(500).json({ error: 'Failed to delete certificate' });
+  }
+}
+
 export const validateUploadWarningNotice = [
   param('userId').isMongoId().withMessage('Valid user ID is required'),
   body('warningText').optional().isString().withMessage('Warning text must be a string'),

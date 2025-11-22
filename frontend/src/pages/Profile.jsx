@@ -172,7 +172,7 @@ export default function Profile() {
     }
   }, [location.search, authUser, loadPublicProfile, loadSelfProfile]);
 
-  const viewerIsAdminOrArbiter = authUser && (authUser.role === 'admin' || authUser.moderatorType === 'Arbiter');
+  const viewerIsAdminOrArbiter = authUser && (authUser.role === 'admin' || authUser.moderatorType === 'Arbiter' || authUser.moderatorType === 'Artisan');
 
   const handleRemoveWarning = async () => {
     if (!profile?.id) return;
@@ -410,11 +410,11 @@ export default function Profile() {
           )}
 
           {/* Warning notice (if any) */}
-          { (profile.warningNotice || profile.warningText) && (
+          {(profile.warningNotice || profile.warningText) && (
             <div className="card" style={{ marginBottom: '1.5rem', padding: '1rem', border: '1px solid rgba(239,68,68,0.3)', background: 'linear-gradient(90deg, rgba(239,68,68,0.06), rgba(239,68,68,0.03))' }}>
-                <div className="warning-notice-inner" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div className="warning-notice-inner" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 {profile.warningNotice ? (
-                    <img src={profile.warningNotice} alt="Warning" className="warning-notice-img" />
+                  <img src={profile.warningNotice} alt="Warning" className="warning-notice-img" />
                 ) : null}
                 <div style={{ flex: 1 }}>
                   <div style={{ fontWeight: 700, color: 'rgba(239,68,68,1)' }}>Warning notice</div>
@@ -449,10 +449,10 @@ export default function Profile() {
               <img
                 src={profile.heroCardUrl}
                 alt={`${profile.username}'s hero banner`}
-                style={{ 
-                  width: '100%', 
-                  aspectRatio: '16/9', 
-                  objectFit: 'contain', 
+                style={{
+                  width: '100%',
+                  aspectRatio: '16/9',
+                  objectFit: 'contain',
                   display: 'block',
                   background: 'var(--surface)'
                 }}
@@ -694,10 +694,42 @@ export default function Profile() {
             ) : (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '0.75rem' }}>
                 {profile.certificates.map((cert, idx) => (
-                  <a key={idx} href={cert} target="_blank" rel="noreferrer" style={{ display: 'block', border: '1px solid rgba(148,163,184,0.12)', borderRadius: 8, overflow: 'hidden', textDecoration: 'none', color: 'inherit' }}>
-                    <div style={{ width: '100%', aspectRatio: '16/10', background: `url(${cert}) center/cover no-repeat`, backgroundSize: 'cover' }} />
-                    <div style={{ padding: '0.5rem', fontSize: '0.9rem', color: 'var(--muted)' }}>View certificate</div>
-                  </a>
+                  <div key={idx} style={{ position: 'relative' }}>
+                    <a href={cert} target="_blank" rel="noreferrer" style={{ display: 'block', border: '1px solid rgba(148,163,184,0.12)', borderRadius: 8, overflow: 'hidden', textDecoration: 'none', color: 'inherit' }}>
+                      <div style={{ width: '100%', aspectRatio: '16/10', background: `url(${cert}) center/cover no-repeat`, backgroundSize: 'cover' }} />
+                      <div style={{ padding: '0.5rem', fontSize: '0.9rem', color: 'var(--muted)' }}>View certificate</div>
+                    </a>
+                    {viewerIsAdminOrArbiter && (
+                      <button
+                        onClick={async (e) => {
+                          e.preventDefault();
+                          if (!confirm('Are you sure you want to delete this certificate?')) return;
+                          try {
+                            await client.delete(`/users/${profile.id}/certificate`, { data: { certificateUrl: cert } });
+                            if (isSelf) await loadSelfProfile(); else await loadPublicProfile(profile.username || profile.sigil || profile.id);
+                          } catch (error) {
+                            console.error('Failed to delete certificate:', error);
+                            alert(error?.response?.data?.error || 'Failed to delete certificate');
+                          }
+                        }}
+                        style={{
+                          position: 'absolute',
+                          top: '0.5rem',
+                          right: '0.5rem',
+                          background: 'rgba(239, 68, 68, 0.9)',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '4px',
+                          padding: '0.25rem 0.5rem',
+                          fontSize: '0.8rem',
+                          cursor: 'pointer',
+                          zIndex: 10,
+                        }}
+                      >
+                        Delete
+                      </button>
+                    )}
+                  </div>
                 ))}
               </div>
             )}

@@ -18,7 +18,7 @@ export function requireAuth(req, res, next) {
 async function loadUserData(req) {
   if (!req.user || !req.user.id) return null;
   if (req.userData) return req.userData; // Cache user data for the request
-  
+
   try {
     const user = await User.findById(req.user.id).select('role moderatorType');
     if (user) {
@@ -36,7 +36,7 @@ async function loadUserData(req) {
 
 export async function requireAdmin(req, res, next) {
   if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
-  
+
   // Load full user data to ensure role is up to date
   const user = await loadUserData(req);
   if (!user || user.role !== 'admin') {
@@ -47,7 +47,7 @@ export async function requireAdmin(req, res, next) {
 
 export async function requireModerator(req, res, next) {
   if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
-  
+
   // Load full user data to ensure role is up to date
   const user = await loadUserData(req);
   if (!user || (user.role !== 'admin' && user.role !== 'moderator')) {
@@ -62,23 +62,23 @@ export function requireModeratorType(allowedTypes) {
     if (!req.user) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
-    
+
     // Load full user data to get moderatorType
     const user = await loadUserData(req);
     if (!user) {
       return res.status(401).json({ error: 'User not found' });
     }
-    
+
     // Admins have access to everything
     if (user.role === 'admin') {
       return next();
     }
-    
+
     // Check if user is a moderator with the required type
     if (user.role === 'moderator' && user.moderatorType && allowedTypes.includes(user.moderatorType)) {
       return next();
     }
-    
+
     return res.status(403).json({ error: 'Forbidden: Insufficient permissions' });
   };
 }
@@ -100,6 +100,18 @@ export async function requireArbiterOrAdmin(req, res, next) {
 
   if (user.role === 'admin') return next();
   if (user.role === 'moderator' && user.moderatorType === 'Arbiter') return next();
+
+  return res.status(403).json({ error: 'Forbidden' });
+}
+
+// Allow either admin or Artisan moderators
+export async function requireArtisanOrAdmin(req, res, next) {
+  if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
+  const user = await loadUserData(req);
+  if (!user) return res.status(401).json({ error: 'User not found' });
+
+  if (user.role === 'admin') return next();
+  if (user.role === 'moderator' && user.moderatorType === 'Artisan') return next();
 
   return res.status(403).json({ error: 'Forbidden' });
 }

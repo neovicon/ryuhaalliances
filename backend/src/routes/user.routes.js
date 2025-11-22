@@ -1,29 +1,31 @@
 import { Router } from 'express';
-import { requireAuth, requireAdmin, requireArtisan, requireArbiter, requireArbiterOrAdmin } from '../middleware/auth.js';
-import { 
-  updateDisplayName, 
-  validateDisplayName, 
-  searchUsers, 
-  validateSearch, 
-  getMe, 
-  updatePhoto, 
-  updateHeroCard, 
-  deleteHeroCard, 
-  changePassword, 
-  validateChangePassword, 
-  getPublicProfile, 
-  validatePublicProfile, 
-  publicSearch, 
-  validatePublicSearch, 
-  updateMemberHeroCard, 
-  validateUpdateMemberHeroCard, 
-  uploadCertificate, 
-  validateUploadCertificate, 
-  uploadWarningNotice, 
-  validateUploadWarningNotice, 
-  removeWarningNotice, 
+import { requireAuth, requireAdmin, requireArtisan, requireArbiter, requireArbiterOrAdmin, requireArtisanOrAdmin } from '../middleware/auth.js';
+import {
+  updateDisplayName,
+  validateDisplayName,
+  searchUsers,
+  validateSearch,
+  getMe,
+  updatePhoto,
+  updateHeroCard,
+  deleteHeroCard,
+  changePassword,
+  validateChangePassword,
+  getPublicProfile,
+  validatePublicProfile,
+  publicSearch,
+  validatePublicSearch,
+  updateMemberHeroCard,
+  validateUpdateMemberHeroCard,
+  uploadCertificate,
+  validateUploadCertificate,
+  uploadWarningNotice,
+  validateUploadWarningNotice,
+  removeWarningNotice,
   getHouses,
-  getUsersByHouse // Added import
+  getUsersByHouse,
+  deleteCertificate,
+  validateDeleteCertificate
 } from '../controllers/user.controller.js';
 import { uploadImage, uploadToStorage } from '../middleware/upload.js';
 import { adjustPoints, leaderboard, validateAdjust, updateRank, validateUpdateRank } from '../controllers/points.controller.js';
@@ -66,6 +68,7 @@ router.get('/leaderboard', requireAuth, leaderboard);
 // Artisan routes: Modify Hero License and upload Certificates for members
 router.post('/:userId/hero-card', requireAuth, requireArtisan, validateUpdateMemberHeroCard, uploadImage.single('heroCard'), handleMulterError, uploadToStorage, updateMemberHeroCard);
 router.post('/:userId/certificate', requireAuth, requireArtisan, validateUploadCertificate, uploadImage.single('certificate'), handleMulterError, uploadToStorage, uploadCertificate);
+router.delete('/:userId/certificate', requireAuth, requireArtisanOrAdmin, validateDeleteCertificate, deleteCertificate);
 
 // Arbiter routes: Upload warning notice for members (image optional, text optional, but at least one required)
 router.post('/:userId/warning-notice', requireAuth, requireArbiter, uploadImage.single('warningNotice'), handleMulterError, uploadToStorage, validateUploadWarningNotice, uploadWarningNotice);
