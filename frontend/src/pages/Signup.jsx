@@ -23,39 +23,39 @@ export default function Signup() {
   const [form, setForm] = useState({ email: '', password: '', username: '', displayName: '', sigil: 'RA–', house: houses[0] });
   const [error, setError] = useState(null);
   const [isPending, setIsPending] = useState(false);
-  
+
   const handleSigilChange = (rawValue) => {
     const digits = rawValue.replace(/\D/g, '').slice(0, 11);
     setForm(prev => ({ ...prev, sigil: formatSigil(digits) }));
   };
-  
+
   const handleSignup = async () => {
     if (!SIGIL_PATTERN.test(form.sigil)) {
       setError('Sigil must follow the format RA–########–###');
       return;
     }
-    try { 
+    try {
       await signup(form);
       setIsPending(true);
       // Don't navigate, show pending message instead
-    } catch (e) { 
+    } catch (e) {
       let errorMsg = e?.response?.data?.error || 'Signup failed';
       if (!errorMsg && e?.response?.data?.errors) {
-        errorMsg = e.response.data.errors.map(err => 
+        errorMsg = e.response.data.errors.map(err =>
           `${err.param || err.path}: ${err.msg}`
         ).join(', ');
       }
-      setError(errorMsg); 
-    } 
+      setError(errorMsg);
+    }
   };
-  
+
   if (isPending) {
     return (
       <div className="container">
         <div className="card" style={{ maxWidth: 520, margin: '2rem auto', textAlign: 'center' }}>
           <h3 className="hdr">Account Created Successfully</h3>
-          <div style={{ 
-            padding: '1.5rem', 
+          <div style={{
+            padding: '1.5rem',
             background: 'linear-gradient(135deg, rgba(177,15,46,0.1) 0%, rgba(177,15,46,0.05) 100%)',
             border: '1px solid rgba(177,15,46,0.2)',
             borderRadius: '8px',
@@ -65,7 +65,7 @@ export default function Signup() {
               Your account is pending
             </p>
             <p style={{ color: 'var(--muted)', fontSize: '0.95rem' }}>
-              Your account has been created and is waiting for admin approval. 
+              Your account has been created and is waiting for admin approval.
               You will be able to sign in once an admin approves your account.
             </p>
           </div>
@@ -78,7 +78,7 @@ export default function Signup() {
       </div>
     );
   }
-  
+
   return (
     <div className="container">
       <div className="card" style={{ maxWidth: 520, margin: '2rem auto', padding: '1.5rem' }}>
@@ -112,7 +112,9 @@ export default function Signup() {
             {houses.map(h => <option key={h} value={h}>{h}</option>)}
           </select>
           <div style={{ gridColumn: '1/-1', display: 'flex', justifyContent: 'center' }}>
-            <button className="btn" style={{ width: '100%', maxWidth: 240 }} onClick={handleSignup}>Create account</button>
+            <button className="btn" style={{ width: '100%', maxWidth: 240 }} onClick={handleSignup} disabled={isPending}>
+              {isPending ? <span className="spinner"></span> : 'Create account'}
+            </button>
           </div>
         </div>
       </div>
