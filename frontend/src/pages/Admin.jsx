@@ -25,12 +25,13 @@ export default function Admin() {
   const [selectedHouse, setSelectedHouse] = useState(null);
   const [loadingSelectedHouse, setLoadingSelectedHouse] = useState(false);
   const [houseEditValues, setHouseEditValues] = useState({ description: '', status: 'Active' });
+  const [loadingAction, setLoadingAction] = useState(null);
 
   async function loadAllUsers() {
+    const { data } = await client.get('/admin/all-users');
+    setAllUsers(data.users);
+    setFilteredUsers(data.users);
     try {
-      const { data } = await client.get('/admin/all-users');
-      setAllUsers(data.users);
-      setFilteredUsers(data.users);
     } catch (error) {
       console.error('Error loading all users:', error);
     }
@@ -78,6 +79,7 @@ export default function Admin() {
 
   const handleUpdatePoints = async (userId, newPoints) => {
     try {
+      setLoadingAction(`update-points-${userId}`);
       const currentUser = allUsers.find(u => (u.id || u._id) === userId);
       if (!currentUser) return;
       const delta = parseInt(newPoints) - (currentUser.points || 0);
@@ -87,22 +89,28 @@ export default function Admin() {
     } catch (error) {
       console.error('Error updating points:', error);
       alert(error?.response?.data?.error || 'Failed to update points');
+    } finally {
+      setLoadingAction(null);
     }
   };
 
   const handleUpdateRank = async (userId, newRank) => {
     try {
+      setLoadingAction(`update-rank-${userId}`);
       await client.patch(`/users/${userId}/rank`, { rank: newRank });
       await loadAllUsers();
       setEditingUser({ userId: null, field: null });
     } catch (error) {
       console.error('Error updating rank:', error);
       alert(error?.response?.data?.error || 'Failed to update rank');
+    } finally {
+      setLoadingAction(null);
     }
   };
 
   const handleUpdateHouse = async (userId, newHouse) => {
     try {
+      setLoadingAction(`update-house-${userId}`);
       await client.post('/admin/update-house', { userId, house: newHouse });
       await loadAllUsers();
       setEditingUser({ userId: null, field: null });
@@ -110,11 +118,14 @@ export default function Admin() {
     } catch (error) {
       console.error('Error updating house:', error);
       alert(error?.response?.data?.error || 'Failed to update house');
+    } finally {
+      setLoadingAction(null);
     }
   };
 
   const handleUpdateMemberStatus = async (userId, newMemberStatus) => {
     try {
+      setLoadingAction(`update-memberStatus-${userId}`);
       await client.post('/admin/update-member-status', { userId, memberStatus: newMemberStatus || null });
       await loadAllUsers();
       setEditingUser({ userId: null, field: null });
@@ -122,11 +133,14 @@ export default function Admin() {
     } catch (error) {
       console.error('Error updating member status:', error);
       alert(error?.response?.data?.error || 'Failed to update member status');
+    } finally {
+      setLoadingAction(null);
     }
   };
 
   const handleUpdateUsername = async (userId, newUsername) => {
     try {
+      setLoadingAction(`update-username-${userId}`);
       await client.post('/admin/update-username', { userId, username: newUsername });
       await loadAllUsers();
       setEditingUser({ userId: null, field: null });
@@ -134,11 +148,14 @@ export default function Admin() {
     } catch (error) {
       console.error('Error updating username:', error);
       alert(error?.response?.data?.error || 'Failed to update username');
+    } finally {
+      setLoadingAction(null);
     }
   };
 
   const handleUpdateDisplayName = async (userId, newDisplayName) => {
     try {
+      setLoadingAction(`update-displayName-${userId}`);
       await client.post('/admin/update-display-name', { userId, displayName: newDisplayName || null });
       await loadAllUsers();
       setEditingUser({ userId: null, field: null });
@@ -146,12 +163,15 @@ export default function Admin() {
     } catch (error) {
       console.error('Error updating display name:', error);
       alert(error?.response?.data?.error || 'Failed to update display name');
+    } finally {
+      setLoadingAction(null);
     }
   };
 
   const handleAddModerator = async () => {
     if (!moderatorModal.userId || !moderatorModal.moderatorType) return;
     try {
+      setLoadingAction('add-moderator');
       await client.post('/admin/add-moderator', { userId: moderatorModal.userId, moderatorType: moderatorModal.moderatorType });
       await loadAllUsers();
       setModeratorModal({ open: false, userId: null, moderatorType: 'Vigil' });
@@ -159,6 +179,8 @@ export default function Admin() {
     } catch (error) {
       console.error('Error adding moderator:', error);
       alert(error?.response?.data?.error || 'Failed to add moderator');
+    } finally {
+      setLoadingAction(null);
     }
   };
 
@@ -167,12 +189,15 @@ export default function Admin() {
     const confirmed = window.confirm('Are you sure you want to remove the moderator role from this user?');
     if (!confirmed) return;
     try {
+      setLoadingAction(`remove-moderator-${userId}`);
       await client.post('/admin/remove-moderator', { userId });
       await loadAllUsers();
       alert('Moderator role removed successfully');
     } catch (error) {
       console.error('Error removing moderator:', error);
       alert(error?.response?.data?.error || 'Failed to remove moderator');
+    } finally {
+      setLoadingAction(null);
     }
   };
 
@@ -186,12 +211,15 @@ export default function Admin() {
     const confirmed = window.confirm('Are you sure you want to remove this user? This action cannot be undone.');
     if (!confirmed) return;
     try {
+      setLoadingAction(`remove-user-${userId}`);
       await client.delete(`/admin/user/${userId}`);
       await loadAllUsers();
       alert('User removed successfully');
     } catch (error) {
       console.error('Error removing user:', error);
       alert(error?.response?.data?.error || 'Failed to remove user');
+    } finally {
+      setLoadingAction(null);
     }
   };
 
@@ -214,18 +242,22 @@ export default function Admin() {
 
   const handleApprove = async (userId) => {
     try {
+      setLoadingAction(`approve-${userId}`);
       await client.post('/admin/approve-user', { userId });
       await loadPendingUsers();
       alert('User approved successfully');
     } catch (error) {
       console.error('Error approving user:', error);
       alert(error?.response?.data?.error || 'Failed to approve user');
+    } finally {
+      setLoadingAction(null);
     }
   };
 
   const handleDecline = async () => {
     if (!declineModal.userId) return;
     try {
+      setLoadingAction('decline-user');
       await client.post('/admin/decline-user', {
         userId: declineModal.userId,
         message: declineModal.message || undefined
@@ -236,12 +268,15 @@ export default function Admin() {
     } catch (error) {
       console.error('Error declining user:', error);
       alert(error?.response?.data?.error || 'Failed to decline user');
+    } finally {
+      setLoadingAction(null);
     }
   };
 
   const handleSendMessage = async () => {
     if (!messageModal.userId || !messageModal.message.trim()) return;
     try {
+      setLoadingAction('send-message');
       await client.post('/admin/send-message', {
         userId: messageModal.userId,
         message: messageModal.message
@@ -251,6 +286,8 @@ export default function Admin() {
     } catch (error) {
       console.error('Error sending message:', error);
       alert(error?.response?.data?.error || 'Failed to send message');
+    } finally {
+      setLoadingAction(null);
     }
   };
 
@@ -289,6 +326,7 @@ export default function Admin() {
   const handleUpdateHouseDetails = async () => {
     if (!selectedHouseName) return;
     try {
+      setLoadingAction('update-house-details');
       await client.post('/admin/update-house-details', {
         houseName: selectedHouseName,
         description: houseEditValues.description,
@@ -300,6 +338,8 @@ export default function Admin() {
     } catch (error) {
       console.error('Error updating house details:', error);
       alert(error?.response?.data?.error || 'Failed to update house details');
+    } finally {
+      setLoadingAction(null);
     }
   };
 
@@ -389,9 +429,9 @@ export default function Admin() {
                         fontSize: '1rem',
                         borderRadius: '6px',
                       }}
-                      aria-label="Approve user"
+                      disabled={loadingAction === `approve-${u.id || u._id}`}
                     >
-                      <span style={{ fontSize: '1.1rem', lineHeight: 1 }}>✅</span>
+                      {loadingAction === `approve-${u.id || u._id}` ? <div className="spinner" style={{ width: '1.1rem', height: '1.1rem', border: '2px solid #22c55e', borderTopColor: 'transparent' }} /> : <span style={{ fontSize: '1.1rem', lineHeight: 1 }}>✅</span>}
                     </button>
                     <button
                       className="btn"
@@ -533,8 +573,9 @@ export default function Admin() {
                   className="btn"
                   onClick={handleUpdateHouseDetails}
                   style={{ padding: '0.5rem 1rem', fontSize: '0.9rem' }}
+                  disabled={loadingAction === 'update-house-details'}
                 >
-                  Save Changes
+                  {loadingAction === 'update-house-details' ? <div className="spinner" style={{ width: '1rem', height: '1rem' }} /> : 'Save Changes'}
                 </button>
               </div>
             </div>
@@ -683,8 +724,9 @@ export default function Admin() {
                             className="btn"
                             onClick={() => handleUpdateUsername(userId, editValues.username)}
                             style={{ padding: '0.3rem 0.6rem', fontSize: '0.85rem' }}
+                            disabled={loadingAction === `update-username-${userId}`}
                           >
-                            ✓
+                            {loadingAction === `update-username-${userId}` ? <div className="spinner" style={{ width: '0.85rem', height: '0.85rem' }} /> : '✓'}
                           </button>
                           <button
                             className="btn"
@@ -724,8 +766,9 @@ export default function Admin() {
                             className="btn"
                             onClick={() => handleUpdateDisplayName(userId, editValues.displayName)}
                             style={{ padding: '0.3rem 0.6rem', fontSize: '0.85rem' }}
+                            disabled={loadingAction === `update-displayName-${userId}`}
                           >
-                            ✓
+                            {loadingAction === `update-displayName-${userId}` ? <div className="spinner" style={{ width: '0.85rem', height: '0.85rem' }} /> : '✓'}
                           </button>
                           <button
                             className="btn"
@@ -769,8 +812,9 @@ export default function Admin() {
                             className="btn"
                             onClick={() => handleUpdateHouse(userId, editValues.house)}
                             style={{ padding: '0.3rem 0.6rem', fontSize: '0.85rem' }}
+                            disabled={loadingAction === `update-house-${userId}`}
                           >
-                            ✓
+                            {loadingAction === `update-house-${userId}` ? <div className="spinner" style={{ width: '0.85rem', height: '0.85rem' }} /> : '✓'}
                           </button>
                           <button
                             className="btn"
@@ -814,8 +858,9 @@ export default function Admin() {
                             className="btn"
                             onClick={() => handleUpdateRank(userId, editValues.rank)}
                             style={{ padding: '0.3rem 0.6rem', fontSize: '0.85rem' }}
+                            disabled={loadingAction === `update-rank-${userId}`}
                           >
-                            ✓
+                            {loadingAction === `update-rank-${userId}` ? <div className="spinner" style={{ width: '0.85rem', height: '0.85rem' }} /> : '✓'}
                           </button>
                           <button
                             className="btn"
@@ -862,8 +907,9 @@ export default function Admin() {
                             className="btn"
                             onClick={() => handleUpdatePoints(userId, editValues.points)}
                             style={{ padding: '0.3rem 0.6rem', fontSize: '0.85rem' }}
+                            disabled={loadingAction === `update-points-${userId}`}
                           >
-                            ✓
+                            {loadingAction === `update-points-${userId}` ? <div className="spinner" style={{ width: '0.85rem', height: '0.85rem' }} /> : '✓'}
                           </button>
                           <button
                             className="btn"
@@ -908,8 +954,9 @@ export default function Admin() {
                             className="btn"
                             onClick={() => handleUpdateMemberStatus(userId, editValues.memberStatus)}
                             style={{ padding: '0.3rem 0.6rem', fontSize: '0.85rem' }}
+                            disabled={loadingAction === `update-memberStatus-${userId}`}
                           >
-                            ✓
+                            {loadingAction === `update-memberStatus-${userId}` ? <div className="spinner" style={{ width: '0.85rem', height: '0.85rem' }} /> : '✓'}
                           </button>
                           <button
                             className="btn"
@@ -949,8 +996,9 @@ export default function Admin() {
                         className="btn"
                         onClick={() => handleRemoveModerator(userId)}
                         style={{ padding: '0.3rem 0.6rem', fontSize: '0.85rem', background: 'rgba(251, 191, 36, 0.2)', border: '1px solid rgba(251, 191, 36, 0.4)' }}
+                        disabled={loadingAction === `remove-moderator-${userId}`}
                       >
-                        Remove Moderator
+                        {loadingAction === `remove-moderator-${userId}` ? <div className="spinner" style={{ width: '0.85rem', height: '0.85rem', border: '2px solid #f59e0b', borderTopColor: 'transparent' }} /> : 'Remove Moderator'}
                       </button>
                     )}
                     {u.role !== 'admin' && (
@@ -958,8 +1006,9 @@ export default function Admin() {
                         className="btn"
                         onClick={() => handleRemoveUser(userId)}
                         style={{ padding: '0.3rem 0.6rem', fontSize: '0.85rem', background: 'rgba(239, 68, 68, 0.2)', border: '1px solid rgba(239, 68, 68, 0.4)' }}
+                        disabled={loadingAction === `remove-user-${userId}`}
                       >
-                        Remove
+                        {loadingAction === `remove-user-${userId}` ? <div className="spinner" style={{ width: '0.85rem', height: '0.85rem', border: '2px solid #ef4444', borderTopColor: 'transparent' }} /> : 'Remove'}
                       </button>
                     )}
                   </div>
@@ -971,139 +1020,147 @@ export default function Admin() {
       </div>
 
       {/* Message Modal */}
-      {messageModal.open && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: 'rgba(0, 0, 0, 0.7)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000
-        }}>
-          <div className="card" style={{ maxWidth: 500, width: '90%' }}>
-            <h4 className="hdr" style={{ marginBottom: '1rem' }}>Send Message to User</h4>
-            <textarea
-              className="input"
-              style={{ width: '100%', minHeight: 120, marginBottom: '1rem' }}
-              placeholder="Enter your message..."
-              value={messageModal.message}
-              onChange={e => setMessageModal({ ...messageModal, message: e.target.value })}
-            />
-            <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
-              <button className="btn" onClick={() => setMessageModal({ open: false, userId: null, message: '' })}>
-                Cancel
-              </button>
-              <button className="btn" onClick={handleSendMessage} disabled={!messageModal.message.trim()}>
-                Send Message
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Decline Modal */}
-      {declineModal.open && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: 'rgba(0, 0, 0, 0.7)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000
-        }}>
-          <div className="card" style={{ maxWidth: 500, width: '90%' }}>
-            <h4 className="hdr" style={{ marginBottom: '1rem' }}>Decline User</h4>
-            <textarea
-              className="input"
-              style={{ width: '100%', minHeight: 120, marginBottom: '1rem' }}
-              placeholder="Optional: Enter a message explaining why the account was declined..."
-              value={declineModal.message}
-              onChange={e => setDeclineModal({ ...declineModal, message: e.target.value })}
-            />
-            <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
-              <button className="btn" onClick={() => setDeclineModal({ open: false, userId: null, message: '' })}>
-                Cancel
-              </button>
-              <button
-                className="btn"
-                onClick={handleDecline}
-                style={{ background: 'rgba(239, 68, 68, 0.2)', border: '1px solid rgba(239, 68, 68, 0.4)' }}
-              >
-                Decline User
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Moderator Modal */}
-      {moderatorModal.open && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: 'rgba(0, 0, 0, 0.7)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000
-        }}>
-          <div className="card" style={{ maxWidth: 500, width: '90%' }}>
-            <h4 className="hdr" style={{ marginBottom: '1rem' }}>Add Moderator</h4>
-            <p style={{ color: 'var(--muted)', marginBottom: '1rem' }}>
-              Select the moderator type for this user. Each type has different permissions.
-            </p>
-            <div style={{ marginBottom: '1rem' }}>
-              <label style={{ display: 'block', color: 'var(--muted)', fontSize: '0.85rem', marginBottom: '0.5rem' }}>
-                Moderator Type
-              </label>
-              <select
+      {
+        messageModal.open && (
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0, 0, 0, 0.7)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000
+          }}>
+            <div className="card" style={{ maxWidth: 500, width: '90%' }}>
+              <h4 className="hdr" style={{ marginBottom: '1rem' }}>Send Message to User</h4>
+              <textarea
                 className="input"
-                value={moderatorModal.moderatorType}
-                onChange={(e) => setModeratorModal({ ...moderatorModal, moderatorType: e.target.value })}
-                style={{ width: '100%' }}
-              >
-                {MODERATOR_TYPES.map((type) => (
-                  <option key={type} value={type}>
-                    {type}
-                  </option>
-                ))}
-              </select>
-              <div style={{ marginTop: '0.5rem', fontSize: '0.8rem', color: 'var(--muted)' }}>
-                {moderatorModal.moderatorType === 'Vigil' && 'Can edit, create and delete posts'}
-                {moderatorModal.moderatorType === 'Arbiter' && 'Can remove users'}
-                {moderatorModal.moderatorType === 'Artisan' && 'Can upload others Hero license and change that'}
-                {moderatorModal.moderatorType === 'Aesther' && 'Moderator permissions'}
-                {moderatorModal.moderatorType === 'Gatekeeper' && 'Moderator permissions'}
-                {moderatorModal.moderatorType === 'Overseer' && 'Moderator permissions'}
+                style={{ width: '100%', minHeight: 120, marginBottom: '1rem' }}
+                placeholder="Enter your message..."
+                value={messageModal.message}
+                onChange={e => setMessageModal({ ...messageModal, message: e.target.value })}
+              />
+              <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+                <button className="btn" onClick={() => setMessageModal({ open: false, userId: null, message: '' })}>
+                  Cancel
+                </button>
+                <button className="btn" onClick={handleSendMessage} disabled={!messageModal.message.trim() || loadingAction === 'send-message'}>
+                  {loadingAction === 'send-message' ? <div className="spinner" style={{ width: '1rem', height: '1rem' }} /> : 'Send Message'}
+                </button>
               </div>
             </div>
-            <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
-              <button className="btn" onClick={() => setModeratorModal({ open: false, userId: null, moderatorType: 'Vigil' })}>
-                Cancel
-              </button>
-              <button
-                className="btn"
-                onClick={handleAddModerator}
-                style={{ background: 'rgba(59, 130, 246, 0.2)', border: '1px solid rgba(59, 130, 246, 0.4)' }}
-              >
-                Add Moderator
-              </button>
+          </div>
+        )
+      }
+
+      {/* Decline Modal */}
+      {
+        declineModal.open && (
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0, 0, 0, 0.7)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000
+          }}>
+            <div className="card" style={{ maxWidth: 500, width: '90%' }}>
+              <h4 className="hdr" style={{ marginBottom: '1rem' }}>Decline User</h4>
+              <textarea
+                className="input"
+                style={{ width: '100%', minHeight: 120, marginBottom: '1rem' }}
+                placeholder="Optional: Enter a message explaining why the account was declined..."
+                value={declineModal.message}
+                onChange={e => setDeclineModal({ ...declineModal, message: e.target.value })}
+              />
+              <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+                <button className="btn" onClick={() => setDeclineModal({ open: false, userId: null, message: '' })}>
+                  Cancel
+                </button>
+                <button
+                  className="btn"
+                  onClick={handleDecline}
+                  style={{ background: 'rgba(239, 68, 68, 0.2)', border: '1px solid rgba(239, 68, 68, 0.4)' }}
+                  disabled={loadingAction === 'decline-user'}
+                >
+                  {loadingAction === 'decline-user' ? <div className="spinner" style={{ width: '1rem', height: '1rem', border: '2px solid #ef4444', borderTopColor: 'transparent' }} /> : 'Decline User'}
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )
+      }
 
-    </div>
+      {/* Moderator Modal */}
+      {
+        moderatorModal.open && (
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0, 0, 0, 0.7)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000
+          }}>
+            <div className="card" style={{ maxWidth: 500, width: '90%' }}>
+              <h4 className="hdr" style={{ marginBottom: '1rem' }}>Add Moderator</h4>
+              <p style={{ color: 'var(--muted)', marginBottom: '1rem' }}>
+                Select the moderator type for this user. Each type has different permissions.
+              </p>
+              <div style={{ marginBottom: '1rem' }}>
+                <label style={{ display: 'block', color: 'var(--muted)', fontSize: '0.85rem', marginBottom: '0.5rem' }}>
+                  Moderator Type
+                </label>
+                <select
+                  className="input"
+                  value={moderatorModal.moderatorType}
+                  onChange={(e) => setModeratorModal({ ...moderatorModal, moderatorType: e.target.value })}
+                  style={{ width: '100%' }}
+                >
+                  {MODERATOR_TYPES.map((type) => (
+                    <option key={type} value={type}>
+                      {type}
+                    </option>
+                  ))}
+                </select>
+                <div style={{ marginTop: '0.5rem', fontSize: '0.8rem', color: 'var(--muted)' }}>
+                  {moderatorModal.moderatorType === 'Vigil' && 'Can edit, create and delete posts'}
+                  {moderatorModal.moderatorType === 'Arbiter' && 'Can remove users'}
+                  {moderatorModal.moderatorType === 'Artisan' && 'Can upload others Hero license and change that'}
+                  {moderatorModal.moderatorType === 'Aesther' && 'Moderator permissions'}
+                  {moderatorModal.moderatorType === 'Gatekeeper' && 'Moderator permissions'}
+                  {moderatorModal.moderatorType === 'Overseer' && 'Moderator permissions'}
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+                <button className="btn" onClick={() => setModeratorModal({ open: false, userId: null, moderatorType: 'Vigil' })}>
+                  Cancel
+                </button>
+                <button
+                  className="btn"
+                  onClick={handleAddModerator}
+                  style={{ background: 'rgba(59, 130, 246, 0.2)', border: '1px solid rgba(59, 130, 246, 0.4)' }}
+                  disabled={loadingAction === 'add-moderator'}
+                >
+                  {loadingAction === 'add-moderator' ? <div className="spinner" style={{ width: '1rem', height: '1rem', border: '2px solid #3b82f6', borderTopColor: 'transparent' }} /> : 'Add Moderator'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )
+      }
+
+    </div >
   );
 }
