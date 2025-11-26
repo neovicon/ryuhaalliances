@@ -5,7 +5,7 @@ import { getPendingUsers, approveUser, declineUser, sendMessageToUser, validateA
 const router = Router();
 
 // All admin routes require authentication and admin role
-router.get('/pending-users', requireAuth, requireAdmin, getPendingUsers);
+router.get('/pending-users', requireAuth, requireGatekeeper, getPendingUsers);
 router.get('/all-users', requireAuth, requireAdmin, getAllUsers);
 router.post('/approve-user', requireAuth, requireGatekeeper, validateApproveUser, approveUser);
 router.post('/decline-user', requireAuth, requireAdmin, validateDeclineUser, declineUser);
