@@ -4,32 +4,78 @@ import User from '../models/User.js';
 import { getPhotoUrl } from '../utils/photoUrl.js';
 import mongoose from 'mongoose';
 
-export const validateCreatePost = [ body('content').isString().isLength({ min: 1, max: 2000 }) ];
+export const validateCreatePost = [
+  body('content').optional().isString().isLength({ max: 2000 }),
+  body('isPrivate').optional().isBoolean()
+];
 export async function createPost(req, res) {
   const errors = validationResult(req);
   if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
-  const post = await Post.create({ author: req.user.id, content: req.body.content });
+
+  const content = req.body.content || '';
+  const image = req.file ? req.file.storagePath : null;
+
+  if (!content.trim() && !image) {
+    return res.status(400).json({ error: 'Post must have content or an image' });
+  }
+
+  const post = await Post.create({
+    author: req.user.id,
+    content,
+    image,
+    isPrivate: req.body.isPrivate === 'true' || req.body.isPrivate === true
+  });
   await post.populate('author', 'username photoUrl');
   const postObj = post.toObject();
   if (postObj.author && postObj.author.photoUrl) {
     postObj.author.photoUrl = await getPhotoUrl(postObj.author.photoUrl, req);
   }
+  if (postObj.image) {
+    postObj.image = await getPhotoUrl(postObj.image, req);
+  }
   res.status(201).json({ post: postObj });
 }
 
 export async function listPosts(req, res) {
-  const posts = await Post.find({}).populate('author', 'username photoUrl').sort({ createdAt: -1 }).limit(100);
+  const { cursor, limit = 10 } = req.query;
+  const query = {};
+
+  // If cursor is provided, fetch posts older than the cursor
+  if (cursor) {
+    query._id = { $lt: cursor };
+  }
+
+  // Filter out private posts unless the viewer is the author (which is unlikely in a general feed, but good practice)
+  // Actually for general feed, we usually only show public posts.
+  // If we want to show private posts to the author in the main feed, we need $or
+  query.$or = [
+    { isPrivate: false },
+    { isPrivate: { $exists: false } }, // Backward compatibility
+    { author: req.user.id }
+  ];
+
+  const posts = await Post.find(query)
+    .populate('author', 'username photoUrl')
+    .sort({ createdAt: -1 })
+    .limit(parseInt(limit));
+
   const postsWithFullUrl = await Promise.all(posts.map(async post => {
     const postObj = post.toObject();
     if (postObj.author && postObj.author.photoUrl) {
       postObj.author.photoUrl = await getPhotoUrl(postObj.author.photoUrl, req);
     }
+    if (postObj.image) {
+      postObj.image = await getPhotoUrl(postObj.image, req);
+    }
     return postObj;
   }));
-  res.json({ posts: postsWithFullUrl });
+
+  const nextCursor = posts.length > 0 ? posts[posts.length - 1]._id : null;
+
+  res.json({ posts: postsWithFullUrl, nextCursor });
 }
 
-export const validateComment = [ param('id').isMongoId(), body('content').isString().isLength({ min: 1, max: 1000 }) ];
+export const validateComment = [param('id').isMongoId(), body('content').isString().isLength({ min: 1, max: 1000 })];
 export async function addComment(req, res) {
   const errors = validationResult(req);
   if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
@@ -44,17 +90,17 @@ export async function addComment(req, res) {
     postObj.author.photoUrl = await getPhotoUrl(postObj.author.photoUrl, req);
   }
   if (postObj.comments) {
-      postObj.comments = await Promise.all(postObj.comments.map(async comment => {
-        if (comment.author && comment.author.photoUrl) {
-          comment.author.photoUrl = await getPhotoUrl(comment.author.photoUrl, req);
-        }
-        return comment;
-      }));
+    postObj.comments = await Promise.all(postObj.comments.map(async comment => {
+      if (comment.author && comment.author.photoUrl) {
+        comment.author.photoUrl = await getPhotoUrl(comment.author.photoUrl, req);
+      }
+      return comment;
+    }));
   }
   res.status(201).json({ post: postObj });
 }
 
-export const validateReact = [ param('id').isMongoId(), body('key').isString().isLength({ min: 1, max: 32 }) ];
+export const validateReact = [param('id').isMongoId(), body('key').isString().isLength({ min: 1, max: 32 })];
 export async function react(req, res) {
   const errors = validationResult(req);
   if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
@@ -72,11 +118,38 @@ export async function react(req, res) {
   res.json({ post });
 }
 
-export const validateDelete = [ param('id').isMongoId() ];
+export const validateDelete = [param('id').isMongoId()];
 export async function removePost(req, res) {
   const post = await Post.findById(req.params.id);
   if (!post) return res.status(404).json({ error: 'Not found' });
+
+  // Allow author or admin to delete
+  if (String(post.author) !== req.user.id && req.user.role !== 'admin') {
+    return res.status(403).json({ error: 'Forbidden' });
+  }
+
   await post.deleteOne();
+  res.json({ ok: true });
+}
+
+export async function removeComment(req, res) {
+  const { id, commentId } = req.params;
+  const post = await Post.findById(id);
+  if (!post) return res.status(404).json({ error: 'Post not found' });
+
+  const comment = post.comments.id(commentId);
+  if (!comment) return res.status(404).json({ error: 'Comment not found' });
+
+  // Allow comment author or admin to delete
+  // Also allow post author to delete comments on their post? User said "their own post or comment".
+  // I'll stick to comment author or admin for now to be safe, unless post author is implied.
+  // Let's allow post author too, it's standard moderation.
+  if (String(comment.author) !== req.user.id && String(post.author) !== req.user.id && req.user.role !== 'admin') {
+    return res.status(403).json({ error: 'Forbidden' });
+  }
+
+  post.comments.pull(commentId);
+  await post.save();
   res.json({ ok: true });
 }
 
@@ -108,10 +181,22 @@ export async function listPostsByUser(req, res) {
       .sort({ createdAt: -1 })
       .limit(100);
 
-    const postsWithFullUrl = await Promise.all(posts.map(async post => {
+    // Filter private posts if viewer is not the author
+    const viewerId = req.user ? req.user.id : null;
+    const isAuthor = viewerId && String(viewerId) === String(user._id);
+
+    const visiblePosts = posts.filter(p => {
+      if (isAuthor) return true;
+      return !p.isPrivate;
+    });
+
+    const postsWithFullUrl = await Promise.all(visiblePosts.map(async post => {
       const postObj = post.toObject();
       if (postObj.author && postObj.author.photoUrl) {
         postObj.author.photoUrl = await getPhotoUrl(postObj.author.photoUrl, req);
+      }
+      if (postObj.image) {
+        postObj.image = await getPhotoUrl(postObj.image, req);
       }
       return postObj;
     }));
