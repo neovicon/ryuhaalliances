@@ -15,6 +15,7 @@
     "@aws-sdk/client-s3": "^3.937.0",
     "@aws-sdk/s3-request-presigner": "^3.937.0",
     "@azure/storage-blob": "^12.29.1",
+    "@supabase/supabase-js": "^2.84.0",
     "bcryptjs": "^3.0.3",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
@@ -28,7 +29,8 @@
     "morgan": "^1.10.1",
     "multer": "^2.0.2",
     "nanoid": "^5.1.6",
-    "nodemailer": "^7.0.10"
+    "nodemailer": "^7.0.10",
+    "supabase": "^2.62.5"
   },
   "devDependencies": {
     "nodemon": "^3.1.10"

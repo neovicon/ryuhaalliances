@@ -18,6 +18,7 @@ import articleRoutes from './routes/article.routes.js';
 import storyRoutes from './routes/story.routes.js';
 import attendanceRoutes from './routes/attendance.routes.js';
 import uploadRoutes from './routes/upload.routes.js';
+import imageRoutes from './routes/image.routes.js';
 
 const app = express();
 
@@ -60,6 +61,7 @@ app.use('/api/articles', articleRoutes);
 app.use('/api/stories', storyRoutes);
 app.use('/api/attendance', attendanceRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/api/image', imageRoutes);
 
 
 const PORT = process.env.PORT || 5000;
