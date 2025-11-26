@@ -9,7 +9,7 @@ export async function getPendingUsers(req, res) {
     const users = await User.find({ status: 'pending' })
       .select('-passwordHash')
       .sort({ createdAt: -1 });
-    
+
     const usersWithFullUrl = await Promise.all(users.map(async user => {
       const userObj = user.toObject();
       userObj.photoUrl = await getPhotoUrl(userObj.photoUrl, req);
@@ -17,7 +17,7 @@ export async function getPendingUsers(req, res) {
       const { _id, ...rest } = userObj;
       return { id: _id, ...rest };
     }));
-    
+
     res.json({ users: usersWithFullUrl });
   } catch (error) {
     console.error('Error fetching pending users:', error);
@@ -40,16 +40,16 @@ export async function approveUser(req, res) {
       { status: 'approved', adminMessage: null },
       { new: true }
     ).select('-passwordHash');
-    
+
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
-    
+
     const userObj = user.toObject();
     userObj.photoUrl = await getPhotoUrl(userObj.photoUrl, req);
     // Convert _id to id for consistency
     const { _id, ...rest } = userObj;
-    
+
     res.json({ user: { id: _id, ...rest }, message: 'User approved successfully' });
   } catch (error) {
     console.error('Error approving user:', error);
@@ -72,22 +72,22 @@ export async function declineUser(req, res) {
     if (message) {
       updateData.adminMessage = message.trim();
     }
-    
+
     const user = await User.findByIdAndUpdate(
       userId,
       updateData,
       { new: true }
     ).select('-passwordHash');
-    
+
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
-    
+
     const userObj = user.toObject();
     userObj.photoUrl = await getPhotoUrl(userObj.photoUrl, req);
     // Convert _id to id for consistency
     const { _id, ...rest } = userObj;
-    
+
     res.json({ user: { id: _id, ...rest }, message: 'User declined successfully' });
   } catch (error) {
     console.error('Error declining user:', error);
@@ -111,16 +111,16 @@ export async function sendMessageToUser(req, res) {
       { adminMessage: message.trim() },
       { new: true }
     ).select('-passwordHash');
-    
+
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
-    
+
     const userObj = user.toObject();
     userObj.photoUrl = await getPhotoUrl(userObj.photoUrl, req);
     // Convert _id to id for consistency
     const { _id, ...rest } = userObj;
-    
+
     res.json({ user: { id: _id, ...rest }, message: 'Message sent successfully' });
   } catch (error) {
     console.error('Error sending message to user:', error);
@@ -131,10 +131,20 @@ export async function sendMessageToUser(req, res) {
 export async function getAllUsers(req, res) {
   try {
     // Exclude pending users from the all users list
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const skip = (page - 1) * limit;
+
+    // Exclude pending users from the all users list
     const users = await User.find({ status: { $ne: 'pending' } })
       .select('-passwordHash')
-      .sort({ points: -1, createdAt: -1 });
-    
+      .sort({ points: -1, createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    const totalUsers = await User.countDocuments({ status: { $ne: 'pending' } });
+    const totalPages = Math.ceil(totalUsers / limit);
+
     const usersWithFullUrl = await Promise.all(users.map(async user => {
       const userObj = user.toObject();
       userObj.photoUrl = await getPhotoUrl(userObj.photoUrl, req);
@@ -143,8 +153,16 @@ export async function getAllUsers(req, res) {
       const { _id, ...rest } = userObj;
       return { id: _id, ...rest };
     }));
-    
-    res.json({ users: usersWithFullUrl });
+
+    res.json({
+      users: usersWithFullUrl,
+      pagination: {
+        page,
+        limit,
+        totalUsers,
+        totalPages
+      }
+    });
   } catch (error) {
     console.error('Error fetching all users:', error);
     res.status(500).json({ error: 'Failed to fetch users' });
@@ -163,25 +181,25 @@ export async function updateHouse(req, res) {
   try {
     const { userId, house } = req.body;
     const { allowedHouses } = await import('../models/User.js');
-    
+
     if (!allowedHouses.includes(house)) {
       return res.status(400).json({ error: `House must be one of: ${allowedHouses.join(', ')}` });
     }
-    
+
     const user = await User.findByIdAndUpdate(
       userId,
       { house },
       { new: true }
     ).select('-passwordHash');
-    
+
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
-    
+
     const userObj = user.toObject();
     userObj.photoUrl = await getPhotoUrl(userObj.photoUrl, req);
     const { _id, ...rest } = userObj;
-    
+
     res.json({ user: { id: _id, ...rest }, message: 'House updated successfully' });
   } catch (error) {
     console.error('Error updating house:', error);
@@ -205,15 +223,15 @@ export async function addModerator(req, res) {
       { role: 'moderator', moderatorType },
       { new: true }
     ).select('-passwordHash');
-    
+
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
-    
+
     const userObj = user.toObject();
     userObj.photoUrl = await getPhotoUrl(userObj.photoUrl, req);
     const { _id, ...rest } = userObj;
-    
+
     res.json({ user: { id: _id, ...rest }, message: 'User promoted to moderator successfully' });
   } catch (error) {
     console.error('Error adding moderator:', error);
@@ -266,29 +284,29 @@ export async function updateMemberStatus(req, res) {
   try {
     const { userId, memberStatus } = req.body;
     const { allowedMemberStatuses } = await import('../models/User.js');
-    
+
     if (memberStatus !== null && memberStatus !== undefined && memberStatus !== '' && !allowedMemberStatuses.includes(memberStatus)) {
       return res.status(400).json({ error: `Member status must be one of: ${allowedMemberStatuses.join(', ')}` });
     }
-    
-    const updateData = memberStatus === null || memberStatus === undefined || memberStatus === '' 
-      ? { $unset: { memberStatus: 1 } } 
+
+    const updateData = memberStatus === null || memberStatus === undefined || memberStatus === ''
+      ? { $unset: { memberStatus: 1 } }
       : { memberStatus };
-    
+
     const user = await User.findByIdAndUpdate(
       userId,
       updateData,
       { new: true }
     ).select('-passwordHash');
-    
+
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
-    
+
     const userObj = user.toObject();
     userObj.photoUrl = await getPhotoUrl(userObj.photoUrl, req);
     const { _id, ...rest } = userObj;
-    
+
     res.json({ user: { id: _id, ...rest }, message: 'Member status updated successfully' });
   } catch (error) {
     console.error('Error updating member status:', error);
@@ -303,13 +321,13 @@ export async function getHouseMembers(req, res) {
       return res.status(400).json({ error: 'House parameter is required' });
     }
 
-    const users = await User.find({ 
+    const users = await User.find({
       house: house,
       status: 'approved'
     })
       .select('-passwordHash')
       .sort({ memberStatus: 1, points: -1, createdAt: -1 });
-    
+
     const usersWithFullUrl = await Promise.all(users.map(async user => {
       const userObj = user.toObject();
       userObj.photoUrl = await getPhotoUrl(userObj.photoUrl, req);
@@ -318,7 +336,7 @@ export async function getHouseMembers(req, res) {
       const { _id, ...rest } = userObj;
       return { id: _id, ...rest };
     }));
-    
+
     res.json({ members: usersWithFullUrl });
   } catch (error) {
     console.error('Error fetching house members:', error);
@@ -334,7 +352,7 @@ export async function getHouse(req, res) {
     }
 
     let house = await House.findOne({ name: houseName });
-    
+
     // If house doesn't exist, create it with default values
     if (!house) {
       const defaultDescription = getDefaultHouseDescription(houseName);
@@ -344,10 +362,10 @@ export async function getHouse(req, res) {
         status: 'Active'
       });
     }
-    
+
     const houseObj = house.toObject();
     const { _id, ...rest } = houseObj;
-    
+
     res.json({ house: { id: _id, ...rest } });
   } catch (error) {
     console.error('Error fetching house:', error);
@@ -375,13 +393,13 @@ function getDefaultHouseDescription(houseName) {
 export async function getAllHouses(req, res) {
   try {
     const houses = await House.find().sort({ name: 1 });
-    
+
     const housesList = houses.map(house => {
       const houseObj = house.toObject();
       const { _id, ...rest } = houseObj;
       return { id: _id, ...rest };
     });
-    
+
     res.json({ houses: housesList });
   } catch (error) {
     console.error('Error fetching houses:', error);
@@ -401,20 +419,20 @@ export async function updateHouseDetails(req, res) {
 
   try {
     const { houseName, description, status } = req.body;
-    
+
     const updateData = {};
     if (description !== undefined) updateData.description = description;
     if (status !== undefined) updateData.status = status;
-    
+
     let house = await House.findOneAndUpdate(
       { name: houseName },
       updateData,
       { new: true, upsert: true }
     );
-    
+
     const houseObj = house.toObject();
     const { _id, ...rest } = houseObj;
-    
+
     res.json({ house: { id: _id, ...rest }, message: 'House details updated successfully' });
   } catch (error) {
     console.error('Error updating house details:', error);
@@ -434,27 +452,27 @@ export async function updateUsername(req, res) {
   try {
     const { userId, username } = req.body;
     const cleanUsername = username.trim();
-    
+
     // Check if username is already taken by another user
     const existingUser = await User.findOne({ username: cleanUsername, _id: { $ne: userId } });
     if (existingUser) {
       return res.status(409).json({ error: 'Username already in use' });
     }
-    
+
     const user = await User.findByIdAndUpdate(
       userId,
       { username: cleanUsername },
       { new: true }
     ).select('-passwordHash');
-    
+
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
-    
+
     const userObj = user.toObject();
     userObj.photoUrl = await getPhotoUrl(userObj.photoUrl, req);
     const { _id, ...rest } = userObj;
-    
+
     res.json({ user: { id: _id, ...rest }, message: 'Username updated successfully' });
   } catch (error) {
     console.error('Error updating username:', error);
@@ -474,23 +492,23 @@ export async function updateDisplayName(req, res) {
   try {
     const { userId, displayName } = req.body;
     const cleanDisplayName = displayName?.trim() || null;
-    
+
     const updateData = cleanDisplayName ? { displayName: cleanDisplayName } : { $unset: { displayName: 1 } };
-    
+
     const user = await User.findByIdAndUpdate(
       userId,
       updateData,
       { new: true }
     ).select('-passwordHash');
-    
+
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
-    
+
     const userObj = user.toObject();
     userObj.photoUrl = await getPhotoUrl(userObj.photoUrl, req);
     const { _id, ...rest } = userObj;
-    
+
     res.json({ user: { id: _id, ...rest }, message: 'Display name updated successfully' });
   } catch (error) {
     console.error('Error updating display name:', error);
@@ -513,15 +531,15 @@ export async function removeModerator(req, res) {
       { role: 'user', moderatorType: null },
       { new: true }
     ).select('-passwordHash');
-    
+
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
-    
+
     const userObj = user.toObject();
     userObj.photoUrl = await getPhotoUrl(userObj.photoUrl, req);
     const { _id, ...rest } = userObj;
-    
+
     res.json({ user: { id: _id, ...rest }, message: 'Moderator role removed successfully' });
   } catch (error) {
     console.error('Error removing moderator:', error);
