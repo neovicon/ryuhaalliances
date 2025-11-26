@@ -39,6 +39,7 @@ export default function Profile() {
   const [posts, setPosts] = useState([]);
   const [postsLoading, setPostsLoading] = useState(false);
   const [newPostContent, setNewPostContent] = useState('');
+  const [newPostIsPrivate, setNewPostIsPrivate] = useState(false);
   const [creatingPost, setCreatingPost] = useState(false);
 
   const [heroFile, setHeroFile] = useState(null);
@@ -206,8 +207,12 @@ export default function Profile() {
     if (!newPostContent.trim()) return;
     setCreatingPost(true);
     try {
-      await client.post('/posts', { content: newPostContent.trim() });
+      await client.post('/posts', {
+        content: newPostContent.trim(),
+        isPrivate: newPostIsPrivate
+      });
       setNewPostContent('');
+      setNewPostIsPrivate(false);
       if (profile?.username) {
         await loadPostsForIdentifier(profile.username);
       }
@@ -224,7 +229,7 @@ export default function Profile() {
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = 'image/png,image/jpeg,image/webp';
-    input.onchange = (e) => {
+    input.onchange = async (e) => {
       const selected = e.target.files?.[0];
       if (selected) {
         const maxSize = 30 * 1024 * 1024; // 30MB
@@ -233,7 +238,19 @@ export default function Profile() {
           input.value = '';
           return;
         }
-        setHeroFile(selected);
+        // Immediate upload
+        setUploadingHero(true);
+        try {
+          const form = new FormData();
+          form.append('heroCard', selected);
+          await client.post('/users/me/hero-card', form, { headers: { 'Content-Type': 'multipart/form-data' } });
+          await loadSelfProfile();
+        } catch (error) {
+          console.error('Failed to upload hero card:', error);
+          alert(error?.response?.data?.error || 'Failed to upload hero card');
+        } finally {
+          setUploadingHero(false);
+        }
       }
     };
     input.click();
@@ -244,7 +261,7 @@ export default function Profile() {
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = 'image/png,image/jpeg,image/webp';
-    input.onchange = (e) => {
+    input.onchange = async (e) => {
       const selected = e.target.files?.[0];
       if (selected) {
         const maxSize = 30 * 1024 * 1024; // 30MB
@@ -253,7 +270,19 @@ export default function Profile() {
           input.value = '';
           return;
         }
-        setAvatarFile(selected);
+        // Immediate upload
+        setUploadingAvatar(true);
+        try {
+          const form = new FormData();
+          form.append('photo', selected);
+          await client.post('/users/me/photo', form, { headers: { 'Content-Type': 'multipart/form-data' } });
+          await loadSelfProfile();
+        } catch (error) {
+          console.error('Failed to upload profile picture:', error);
+          alert(error?.response?.data?.error || 'Failed to upload profile picture');
+        } finally {
+          setUploadingAvatar(false);
+        }
       }
     };
     input.click();
@@ -828,6 +857,16 @@ export default function Profile() {
                   onChange={(e) => setNewPostContent(e.target.value.slice(0, 500))}
                   style={{ minHeight: 100, resize: 'vertical', marginBottom: '0.5rem' }}
                 />
+                <div style={{ marginBottom: '0.5rem' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.9rem', color: 'var(--muted)' }}>
+                    <input
+                      type="checkbox"
+                      checked={newPostIsPrivate}
+                      onChange={(e) => setNewPostIsPrivate(e.target.checked)}
+                    />
+                    Private (Only visible to you)
+                  </label>
+                </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
                   <span style={{ color: 'var(--muted)', fontSize: '0.85rem' }}>{newPostContent.length}/500</span>
                   <button className="btn" onClick={handleCreatePost} disabled={creatingPost || !newPostContent.trim()} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -865,7 +904,9 @@ export default function Profile() {
                         borderRadius: '12px',
                         padding: '1rem',
                         background: 'rgba(15,23,42,0.4)',
+                        cursor: 'pointer'
                       }}
+                      onClick={() => navigate(`/post/${postId}`)}
                     >
                       <div style={{ marginBottom: '0.35rem', fontWeight: 600 }}>
                         {post.author?.displayName || post.author?.username || profile.username}
@@ -873,7 +914,20 @@ export default function Profile() {
                       <div style={{ color: 'var(--muted)', fontSize: '0.8rem', marginBottom: '0.75rem' }}>
                         {new Date(post.createdAt).toLocaleString()}
                       </div>
-                      <div style={{ whiteSpace: 'pre-wrap', lineHeight: 1.6 }}>{post.content}</div>
+                      {post.content && <div style={{ whiteSpace: 'pre-wrap', lineHeight: 1.6, marginBottom: '0.5rem' }}>{post.content}</div>}
+
+                      {post.image && (
+                        <img
+                          src={post.image}
+                          alt="Post content"
+                          style={{ width: '100%', borderRadius: '8px', marginBottom: '0.5rem', border: '1px solid #1f2937' }}
+                        />
+                      )}
+
+                      <div style={{ display: 'flex', gap: '1rem', color: 'var(--muted)', fontSize: '0.85rem' }}>
+                        <span>{post.comments?.length || 0} Comments</span>
+                        {post.isPrivate && <span>🔒 Private</span>}
+                      </div>
                     </div>
                   );
                 })}
