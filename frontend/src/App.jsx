@@ -24,6 +24,7 @@ import Stories from './pages/Stories.jsx'
 import ArticleDetail from './pages/ArticleDetail.jsx'
 import StoryDetail from './pages/StoryDetail.jsx'
 import Attendance from './pages/Attendance.jsx'
+import PostDetail from './pages/PostDetail.jsx'
 
 
 export default function App() {
@@ -43,6 +44,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/feed" element={<Feed />} />
+        <Route path="/post/:id" element={<PostDetail />} />
         <Route path="/leaderboard" element={<Leaderboard />} />
         <Route path="/admin" element={<Admin />} />
         <Route path="/moderator" element={<Moderator />} />
@@ -55,11 +57,11 @@ export default function App() {
         <Route path="/events/:id" element={<EventDetail />} />
         <Route path="/blogs" element={<Blogs />} />
         <Route path="/blogs/:id" element={<BlogDetail />} />
-  <Route path="/articles" element={<Articles />} />
+        <Route path="/articles" element={<Articles />} />
         <Route path="/articles/:id" element={<ArticleDetail />} />
-  <Route path="/stories" element={<Stories />} />
+        <Route path="/stories" element={<Stories />} />
         <Route path="/stories/:id" element={<StoryDetail />} />
-            <Route path="/houses/:slug" element={<HouseDetail />} />
+        <Route path="/houses/:slug" element={<HouseDetail />} />
         <Route path="/announcements" element={<Announcements />} />
         <Route path="/announcements/:id" element={<AnnouncementDetail />} />
       </Routes>
@@ -80,16 +82,16 @@ function Footer() {
           <h4 className="hdr">Social</h4>
           <div className="grid" style={{ gridTemplateColumns: '1fr' }}>
             <a href="https://www.facebook.com/groups/1Brd988fMv/" target="_blank" rel="noreferrer">
-              <i className="fa-brands fa-facebook" style={{marginRight: 8}}></i> Facebook
+              <i className="fa-brands fa-facebook" style={{ marginRight: 8 }}></i> Facebook
             </a>
             <a href="https://m.me/j/Abah_xP2JTbUxM1C/" target="_blank" rel="noreferrer">
-              <i className="fa-brands fa-facebook-messenger" style={{marginRight: 8}}></i> Messenger
+              <i className="fa-brands fa-facebook-messenger" style={{ marginRight: 8 }}></i> Messenger
             </a>
             <a href="https://www.youtube.com/@ryuha-alliances" target="_blank" rel="noreferrer">
-              <i className="fa-brands fa-youtube" style={{marginRight: 8}}></i> YouTube
+              <i className="fa-brands fa-youtube" style={{ marginRight: 8 }}></i> YouTube
             </a>
             <a href="https://discord.gg/ZxVqUaZF" target="_blank" rel="noreferrer">
-              <i className="fa-brands fa-discord" style={{marginRight: 8}}></i> Discord
+              <i className="fa-brands fa-discord" style={{ marginRight: 8 }}></i> Discord
             </a>
           </div>
         </div>
