@@ -119,7 +119,7 @@ const Attendance = () => {
       // USE _id HERE
       const uid = m.id || m._id;
 
-      const record = attendanceDoc?.records?.find(r => (r.userId._id || r.userId) === uid);
+      const record = attendanceDoc?.records?.find(r => (r.userId?._id || r.userId) === uid);
 
       initialBuffer[uid] = record
         ? { ...defaultRow, ...record.status }
@@ -190,7 +190,7 @@ const Attendance = () => {
     if (isEditing) {
       return editBuffer[memberId]?.[day] || 'absent';
     }
-    const record = attendanceDoc?.records?.find(r => (r.userId._id || r.userId) === memberId);
+    const record = attendanceDoc?.records?.find(r => (r.userId?._id || r.userId) === memberId);
     return record?.status?.[day] || 'absent';
   };
 
