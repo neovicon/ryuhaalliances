@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import client from '../api/client';
 import { getRankImageSrc, calculateRank, RANKS } from '../utils/rank';
 import { useAuth } from '../store/auth';
@@ -15,6 +15,10 @@ export default function Admin() {
   const [allUsers, setAllUsers] = useState([]);
   const [filteredUsers, setFilteredUsers] = useState([]);
   const [pendingUsers, setPendingUsers] = useState([]);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingUsers, setLoadingUsers] = useState(false);
+  const observer = useRef();
   const [messageModal, setMessageModal] = useState({ open: false, userId: null, message: '' });
   const [declineModal, setDeclineModal] = useState({ open: false, userId: null, message: '' });
   const [editingUser, setEditingUser] = useState({ userId: null, field: null });
@@ -27,15 +31,41 @@ export default function Admin() {
   const [houseEditValues, setHouseEditValues] = useState({ description: '', status: 'Active' });
   const [loadingAction, setLoadingAction] = useState(null);
 
-  async function loadAllUsers() {
-    const { data } = await client.get('/admin/all-users');
-    setAllUsers(data.users);
-    setFilteredUsers(data.users);
+  const loadAllUsers = useCallback(async (reset = false) => {
+    if (loadingUsers) return;
+    setLoadingUsers(true);
     try {
+      const currentPage = reset ? 1 : page;
+      const { data } = await client.get('/admin/all-users', { params: { page: currentPage, limit: 20 } });
+
+      if (reset) {
+        setAllUsers(data.users);
+        setFilteredUsers(data.users);
+        setPage(2);
+      } else {
+        setAllUsers(prev => [...prev, ...data.users]);
+        setFilteredUsers(prev => [...prev, ...data.users]);
+        setPage(prev => prev + 1);
+      }
+
+      setHasMore(currentPage < data.pagination.totalPages);
     } catch (error) {
       console.error('Error loading all users:', error);
+    } finally {
+      setLoadingUsers(false);
     }
-  }
+  }, [loadingUsers, page]);
+
+  const lastUserElementRef = useCallback(node => {
+    if (loadingUsers) return;
+    if (observer.current) observer.current.disconnect();
+    observer.current = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting && hasMore && !q) { // Only infinite scroll when not searching
+        loadAllUsers();
+      }
+    });
+    if (node) observer.current.observe(node);
+  }, [loadingUsers, hasMore, loadAllUsers, q]);
 
   useEffect(() => {
     // Filter users based on search query
@@ -73,7 +103,7 @@ export default function Admin() {
 
   useEffect(() => {
     loadPendingUsers();
-    loadAllUsers();
+    loadAllUsers(true);
     loadHouses();
   }, []);
 
@@ -612,7 +642,7 @@ export default function Admin() {
               onChange={e => setQ(e.target.value)}
               style={{ minWidth: '200px' }}
             />
-            <button className="btn" onClick={loadAllUsers}>Refresh</button>
+            <button className="btn" onClick={() => loadAllUsers(true)}>Refresh</button>
           </div>
         </div>
         {filteredUsers.length === 0 ? (
@@ -621,8 +651,11 @@ export default function Admin() {
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            {filteredUsers.map((u) => {
+            {filteredUsers.map((u, index) => {
               const userId = u.id || u._id;
+              const isLast = index === filteredUsers.length - 1;
+
+              // ... existing variables ...
               const isEditingPoints = editingUser.userId === userId && editingUser.field === 'points';
               const isEditingRank = editingUser.userId === userId && editingUser.field === 'rank';
               const isEditingHouse = editingUser.userId === userId && editingUser.field === 'house';
@@ -684,6 +717,7 @@ export default function Admin() {
               return (
                 <div
                   key={userId}
+                  ref={isLast ? lastUserElementRef : null}
                   style={{
                     border: '1px solid #1f2937',
                     borderRadius: '12px',
