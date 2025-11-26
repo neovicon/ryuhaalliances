@@ -17,6 +17,7 @@ import announcementRoutes from './routes/announcement.routes.js';
 import articleRoutes from './routes/article.routes.js';
 import storyRoutes from './routes/story.routes.js';
 import attendanceRoutes from './routes/attendance.routes.js';
+import uploadRoutes from './routes/upload.routes.js';
 
 const app = express();
 
@@ -58,6 +59,7 @@ app.use('/api/announcements', announcementRoutes);
 app.use('/api/articles', articleRoutes);
 app.use('/api/stories', storyRoutes);
 app.use('/api/attendance', attendanceRoutes);
+app.use('/api/upload', uploadRoutes);
 
 
 const PORT = process.env.PORT || 5000;
