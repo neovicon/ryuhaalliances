@@ -13,6 +13,8 @@ const commentSchema = new mongoose.Schema({
 const postSchema = new mongoose.Schema({
   author: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   content: { type: String, required: true },
+  image: { type: String }, // URL to the image
+  isPrivate: { type: Boolean, default: false },
   reactions: { type: [reactionSchema], default: [] },
   comments: { type: [commentSchema], default: [] },
 }, { timestamps: true });
