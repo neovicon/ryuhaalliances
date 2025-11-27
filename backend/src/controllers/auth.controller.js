@@ -44,7 +44,12 @@ export async function signup(req, res) {
   const cleanSigil = sigil?.trim();
   const cleanDisplayName = displayName?.trim() || undefined;
 
-  const existing = await User.findOne({ $or: [{ email: cleanEmail }, { username: cleanUsername }] });
+  // Only check for approved users - declined/pending users shouldn't block new signups
+  // The compound unique indexes (email+status, username+status) prevent duplicates with the same status
+  const existing = await User.findOne({
+    $or: [{ email: cleanEmail }, { username: cleanUsername }],
+    status: 'approved'
+  });
   if (existing) return res.status(409).json({ error: 'Email or username already in use' });
 
   const passwordHash = await bcrypt.hash(password, 12);

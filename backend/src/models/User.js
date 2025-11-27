@@ -5,12 +5,12 @@ const houses = ['Pendragon', 'Phantomhive', 'Tempest', 'Zoldyck', 'Fritz', 'Elri
 const memberStatuses = ['Creator of the Realm', 'Guardian', 'Lord of the House', 'General', 'Seeker', 'Herald', 'Watcher', 'Knight of Genesis', 'Knight of I', 'Knight of II', 'Knight of III', 'Knight of IV', 'Knight of V', 'Commoner'];
 
 const userSchema = new mongoose.Schema({
-  email: { type: String, required: true, unique: true, index: true },
+  email: { type: String, required: true, index: true },
   emailVerified: { type: Boolean, default: false },
   emailVerificationCode: { type: String },
   emailVerificationCodeExpires: { type: Date },
   passwordHash: { type: String, required: true },
-  username: { type: String, required: true, unique: true, index: true },
+  username: { type: String, required: true, index: true },
   displayName: { type: String },
   sigil: { type: String, required: true },
   house: { type: String, enum: houses, required: true },
@@ -27,6 +27,11 @@ const userSchema = new mongoose.Schema({
   rank: { type: String, default: 'Novice' },
   memberStatus: { type: String, enum: memberStatuses },
 }, { timestamps: true });
+
+// Compound unique indexes: allow same email/username only if status is different
+// This allows declined users' credentials to be reused for new signups
+userSchema.index({ email: 1, status: 1 }, { unique: true });
+userSchema.index({ username: 1, status: 1 }, { unique: true });
 
 export default mongoose.model('User', userSchema);
 export const allowedHouses = houses;
