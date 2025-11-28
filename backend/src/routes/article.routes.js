@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { requireAuth, requireAestherOrVigilOrOverseer } from '../middleware/auth.js';
 import multer from 'multer';
 import { uploadImage, uploadToStorage } from '../middleware/upload.js';
-import { createArticle, listArticles, getArticleById, addComment, updateArticle, deleteArticle, validateCreateArticle, validateGetArticle, validateAddComment, validateUpdateArticle, validateDeleteArticle } from '../controllers/article.controller.js';
+import { createArticle, listArticles, getArticleById, addComment, updateArticle, deleteArticle, react, validateCreateArticle, validateGetArticle, validateAddComment, validateUpdateArticle, validateDeleteArticle, validateReact } from '../controllers/article.controller.js';
 
 const router = Router();
 
@@ -18,6 +18,7 @@ const handleMulterError = (err, req, res, next) => {
 router.get('/', listArticles);
 router.get('/:id', validateGetArticle, getArticleById);
 router.post('/:id/comments', requireAuth, validateAddComment, addComment);
+router.post('/:id/react', requireAuth, validateReact, react);
 router.post('/', requireAuth, requireAestherOrVigilOrOverseer, uploadImage.single('image'), handleMulterError, uploadToStorage, async (req, res, next) => {
   if (req.file) req.body.imageUrl = req.file.storagePath || `/uploads/${req.file.filename}`;
   next();

@@ -16,7 +16,9 @@ import {
 	validateGetBlog,
 	getBlogById,
 	validateAddComment,
-	addComment
+	addComment,
+	react,
+	validateReact
 } from '../controllers/blog.controller.js';
 
 const router = Router();
@@ -56,6 +58,7 @@ router.put('/:id', requireAuth, requireVigil, uploadImage.single('image'), handl
 router.delete('/:id', requireAuth, requireVigil, validateDeleteBlog, deleteBlog);
 router.patch('/:id/archive', requireAuth, requireVigil, validateArchive, setArchived);
 router.post('/:id/comments', requireAuth, validateAddComment, addComment);
+router.post('/:id/react', requireAuth, validateReact, react);
 
 export default router;
 

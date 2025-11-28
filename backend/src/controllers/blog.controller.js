@@ -122,7 +122,7 @@ export async function deleteBlog(req, res) {
   }
 }
 
-export const validateArchive = [ param('id').isMongoId(), body('archived').isBoolean() ];
+export const validateArchive = [param('id').isMongoId(), body('archived').isBoolean()];
 export async function setArchived(req, res) {
   try {
     const blog = await Blog.findByIdAndUpdate(req.params.id, { archived: req.body.archived }, { new: true });
@@ -190,7 +190,7 @@ export async function addComment(req, res) {
   try {
     const { id } = req.params;
     const blog = await Blog.findById(id);
-    
+
     if (!blog) {
       return res.status(404).json({ error: 'Blog not found' });
     }
@@ -225,6 +225,30 @@ export async function addComment(req, res) {
   } catch (error) {
     console.error('Error adding comment to blog:', error);
     res.status(500).json({ error: 'Failed to add comment' });
+  }
+}
+
+export const validateReact = [param('id').isMongoId(), body('key').isString().isLength({ min: 1, max: 32 })];
+
+export async function react(req, res) {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+  try {
+    const blog = await Blog.findById(req.params.id);
+    if (!blog) return res.status(404).json({ error: 'Blog not found' });
+    const { key } = req.body;
+    let reaction = blog.reactions.find(r => r.key === key);
+    if (!reaction) {
+      reaction = { key, userIds: [] };
+      blog.reactions.push(reaction);
+    }
+    const idx = reaction.userIds.findIndex(u => String(u) === req.user.id);
+    if (idx >= 0) reaction.userIds.splice(idx, 1); else reaction.userIds.push(req.user.id);
+    await blog.save();
+    res.json({ blog });
+  } catch (err) {
+    console.error('Error reacting to blog:', err);
+    res.status(500).json({ error: 'Failed to react' });
   }
 }
 

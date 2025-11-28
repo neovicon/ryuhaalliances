@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { requireAuth, requireAdmin, requireAestherOrVigilOrOverseer } from '../middleware/auth.js';
-import { createAnnouncement, listAnnouncements, updateAnnouncement, deleteAnnouncement, getAnnouncementById, addComment, validateCreateAnnouncement, validateUpdateAnnouncement, validateDeleteAnnouncement, validateGetAnnouncement, validateAddComment } from '../controllers/announcement.controller.js';
+import { createAnnouncement, listAnnouncements, updateAnnouncement, deleteAnnouncement, getAnnouncementById, addComment, react, validateCreateAnnouncement, validateUpdateAnnouncement, validateDeleteAnnouncement, validateGetAnnouncement, validateAddComment, validateReact } from '../controllers/announcement.controller.js';
 import { uploadImage, uploadToStorage } from '../middleware/upload.js';
 import multer from 'multer';
 
@@ -23,6 +23,7 @@ const handleMulterError = (err, req, res, next) => {
 router.get('/', listAnnouncements);
 router.get('/:id', validateGetAnnouncement, getAnnouncementById);
 router.post('/:id/comments', requireAuth, validateAddComment, addComment);
+router.post('/:id/react', requireAuth, validateReact, react);
 router.post('/', requireAuth, requireAestherOrVigilOrOverseer, uploadImage.single('image'), handleMulterError, uploadToStorage, async (req, res, next) => {
   // Add imageUrl to req.body if file was uploaded (store only filename/path, not full URL)
   if (req.file) {

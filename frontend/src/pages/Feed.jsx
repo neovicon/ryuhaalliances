@@ -1,6 +1,8 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import client from '../api/client';
+import Reactions from '../components/Reactions';
+import ShareButton from '../components/ShareButton';
 
 import { useAuth } from '../store/auth';
 
@@ -188,9 +190,25 @@ export default function Feed() {
                 />
               )}
 
-              <div style={{ display: 'flex', gap: '1rem', color: 'var(--muted)', fontSize: '0.85rem', marginTop: '0.5rem' }}>
-                <span>{p.comments?.length || 0} Comments</span>
-                {p.isPrivate && <span>🔒 Private</span>}
+              <div style={{ borderTop: '1px solid #1f2937', paddingTop: '0.75rem', marginTop: '0.75rem' }}>
+                <div style={{ display: 'flex', gap: '1rem', color: 'var(--muted)', fontSize: '0.85rem', marginBottom: '0.75rem' }}>
+                  <span>{p.comments?.length || 0} Comments</span>
+                  {p.isPrivate && <span>🔒 Private</span>}
+                </div>
+
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', alignItems: 'center', justifyContent: 'space-between' }} onClick={(e) => e.stopPropagation()}>
+                  <Reactions
+                    contentType="posts"
+                    contentId={p._id || p.id}
+                    reactions={p.reactions || []}
+                    user={user}
+                    onReactionUpdate={() => loadPosts(true)}
+                  />
+                  <ShareButton
+                    url={`${window.location.origin}/post/${p._id || p.id}`}
+                    title={p.content?.substring(0, 100) || 'Check out this post'}
+                  />
+                </div>
               </div>
             </div>
           );

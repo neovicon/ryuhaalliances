@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import client from '../api/client';
 import { useAuth } from '../store/auth';
+import Reactions from '../components/Reactions';
+import ShareButton from '../components/ShareButton';
 
 export default function PostDetail() {
     const { id } = useParams();
@@ -126,8 +128,24 @@ export default function PostDetail() {
                     />
                 )}
 
-                <div style={{ borderTop: '1px solid #1f2937', paddingTop: '1rem', color: 'var(--muted)', fontSize: '0.9rem' }}>
-                    {post.comments?.length || 0} Comments
+                <div style={{ borderTop: '1px solid #1f2937', paddingTop: '1rem', marginTop: '1rem' }}>
+                    <div style={{ color: 'var(--muted)', fontSize: '0.9rem', marginBottom: '1rem' }}>
+                        {post.comments?.length || 0} Comments
+                    </div>
+
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <Reactions
+                            contentType="posts"
+                            contentId={post._id || post.id}
+                            reactions={post.reactions || []}
+                            user={user}
+                            onReactionUpdate={loadPost}
+                        />
+                        <ShareButton
+                            url={window.location.href}
+                            title={post.content?.substring(0, 100) || 'Check out this post'}
+                        />
+                    </div>
                 </div>
             </div>
 

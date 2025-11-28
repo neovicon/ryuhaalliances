@@ -11,7 +11,8 @@ import {
   User,
   LogOut,
   ChevronDown,
-  Menu as MenuIcon
+  Menu as MenuIcon,
+  X
 } from 'lucide-react'
 
 export default function Nav() {
@@ -122,6 +123,29 @@ export default function Nav() {
         {open && createPortal(
           <div className={`mobile-menu open`} onClick={() => setOpen(false)}>
             <div className="mobile-menu-inner" onClick={e => e.stopPropagation()}>
+              <button
+                onClick={() => setOpen(false)}
+                style={{
+                  position: 'absolute',
+                  top: '1rem',
+                  right: '1rem',
+                  background: 'transparent',
+                  border: 'none',
+                  color: 'var(--text)',
+                  cursor: 'pointer',
+                  padding: '0.5rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  borderRadius: '4px',
+                  transition: 'background 0.2s'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
+                onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                aria-label="Close menu"
+              >
+                <X size={24} />
+              </button>
               <div className="mobile-links">
                 {visibleMainLinks.map(({ to, label, Icon }) => (
                   <Link key={to} to={to} className={`mobile-link ${isActive(to) ? 'active' : ''}`} onClick={() => setOpen(false)}>

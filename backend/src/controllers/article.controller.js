@@ -53,7 +53,7 @@ export async function listArticles(req, res) {
   }
 }
 
-export const validateGetArticle = [ param('id').isMongoId().withMessage('Invalid article ID') ];
+export const validateGetArticle = [param('id').isMongoId().withMessage('Invalid article ID')];
 
 export async function getArticleById(req, res) {
   const errors = validationResult(req);
@@ -79,7 +79,7 @@ export async function getArticleById(req, res) {
   }
 }
 
-export const validateAddComment = [ param('id').isMongoId(), body('content').isString().isLength({ min: 1, max: 1000 }).withMessage('Comment must be between 1 and 1000 characters') ];
+export const validateAddComment = [param('id').isMongoId(), body('content').isString().isLength({ min: 1, max: 1000 }).withMessage('Comment must be between 1 and 1000 characters')];
 
 export async function addComment(req, res) {
   const errors = validationResult(req);
@@ -109,7 +109,7 @@ export async function addComment(req, res) {
   }
 }
 
-export const validateUpdateArticle = [ param('id').isMongoId(), body('title').optional().notEmpty().withMessage('Title cannot be empty'), body('content').optional().notEmpty().withMessage('Content cannot be empty'), body('isActive').optional().isBoolean() ];
+export const validateUpdateArticle = [param('id').isMongoId(), body('title').optional().notEmpty().withMessage('Title cannot be empty'), body('content').optional().notEmpty().withMessage('Content cannot be empty'), body('isActive').optional().isBoolean()];
 
 export async function updateArticle(req, res) {
   const errors = validationResult(req);
@@ -134,7 +134,7 @@ export async function updateArticle(req, res) {
   }
 }
 
-export const validateDeleteArticle = [ param('id').isMongoId() ];
+export const validateDeleteArticle = [param('id').isMongoId()];
 
 export async function deleteArticle(req, res) {
   const errors = validationResult(req);
@@ -147,5 +147,29 @@ export async function deleteArticle(req, res) {
   } catch (err) {
     console.error('Error deleting article:', err);
     res.status(500).json({ error: 'Failed to delete article' });
+  }
+}
+
+export const validateReact = [param('id').isMongoId(), body('key').isString().isLength({ min: 1, max: 32 })];
+
+export async function react(req, res) {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+  try {
+    const article = await Article.findById(req.params.id);
+    if (!article) return res.status(404).json({ error: 'Article not found' });
+    const { key } = req.body;
+    let reaction = article.reactions.find(r => r.key === key);
+    if (!reaction) {
+      reaction = { key, userIds: [] };
+      article.reactions.push(reaction);
+    }
+    const idx = reaction.userIds.findIndex(u => String(u) === req.user.id);
+    if (idx >= 0) reaction.userIds.splice(idx, 1); else reaction.userIds.push(req.user.id);
+    await article.save();
+    res.json({ article });
+  } catch (err) {
+    console.error('Error reacting to article:', err);
+    res.status(500).json({ error: 'Failed to react' });
   }
 }

@@ -24,7 +24,7 @@ export async function createAnnouncement(req, res) {
     });
 
     await announcement.populate('createdBy', 'username displayName');
-    
+
     const announcementObj = announcement.toObject();
     const announcementId = announcementObj._id || announcementObj.id;
     let fullImageUrl = null;
@@ -33,7 +33,7 @@ export async function createAnnouncement(req, res) {
       announcementObj.imageUrl = fullImageUrl;
     }
     const { _id, ...rest } = announcementObj;
-    
+
     // Send email notifications to all approved users (non-blocking)
     sendAnnouncementEmails({
       id: announcementId,
@@ -43,7 +43,7 @@ export async function createAnnouncement(req, res) {
     }).catch(error => {
       console.error('Error sending announcement emails:', error);
     });
-    
+
     res.status(201).json({ announcement: { id: _id, ...rest } });
   } catch (error) {
     console.error('Error creating announcement:', error);
@@ -55,7 +55,7 @@ async function sendAnnouncementEmails(announcement) {
   try {
     // Get all approved users with verified emails
     const users = await User.find({ status: 'approved', emailVerified: true }).select('email displayName username');
-    
+
     if (users.length === 0) {
       console.log('No approved users to send announcement emails to');
       return;
@@ -64,14 +64,14 @@ async function sendAnnouncementEmails(announcement) {
     const baseUrl = process.env.CLIENT_ORIGIN?.replace(/\/$/, '') || 'http://localhost:5173';
     const announcementId = announcement.id || announcement._id;
     const announcementUrl = `${baseUrl}/announcements/${announcementId}`;
-    
+
     // Escape HTML in content to prevent XSS, but preserve line breaks
     const escapedContent = announcement.content
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;')
       .replace(/\n/g, '<br>');
-    
+
     // Create email HTML
     const html = `
       <!DOCTYPE html>
@@ -111,14 +111,14 @@ async function sendAnnouncementEmails(announcement) {
 
     const subject = `New Announcement: ${announcement.title}`;
     const recipientEmails = users.map(user => user.email).filter(email => email);
-    
+
     console.log(`Sending announcement email to ${recipientEmails.length} users...`);
     const results = await sendBulkEmails({
       recipients: recipientEmails,
       subject,
       html
     });
-    
+
     const successCount = results.filter(r => r.success).length;
     const failCount = results.filter(r => !r.success).length;
     console.log(`Announcement emails sent: ${successCount} successful, ${failCount} failed`);
@@ -132,7 +132,7 @@ export async function listAnnouncements(req, res) {
   try {
     const { activeOnly } = req.query;
     const query = activeOnly === 'true' ? { isActive: true } : {};
-    
+
     const announcements = await Announcement.find(query)
       .populate('createdBy', 'username displayName')
       .sort({ createdAt: -1 });
@@ -153,7 +153,7 @@ export async function listAnnouncements(req, res) {
   }
 }
 
-export const validateGetAnnouncement = [ param('id').isMongoId().withMessage('Invalid announcement ID') ];
+export const validateGetAnnouncement = [param('id').isMongoId().withMessage('Invalid announcement ID')];
 
 export async function getAnnouncementById(req, res) {
   const errors = validationResult(req);
@@ -209,7 +209,7 @@ export async function addComment(req, res) {
   try {
     const { id } = req.params;
     const announcement = await Announcement.findById(id);
-    
+
     if (!announcement) {
       return res.status(404).json({ error: 'Announcement not found' });
     }
@@ -260,7 +260,7 @@ export async function updateAnnouncement(req, res) {
   try {
     const { id } = req.params;
     const { title, content, imageUrl, isActive } = req.body;
-    
+
     const updateData = {};
     if (title !== undefined) updateData.title = title;
     if (content !== undefined) updateData.content = content;
@@ -290,7 +290,7 @@ export async function updateAnnouncement(req, res) {
   }
 }
 
-export const validateDeleteAnnouncement = [ param('id').isMongoId() ];
+export const validateDeleteAnnouncement = [param('id').isMongoId()];
 
 export async function deleteAnnouncement(req, res) {
   const errors = validationResult(req);
@@ -308,6 +308,30 @@ export async function deleteAnnouncement(req, res) {
   } catch (error) {
     console.error('Error deleting announcement:', error);
     res.status(500).json({ error: 'Failed to delete announcement' });
+  }
+}
+
+export const validateReact = [param('id').isMongoId(), body('key').isString().isLength({ min: 1, max: 32 })];
+
+export async function react(req, res) {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+  try {
+    const announcement = await Announcement.findById(req.params.id);
+    if (!announcement) return res.status(404).json({ error: 'Announcement not found' });
+    const { key } = req.body;
+    let reaction = announcement.reactions.find(r => r.key === key);
+    if (!reaction) {
+      reaction = { key, userIds: [] };
+      announcement.reactions.push(reaction);
+    }
+    const idx = reaction.userIds.findIndex(u => String(u) === req.user.id);
+    if (idx >= 0) reaction.userIds.splice(idx, 1); else reaction.userIds.push(req.user.id);
+    await announcement.save();
+    res.json({ announcement });
+  } catch (err) {
+    console.error('Error reacting to announcement:', err);
+    res.status(500).json({ error: 'Failed to react' });
   }
 }
 
