@@ -5,6 +5,7 @@ import { useAuth } from '../store/auth';
 import RichContent from '../components/RichContent';
 import Reactions from '../components/Reactions';
 import ShareButton from '../components/ShareButton';
+import SEO from '../components/SEO';
 
 export default function ArticleDetail() {
   const { id } = useParams();
@@ -42,6 +43,13 @@ export default function ArticleDetail() {
 
   return (
     <div className="container" style={{ padding: '2rem 1rem', maxWidth: '900px', margin: '0 auto' }}>
+      <SEO
+        title={article.title}
+        description={article.content?.substring(0, 200).replace(/<[^>]*>/g, '') || 'Read this article on Ryuha Alliance'}
+        image={article.imageUrl}
+        url={`/articles/${id}`}
+        type="article"
+      />
       <button className="btn" onClick={() => navigate('/articles')} style={{ marginBottom: '1.5rem', background: 'transparent', border: '1px solid rgba(148,163,184,0.3)' }}>← Back to Articles</button>
 
       <div className="card" style={{ marginBottom: '1.5rem', border: '1px solid rgba(148,163,184,0.2)', padding: 0, overflow: 'hidden' }}>

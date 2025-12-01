@@ -26,6 +26,7 @@ const userSchema = new mongoose.Schema({
   adminMessage: { type: String },
   rank: { type: String, default: 'Novice' },
   memberStatus: { type: String, enum: memberStatuses },
+  isDubber: { type: Boolean, default: false }, // Can upload dubbing videos
 }, { timestamps: true });
 
 // Compound unique indexes: allow same email/username only if status is different

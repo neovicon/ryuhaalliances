@@ -4,6 +4,7 @@ import client from '../api/client';
 import { useAuth } from '../store/auth';
 import Reactions from '../components/Reactions';
 import ShareButton from '../components/ShareButton';
+import SEO from '../components/SEO';
 
 export default function PostDetail() {
     const { id } = useParams();
@@ -90,6 +91,13 @@ export default function PostDetail() {
 
     return (
         <div className="container" style={{ padding: '2rem 1rem', maxWidth: '800px', margin: '0 auto' }}>
+            <SEO
+                title={post.content?.substring(0, 100) || 'Post'}
+                description={post.content?.substring(0, 200) || 'View this post on Ryuha Alliance'}
+                image={post.image}
+                url={`/post/${id}`}
+                type="article"
+            />
             <button onClick={() => navigate(-1)} className="btn" style={{ marginBottom: '1rem', background: 'transparent', border: '1px solid var(--muted)', color: 'var(--muted)' }}>
                 &larr; Back
             </button>

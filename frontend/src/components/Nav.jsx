@@ -58,6 +58,7 @@ export default function Nav() {
     { to: '/articles', label: 'Articles' },
     { to: '/stories', label: 'Stories' },
     { to: '/attendance', label: 'Attendance' },
+    { to: '/dubbing', label: 'Ryuha VA' },
   ]
 
   return (
@@ -147,7 +148,13 @@ export default function Nav() {
                 <X size={24} />
               </button>
               <div className="mobile-links">
-                {visibleMainLinks.map(({ to, label, Icon }) => (
+                {user && mainLinks.map(({ to, label, Icon }) => (
+                  <Link key={to} to={to} className={`mobile-link ${isActive(to) ? 'active' : ''}`} onClick={() => setOpen(false)}>
+                    <Icon size={18} style={{ marginRight: 12 }} />
+                    <span>{label}</span>
+                  </Link>
+                ))}
+                {!user && visibleMainLinks.map(({ to, label, Icon }) => (
                   <Link key={to} to={to} className={`mobile-link ${isActive(to) ? 'active' : ''}`} onClick={() => setOpen(false)}>
                     <Icon size={18} style={{ marginRight: 12 }} />
                     <span>{label}</span>
@@ -169,6 +176,10 @@ export default function Nav() {
                 <Link to="/stories" className="mobile-link" onClick={() => setOpen(false)}>
                   <span style={{ width: 20 }} />
                   <span>Stories</span>
+                </Link>
+                <Link to="/dubbing" className="mobile-link" onClick={() => setOpen(false)}>
+                  <span style={{ width: 20 }} />
+                  <span>Ryuha VA</span>
                 </Link>
                 {user?.role === 'admin' && (
                   <Link to="/admin" className="mobile-link" onClick={() => setOpen(false)}>Admin</Link>

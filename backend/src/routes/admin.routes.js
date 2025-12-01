@@ -1,12 +1,13 @@
 import { Router } from 'express';
 import { requireAuth, requireAdmin, requireGatekeeper, requireArbiter } from '../middleware/auth.js';
-import { getPendingUsers, approveUser, declineUser, sendMessageToUser, validateApproveUser, validateDeclineUser, validateSendMessage, getAllUsers, updateHouse, validateUpdateHouse, addModerator, validateAddModerator, removeUser, validateRemoveUser, updateMemberStatus, validateUpdateMemberStatus, getHouseMembers, getHouse, getAllHouses, updateHouseDetails, validateUpdateHouseDetails, updateUsername, validateUpdateUsername, updateDisplayName, validateUpdateDisplayName, removeModerator, validateRemoveModerator } from '../controllers/admin.controller.js';
+import { getPendingUsers, approveUser, declineUser, sendMessageToUser, validateApproveUser, validateDeclineUser, validateSendMessage, getAllUsers, searchUsers, updateHouse, validateUpdateHouse, addModerator, validateAddModerator, removeUser, validateRemoveUser, updateMemberStatus, validateUpdateMemberStatus, getHouseMembers, getHouse, getAllHouses, updateHouseDetails, validateUpdateHouseDetails, updateUsername, validateUpdateUsername, updateDisplayName, validateUpdateDisplayName, removeModerator, validateRemoveModerator } from '../controllers/admin.controller.js';
 
 const router = Router();
 
 // All admin routes require authentication and admin role
 router.get('/pending-users', requireAuth, requireGatekeeper, getPendingUsers);
 router.get('/all-users', requireAuth, requireAdmin, getAllUsers);
+router.get('/search-users', requireAuth, requireAdmin, searchUsers);
 router.post('/approve-user', requireAuth, requireGatekeeper, validateApproveUser, approveUser);
 router.post('/decline-user', requireAuth, requireAdmin, validateDeclineUser, declineUser);
 router.post('/send-message', requireAuth, requireAdmin, validateSendMessage, sendMessageToUser);

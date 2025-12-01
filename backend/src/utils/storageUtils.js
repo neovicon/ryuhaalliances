@@ -37,18 +37,20 @@ export async function getSupabaseSignedUrl(filename) {
  * @returns {string}
  */
 export function getAzureUrl(filename) {
-    // If we don't have account name, we can try to extract it from connection string or just fail gracefully
-    // But usually it's in the env or we can construct it.
-    // The user provided example: https://ryuhaalliance.blob.core.windows.net/uploads/${filename}
-
     // If filename already has full URL, return it
     if (filename.startsWith('http')) return filename;
 
     const cleanName = filename.replace(/^uploads\//, '').replace(/^\//, '');
 
-    // Use configured account name or fallback to hardcoded from user request if missing (risky but requested)
-    const accountName = AZURE_ACCOUNT_NAME || 'ryuhaalliance';
+    // Check if CDN endpoint is configured
+    const cdnEndpoint = process.env.AZURE_CDN_ENDPOINT;
+    if (cdnEndpoint) {
+        // Use CDN for faster delivery
+        return `${cdnEndpoint}/${AZURE_CONTAINER}/${cleanName}`;
+    }
 
+    // Fallback to direct Azure Blob Storage URL
+    const accountName = AZURE_ACCOUNT_NAME || 'ryuhaalliance';
     return `https://${accountName}.blob.core.windows.net/${AZURE_CONTAINER}/${cleanName}`;
 }
 

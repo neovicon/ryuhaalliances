@@ -5,6 +5,7 @@ import { useAuth } from '../store/auth';
 import RichContent from '../components/RichContent';
 import Reactions from '../components/Reactions';
 import ShareButton from '../components/ShareButton';
+import SEO from '../components/SEO';
 
 export default function AnnouncementDetail() {
   const { id } = useParams();
@@ -42,6 +43,13 @@ export default function AnnouncementDetail() {
 
   return (
     <div className="container" style={{ padding: '2rem 1rem', maxWidth: '900px', margin: '0 auto' }}>
+      <SEO
+        title={announcement.title}
+        description={announcement.content?.substring(0, 200).replace(/<[^>]*>/g, '') || 'Read this announcement on Ryuha Alliance'}
+        image={announcement.imageUrl}
+        url={`/announcements/${id}`}
+        type="article"
+      />
       <button className="btn" onClick={() => navigate('/announcements')} style={{ marginBottom: '1.5rem', background: 'transparent', border: '1px solid rgba(148,163,184,0.3)' }}>← Back to Announcements</button>
 
       <div className="card" style={{ marginBottom: '1.5rem', border: '1px solid rgba(148,163,184,0.2)', padding: 0, overflow: 'hidden' }}>

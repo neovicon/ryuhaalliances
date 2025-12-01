@@ -15,16 +15,17 @@ export const uploadFile = async (req, res) => {
 
         const containerClient = blobServiceClient.getContainerClient(containerName);
 
-        // Ensure container exists
+        // Ensure container exists with public access
         await containerClient.createIfNotExists({
-            access: 'blob' // Allow public read access to blobs if desired, or 'container' or undefined (private)
+            access: 'container' // Public read access for container and blobs
         });
 
         const blockBlobClient = containerClient.getBlockBlobClient(blobName);
 
         await blockBlobClient.uploadData(req.file.buffer, {
             blobHTTPHeaders: {
-                blobContentType: req.file.mimetype
+                blobContentType: req.file.mimetype,
+                blobCacheControl: 'public, max-age=31536000' // Cache for 1 year
             }
         });
 
@@ -50,13 +51,13 @@ export const getSignedUrlForFile = async (req, res) => {
         const containerClient = blobServiceClient.getContainerClient(containerName);
         const blockBlobClient = containerClient.getBlockBlobClient(key);
 
-        // Generate SAS token
+        // Generate SAS token with longer expiration for better video streaming
         const sasToken = generateBlobSASQueryParameters({
             containerName,
             blobName: key,
             permissions: BlobSASPermissions.parse("r"), // Read permission
             startsOn: new Date(),
-            expiresOn: new Date(new Date().valueOf() + 3600 * 1000), // 1 hour
+            expiresOn: new Date(new Date().valueOf() + 24 * 3600 * 1000), // 24 hours
         }, blobServiceClient.credential).toString();
 
         const url = `${blockBlobClient.url}?${sasToken}`;

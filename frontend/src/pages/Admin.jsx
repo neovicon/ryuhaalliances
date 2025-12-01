@@ -68,19 +68,33 @@ export default function Admin() {
   }, [loadingUsers, hasMore, loadAllUsers, q]);
 
   useEffect(() => {
-    // Filter users based on search query
-    if (!q.trim()) {
-      setFilteredUsers(allUsers);
-    } else {
-      const query = q.toLowerCase();
-      const filtered = allUsers.filter(u =>
-        u.username?.toLowerCase().includes(query) ||
-        u.displayName?.toLowerCase().includes(query) ||
-        u.email?.toLowerCase().includes(query) ||
-        u.house?.toLowerCase().includes(query)
-      );
-      setFilteredUsers(filtered);
-    }
+    // Search users from backend when query changes
+    const searchUsers = async () => {
+      if (!q.trim()) {
+        setFilteredUsers(allUsers);
+        return;
+      }
+
+      try {
+        const { data } = await client.get('/admin/search-users', { params: { q } });
+        setFilteredUsers(data.users);
+      } catch (error) {
+        console.error('Error searching users:', error);
+        // Fallback to client-side filtering if search fails
+        const query = q.toLowerCase();
+        const filtered = allUsers.filter(u =>
+          u.username?.toLowerCase().includes(query) ||
+          u.displayName?.toLowerCase().includes(query) ||
+          u.email?.toLowerCase().includes(query) ||
+          u.house?.toLowerCase().includes(query)
+        );
+        setFilteredUsers(filtered);
+      }
+    };
+
+    // Debounce search to avoid too many requests
+    const timeoutId = setTimeout(searchUsers, 300);
+    return () => clearTimeout(timeoutId);
   }, [q, allUsers]);
 
   async function loadPendingUsers() {

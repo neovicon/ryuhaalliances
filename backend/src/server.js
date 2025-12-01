@@ -19,6 +19,7 @@ import storyRoutes from './routes/story.routes.js';
 import attendanceRoutes from './routes/attendance.routes.js';
 import uploadRoutes from './routes/upload.routes.js';
 import imageRoutes from './routes/image.routes.js';
+import dubbingRoutes from './routes/dubbing.routes.js';
 
 const app = express();
 
@@ -62,6 +63,7 @@ app.use('/api/stories', storyRoutes);
 app.use('/api/attendance', attendanceRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/image', imageRoutes);
+app.use('/api/dubbing', dubbingRoutes);
 
 
 const PORT = process.env.PORT || 5000;

@@ -25,6 +25,8 @@ import ArticleDetail from './pages/ArticleDetail.jsx'
 import StoryDetail from './pages/StoryDetail.jsx'
 import Attendance from './pages/Attendance.jsx'
 import PostDetail from './pages/PostDetail.jsx'
+import Dubbing from './pages/Dubbing.jsx'
+import DubbingVideoDetail from './pages/DubbingVideoDetail.jsx'
 
 
 export default function App() {
@@ -64,6 +66,8 @@ export default function App() {
         <Route path="/houses/:slug" element={<HouseDetail />} />
         <Route path="/announcements" element={<Announcements />} />
         <Route path="/announcements/:id" element={<AnnouncementDetail />} />
+        <Route path="/dubbing" element={<Dubbing />} />
+        <Route path="/dubbing/:id" element={<DubbingVideoDetail />} />
       </Routes>
       <Footer />
     </>

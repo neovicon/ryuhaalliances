@@ -169,6 +169,46 @@ export async function getAllUsers(req, res) {
   }
 }
 
+export async function searchUsers(req, res) {
+  try {
+    const { q } = req.query;
+    if (!q || !q.trim()) {
+      return res.status(400).json({ error: 'Search query is required' });
+    }
+
+    const query = q.trim();
+    const searchRegex = new RegExp(query, 'i'); // case-insensitive search
+
+    // Search across username, displayName, email, and house
+    const users = await User.find({
+      status: { $ne: 'pending' },
+      $or: [
+        { username: searchRegex },
+        { displayName: searchRegex },
+        { email: searchRegex },
+        { house: searchRegex }
+      ]
+    })
+      .select('-passwordHash')
+      .sort({ points: -1, createdAt: -1 })
+      .limit(50); // Limit search results to 50
+
+    const usersWithFullUrl = await Promise.all(users.map(async user => {
+      const userObj = user.toObject();
+      userObj.photoUrl = await getPhotoUrl(userObj.photoUrl, req);
+      userObj.heroCardUrl = await getPhotoUrl(userObj.heroCardUrl, req);
+      // Convert _id to id for consistency
+      const { _id, ...rest } = userObj;
+      return { id: _id, ...rest };
+    }));
+
+    res.json({ users: usersWithFullUrl });
+  } catch (error) {
+    console.error('Error searching users:', error);
+    res.status(500).json({ error: 'Failed to search users' });
+  }
+}
+
 export const validateUpdateHouse = [
   body('userId').notEmpty().withMessage('User ID is required'),
   body('house').notEmpty().withMessage('House is required'),
