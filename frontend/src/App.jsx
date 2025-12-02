@@ -27,6 +27,7 @@ import Attendance from './pages/Attendance.jsx'
 import PostDetail from './pages/PostDetail.jsx'
 import Dubbing from './pages/Dubbing.jsx'
 import DubbingVideoDetail from './pages/DubbingVideoDetail.jsx'
+import Download from './pages/Download.jsx'
 
 
 export default function App() {
@@ -68,6 +69,7 @@ export default function App() {
         <Route path="/announcements/:id" element={<AnnouncementDetail />} />
         <Route path="/dubbing" element={<Dubbing />} />
         <Route path="/dubbing/:id" element={<DubbingVideoDetail />} />
+        <Route path="/download" element={<Download />} />
       </Routes>
       <Footer />
     </>

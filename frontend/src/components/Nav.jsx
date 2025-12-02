@@ -93,6 +93,7 @@ export default function Nav() {
                       {l.label}
                     </Link>
                   ))}
+                  <Link to="/download" className="more-item" onClick={() => setMoreOpen(false)}>Download App</Link>
                   {user?.role === 'admin' && <Link to="/admin" className="more-item" onClick={() => setMoreOpen(false)}>Admin</Link>}
                   {(user?.role === 'moderator' || user?.role === 'admin') && <Link to="/moderator" className="more-item" onClick={() => setMoreOpen(false)}>Moderator</Link>}
                   {user && <Link to="/profile" className="more-item" onClick={() => setMoreOpen(false)}>Profile</Link>}
@@ -180,6 +181,10 @@ export default function Nav() {
                 <Link to="/dubbing" className="mobile-link" onClick={() => setOpen(false)}>
                   <span style={{ width: 20 }} />
                   <span>Ryuha VA</span>
+                </Link>
+                <Link to="/download" className="mobile-link" onClick={() => setOpen(false)}>
+                  <span style={{ width: 20 }} />
+                  <span>Download App</span>
                 </Link>
                 {user?.role === 'admin' && (
                   <Link to="/admin" className="mobile-link" onClick={() => setOpen(false)}>Admin</Link>
