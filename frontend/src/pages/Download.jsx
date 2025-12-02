@@ -5,18 +5,34 @@ import SEO from '../components/SEO'
 export default function Download() {
     const [downloading, setDownloading] = useState(false)
 
-    const handleDownload = () => {
+    const handleDownload = async () => {
         setDownloading(true)
-        // Create a link element and trigger download
-        const link = document.createElement('a')
-        link.href = '/assets/Apps/andriod.apk'
-        link.download = 'RyuhaAlliance.apk'
-        document.body.appendChild(link)
-        link.click()
-        document.body.removeChild(link)
+        try {
+            // Fetch the APK file
+            const response = await fetch('/assets/Apps/andriod.apk')
+            const blob = await response.blob()
 
-        // Reset downloading state after a delay
-        setTimeout(() => setDownloading(false), 2000)
+            // Create a blob with the correct MIME type
+            const apkBlob = new Blob([blob], { type: 'application/vnd.android.package-archive' })
+
+            // Create download link
+            const url = window.URL.createObjectURL(apkBlob)
+            const link = document.createElement('a')
+            link.href = url
+            link.download = 'RyuhaAlliance.apk'
+            document.body.appendChild(link)
+            link.click()
+
+            // Cleanup
+            document.body.removeChild(link)
+            window.URL.revokeObjectURL(url)
+        } catch (error) {
+            console.error('Download failed:', error)
+            alert('Failed to download the APK. Please try again.')
+        } finally {
+            // Reset downloading state after a delay
+            setTimeout(() => setDownloading(false), 2000)
+        }
     }
 
     return (
