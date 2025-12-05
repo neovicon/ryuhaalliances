@@ -84,21 +84,24 @@ export default function EventDetail() {
 
       <div className="card" style={{ marginBottom: '1.5rem', border: '1px solid rgba(148,163,184,0.2)', padding: 0, overflow: 'hidden' }}>
         {event.imageUrl && (
-          <div style={{
-            width: '100%',
-            aspectRatio: '16 / 10',
-            background: `url(${event.imageUrl}) center/cover no-repeat`,
-            backgroundSize: 'cover',
-            borderBottom: '1px solid rgba(148,163,184,0.12)'
-          }} />
+          <img
+            src={event.imageUrl}
+            alt={event.title}
+            style={{
+              width: '100%',
+              height: 'auto',
+              display: 'block',
+              borderBottom: '1px solid rgba(148,163,184,0.12)'
+            }}
+          />
         )}
         <div style={{ padding: '2rem' }}>
           <h1 className="hdr" style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>
             {event.title}
           </h1>
-          <div style={{ 
-            color: 'var(--muted)', 
-            fontSize: '0.9rem', 
+          <div style={{
+            color: 'var(--muted)',
+            fontSize: '0.9rem',
             marginBottom: '1.5rem',
             display: 'flex',
             gap: '1rem',
@@ -111,9 +114,9 @@ export default function EventDetail() {
               <div>By: {event.createdBy?.displayName || event.createdBy?.username || 'Unknown'}</div>
             )}
           </div>
-          <div style={{ 
-            color: 'var(--text)', 
-            fontSize: '1rem', 
+          <div style={{
+            color: 'var(--text)',
+            fontSize: '1rem',
             whiteSpace: 'pre-wrap',
             lineHeight: '1.8'
           }}>
@@ -138,9 +141,9 @@ export default function EventDetail() {
             />
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
               <span style={{ color: 'var(--muted)', fontSize: '0.85rem' }}>{commentContent.length}/1000</span>
-              <button 
-                className="btn" 
-                onClick={handleAddComment} 
+              <button
+                className="btn"
+                onClick={handleAddComment}
                 disabled={submittingComment || !commentContent.trim()}
               >
                 {submittingComment ? 'Posting...' : 'Post Comment'}
@@ -150,9 +153,9 @@ export default function EventDetail() {
         )}
 
         {!user && (
-          <div style={{ 
-            padding: '1rem', 
-            background: 'rgba(148,163,184,0.1)', 
+          <div style={{
+            padding: '1rem',
+            background: 'rgba(148,163,184,0.1)',
             borderRadius: '8px',
             marginBottom: '1.5rem',
             textAlign: 'center',

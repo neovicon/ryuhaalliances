@@ -143,7 +143,16 @@ export default function Articles() {
           {items.map(item => (
             <div key={item.id} className="card" style={{ padding: 0, overflow: 'hidden', cursor: 'pointer' }} onClick={() => navigate(`/articles/${item.id}`)}>
               {item.imageUrl && (
-                <div style={{ width: '100%', aspectRatio: '16 / 10', background: `url(${item.imageUrl}) center/cover no-repeat`, backgroundSize: 'cover', borderBottom: '1px solid rgba(148,163,184,0.12)' }} />
+                <img
+                  src={item.imageUrl}
+                  alt={item.title}
+                  style={{
+                    width: '100%',
+                    height: 'auto',
+                    display: 'block',
+                    borderBottom: '1px solid rgba(148,163,184,0.12)'
+                  }}
+                />
               )}
               <div style={{ padding: '1.5rem' }}>
                 <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginBottom: '0.5rem' }}>
@@ -173,7 +182,21 @@ export default function Articles() {
               <div>
                 <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--muted)', fontSize: '0.9rem' }}>Image (optional)</label>
                 <input type="file" accept="image/*" onChange={handleImageChange} style={{ marginBottom: '0.5rem' }} />
-                {imagePreview && (<div style={{ marginTop: '0.5rem' }}><div style={{ width: '100%', aspectRatio: '16 / 10', background: `url(${imagePreview}) center/cover no-repeat`, backgroundSize: 'cover', borderRadius: '8px', border: '1px solid rgba(148,163,184,0.2)' }} /></div>)}
+                {imagePreview && (
+                  <div style={{ marginTop: '0.5rem' }}>
+                    <img
+                      src={imagePreview}
+                      alt="Preview"
+                      style={{
+                        width: '100%',
+                        height: 'auto',
+                        display: 'block',
+                        borderRadius: '8px',
+                        border: '1px solid rgba(148,163,184,0.2)'
+                      }}
+                    />
+                  </div>
+                )}
               </div>
               <div>
                 <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>

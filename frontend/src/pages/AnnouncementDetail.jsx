@@ -54,7 +54,16 @@ export default function AnnouncementDetail() {
 
       <div className="card" style={{ marginBottom: '1.5rem', border: '1px solid rgba(148,163,184,0.2)', padding: 0, overflow: 'hidden' }}>
         {announcement.imageUrl && (
-          <div style={{ width: '100%', aspectRatio: '16 / 10', background: `url(${announcement.imageUrl}) center/cover no-repeat`, backgroundSize: 'cover', borderBottom: '1px solid rgba(148,163,184,0.12)' }} />
+          <img
+            src={announcement.imageUrl}
+            alt={announcement.title}
+            style={{
+              width: '100%',
+              height: 'auto',
+              display: 'block',
+              borderBottom: '1px solid rgba(148,163,184,0.12)'
+            }}
+          />
         )}
         <div style={{ padding: '2.5rem' }}>
           <div style={{ display: 'inline-block', padding: '0.4rem 1rem', background: 'rgba(177, 15, 46, 0.15)', border: '1px solid rgba(177, 15, 46, 0.3)', borderRadius: '20px', fontSize: '0.85rem', fontWeight: '600', color: 'var(--primary)', marginBottom: '1.5rem' }}>📢 ANNOUNCEMENT</div>

@@ -32,8 +32,8 @@ export default function Announcements() {
     try {
       setLoading(true);
       // Admins see all announcements, others see only active
-  // Admins and specific moderator types can see all announcements; others only see active ones
-  const params = (isPrivileged) ? {} : { activeOnly: 'true' };
+      // Admins and specific moderator types can see all announcements; others only see active ones
+      const params = (isPrivileged) ? {} : { activeOnly: 'true' };
       const { data } = await client.get('/announcements', { params });
       setAnnouncements(data.announcements || []);
     } catch (error) {
@@ -226,8 +226,8 @@ export default function Announcements() {
 
       {/* Email Verification Box */}
       {showEmailVerification && (
-        <div className="card" style={{ 
-          marginBottom: '1.5rem', 
+        <div className="card" style={{
+          marginBottom: '1.5rem',
           background: 'rgba(177, 15, 46, 0.1)',
           border: '1px solid rgba(177, 15, 46, 0.3)'
         }}>
@@ -261,7 +261,7 @@ export default function Announcements() {
               <p style={{ marginBottom: '1rem', color: 'var(--muted)', lineHeight: 1.6 }}>
                 We've sent a 6-digit verification code to <strong>{user.email}</strong>. Please enter it below.
               </p>
-              
+
               <div style={{ marginBottom: '1rem' }}>
                 <input
                   type="text"
@@ -273,9 +273,9 @@ export default function Announcements() {
                     setVerificationCode(value);
                     setVerificationError('');
                   }}
-                  style={{ 
-                    fontSize: '1.2rem', 
-                    textAlign: 'center', 
+                  style={{
+                    fontSize: '1.2rem',
+                    textAlign: 'center',
                     letterSpacing: '0.3rem',
                     fontFamily: 'monospace',
                     width: '100%',
@@ -343,12 +343,13 @@ export default function Announcements() {
           {announcements.map(announcement => (
             <div key={announcement.id} className="card" style={{ padding: 0, overflow: 'hidden', cursor: 'pointer' }} onClick={() => navigate(`/announcements/${announcement.id}`)}>
               {announcement.imageUrl && (
-                <div
+                <img
+                  src={announcement.imageUrl}
+                  alt={announcement.title}
                   style={{
                     width: '100%',
-                    aspectRatio: '16 / 10',
-                    background: `url(${announcement.imageUrl}) center/cover no-repeat`,
-                    backgroundSize: 'cover',
+                    height: 'auto',
+                    display: 'block',
                     borderBottom: '1px solid rgba(148,163,184,0.12)'
                   }}
                 />
@@ -364,9 +365,9 @@ export default function Announcements() {
                     </span>
                   )}
                 </div>
-                <div style={{ 
-                  color: 'var(--muted)', 
-                  fontSize: '0.85rem', 
+                <div style={{
+                  color: 'var(--muted)',
+                  fontSize: '0.85rem',
                   marginBottom: '1rem',
                   lineHeight: '1.6',
                   display: '-webkit-box',
@@ -376,9 +377,9 @@ export default function Announcements() {
                 }}>
                   {announcement.content}
                 </div>
-                <div style={{ 
-                  borderTop: '1px solid #1f2937', 
-                  paddingTop: '0.75rem', 
+                <div style={{
+                  borderTop: '1px solid #1f2937',
+                  paddingTop: '0.75rem',
                   marginTop: '1rem',
                   fontSize: '0.85rem',
                   color: 'var(--muted)'
@@ -389,18 +390,18 @@ export default function Announcements() {
                 </div>
                 {isPrivileged && (
                   <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }} onClick={(e) => e.stopPropagation()}>
-                    <button 
-                      className="btn" 
+                    <button
+                      className="btn"
                       onClick={() => startEdit(announcement)}
                       style={{ flex: 1, fontSize: '0.9rem' }}
                     >
                       Edit
                     </button>
-                    <button 
-                      className="btn" 
+                    <button
+                      className="btn"
                       onClick={() => handleDeleteAnnouncement(announcement.id)}
-                      style={{ 
-                        flex: 1, 
+                      style={{
+                        flex: 1,
                         fontSize: '0.9rem',
                         background: 'rgba(239, 68, 68, 0.2)',
                         border: '1px solid rgba(239, 68, 68, 0.4)'
@@ -458,23 +459,23 @@ export default function Announcements() {
                 />
                 {imagePreview && (
                   <div style={{ marginTop: '0.5rem' }}>
-                    <div style={{
-                      width: '100%',
-                      aspectRatio: '16 / 10',
-                      background: `url(${imagePreview}) center/cover no-repeat`,
-                      backgroundSize: 'cover',
-                      borderRadius: '8px',
-                      border: '1px solid rgba(148,163,184,0.2)'
-                    }} />
-                    <div style={{ marginTop: '0.5rem', fontSize: '0.85rem', color: 'var(--muted)' }}>
-                      Recommended: 3088x1890 (16:10 ratio)
-                    </div>
+                    <img
+                      src={imagePreview}
+                      alt="Preview"
+                      style={{
+                        width: '100%',
+                        height: 'auto',
+                        display: 'block',
+                        borderRadius: '8px',
+                        border: '1px solid rgba(148,163,184,0.2)'
+                      }}
+                    />
                   </div>
                 )}
               </div>
               <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
-                <button 
-                  className="btn" 
+                <button
+                  className="btn"
                   onClick={() => {
                     setShowCreateModal(false);
                     setFormData({ title: '', content: '', image: null, isActive: true });
@@ -484,8 +485,8 @@ export default function Announcements() {
                 >
                   Cancel
                 </button>
-                <button 
-                  className="btn" 
+                <button
+                  className="btn"
                   onClick={handleCreateAnnouncement}
                   disabled={uploading || !formData.title.trim() || !formData.content.trim()}
                 >
@@ -539,17 +540,17 @@ export default function Announcements() {
                 />
                 {imagePreview && (
                   <div style={{ marginTop: '0.5rem' }}>
-                    <div style={{
-                      width: '100%',
-                      aspectRatio: '16 / 10',
-                      background: `url(${imagePreview}) center/cover no-repeat`,
-                      backgroundSize: 'cover',
-                      borderRadius: '8px',
-                      border: '1px solid rgba(148,163,184,0.2)'
-                    }} />
-                    <div style={{ marginTop: '0.5rem', fontSize: '0.85rem', color: 'var(--muted)' }}>
-                      Recommended: 3088x1890 (16:10 ratio)
-                    </div>
+                    <img
+                      src={imagePreview}
+                      alt="Preview"
+                      style={{
+                        width: '100%',
+                        height: 'auto',
+                        display: 'block',
+                        borderRadius: '8px',
+                        border: '1px solid rgba(148,163,184,0.2)'
+                      }}
+                    />
                   </div>
                 )}
               </div>
@@ -564,15 +565,15 @@ export default function Announcements() {
                 </label>
               </div>
               <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
-                <button 
-                  className="btn" 
+                <button
+                  className="btn"
                   onClick={cancelEdit}
                   disabled={uploading}
                 >
                   Cancel
                 </button>
-                <button 
-                  className="btn" 
+                <button
+                  className="btn"
                   onClick={handleUpdateAnnouncement}
                   disabled={uploading || !formData.title.trim() || !formData.content.trim()}
                 >

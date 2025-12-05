@@ -54,7 +54,16 @@ export default function StoryDetail() {
 
       <div className="card" style={{ marginBottom: '1.5rem', border: '1px solid rgba(148,163,184,0.2)', padding: 0, overflow: 'hidden' }}>
         {story.imageUrl && (
-          <div style={{ width: '100%', aspectRatio: '16 / 10', background: `url(${story.imageUrl}) center/cover no-repeat`, backgroundSize: 'cover', borderBottom: '1px solid rgba(148,163,184,0.12)' }} />
+          <img
+            src={story.imageUrl}
+            alt={story.title}
+            style={{
+              width: '100%',
+              height: 'auto',
+              display: 'block',
+              borderBottom: '1px solid rgba(148,163,184,0.12)'
+            }}
+          />
         )}
         <div style={{ padding: '2.5rem' }}>
           <h1 className="hdr" style={{ fontSize: '2.5rem', marginBottom: '1rem', lineHeight: '1.2' }}>{story.title}</h1>

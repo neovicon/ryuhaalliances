@@ -169,21 +169,24 @@ export default function Events() {
           {events.map(event => (
             <div key={event.id} className="card" style={{ padding: 0, overflow: 'hidden', cursor: 'pointer' }} onClick={() => navigate(`/events/${event.id}`)}>
               {event.imageUrl && (
-                <div style={{
-                  width: '100%',
-                  aspectRatio: '16 / 10',
-                  background: `url(${event.imageUrl}) center/cover no-repeat`,
-                  backgroundSize: 'cover',
-                  borderBottom: '1px solid rgba(148,163,184,0.12)'
-                }} />
+                <img
+                  src={event.imageUrl}
+                  alt={event.title}
+                  style={{
+                    width: '100%',
+                    height: 'auto',
+                    display: 'block',
+                    borderBottom: '1px solid rgba(148,163,184,0.12)'
+                  }}
+                />
               )}
               <div style={{ padding: '1.5rem' }}>
                 <h3 className="hdr" style={{ margin: '0 0 0.5rem 0', fontSize: '1.25rem' }}>
                   {event.title}
                 </h3>
-                <div style={{ 
-                  color: 'var(--muted)', 
-                  fontSize: '0.85rem', 
+                <div style={{
+                  color: 'var(--muted)',
+                  fontSize: '0.85rem',
                   marginBottom: '1rem',
                   lineHeight: '1.6',
                   display: '-webkit-box',
@@ -193,9 +196,9 @@ export default function Events() {
                 }}>
                   {event.description}
                 </div>
-                <div style={{ 
-                  borderTop: '1px solid #1f2937', 
-                  paddingTop: '0.75rem', 
+                <div style={{
+                  borderTop: '1px solid #1f2937',
+                  paddingTop: '0.75rem',
                   marginTop: '1rem',
                   fontSize: '0.85rem',
                   color: 'var(--muted)'
@@ -206,18 +209,18 @@ export default function Events() {
                 </div>
                 {isModeratorOrAdmin && (
                   <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }} onClick={(e) => e.stopPropagation()}>
-                    <button 
-                      className="btn" 
+                    <button
+                      className="btn"
                       onClick={() => startEdit(event)}
                       style={{ flex: 1, fontSize: '0.9rem' }}
                     >
                       Edit
                     </button>
-                    <button 
-                      className="btn" 
+                    <button
+                      className="btn"
                       onClick={() => handleDeleteEvent(event.id)}
-                      style={{ 
-                        flex: 1, 
+                      style={{
+                        flex: 1,
                         fontSize: '0.9rem',
                         background: 'rgba(239, 68, 68, 0.2)',
                         border: '1px solid rgba(239, 68, 68, 0.4)'
@@ -275,23 +278,23 @@ export default function Events() {
                 />
                 {imagePreview && (
                   <div style={{ marginTop: '0.5rem' }}>
-                    <div style={{
-                      width: '100%',
-                      aspectRatio: '16 / 10',
-                      background: `url(${imagePreview}) center/cover no-repeat`,
-                      backgroundSize: 'cover',
-                      borderRadius: '8px',
-                      border: '1px solid rgba(148,163,184,0.2)'
-                    }} />
-                    <div style={{ marginTop: '0.5rem', fontSize: '0.85rem', color: 'var(--muted)' }}>
-                      Recommended: 3088x1890 (16:10 ratio)
-                    </div>
+                    <img
+                      src={imagePreview}
+                      alt="Preview"
+                      style={{
+                        width: '100%',
+                        height: 'auto',
+                        display: 'block',
+                        borderRadius: '8px',
+                        border: '1px solid rgba(148,163,184,0.2)'
+                      }}
+                    />
                   </div>
                 )}
               </div>
               <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
-                <button 
-                  className="btn" 
+                <button
+                  className="btn"
                   onClick={() => {
                     setShowCreateModal(false);
                     setFormData({ title: '', description: '', image: null });
@@ -301,8 +304,8 @@ export default function Events() {
                 >
                   Cancel
                 </button>
-                <button 
-                  className="btn" 
+                <button
+                  className="btn"
                   onClick={handleCreateEvent}
                   disabled={uploading || !formData.title.trim() || !formData.description.trim()}
                 >
@@ -356,30 +359,30 @@ export default function Events() {
                 />
                 {imagePreview && (
                   <div style={{ marginTop: '0.5rem' }}>
-                    <div style={{
-                      width: '100%',
-                      aspectRatio: '16 / 10',
-                      background: `url(${imagePreview}) center/cover no-repeat`,
-                      backgroundSize: 'cover',
-                      borderRadius: '8px',
-                      border: '1px solid rgba(148,163,184,0.2)'
-                    }} />
-                    <div style={{ marginTop: '0.5rem', fontSize: '0.85rem', color: 'var(--muted)' }}>
-                      Recommended: 3088x1890 (16:10 ratio)
-                    </div>
+                    <img
+                      src={imagePreview}
+                      alt="Preview"
+                      style={{
+                        width: '100%',
+                        height: 'auto',
+                        display: 'block',
+                        borderRadius: '8px',
+                        border: '1px solid rgba(148,163,184,0.2)'
+                      }}
+                    />
                   </div>
                 )}
               </div>
               <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
-                <button 
-                  className="btn" 
+                <button
+                  className="btn"
                   onClick={cancelEdit}
                   disabled={uploading}
                 >
                   Cancel
                 </button>
-                <button 
-                  className="btn" 
+                <button
+                  className="btn"
                   onClick={handleUpdateEvent}
                   disabled={uploading || !formData.title.trim() || !formData.description.trim()}
                 >
