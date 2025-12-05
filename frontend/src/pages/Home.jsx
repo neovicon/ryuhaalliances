@@ -94,7 +94,7 @@ export default function Home() {
         <div className="container" style={{ textAlign: 'center' }}>
           <h1 className="hdr" style={{ fontSize: 42, letterSpacing: 2 }}>Ryuha Alliance</h1>
           <p style={{ maxWidth: 800, margin: '1rem auto', color: 'var(--muted)', lineHeight: 1.6 }}>
-          a legendary gathering of warriors, dreamers, and adventurers from all walks of anime fandom.
+            a legendary gathering of warriors, dreamers, and adventurers from all walks of anime fandom.
           </p>
           <div style={{ display: 'flex', justifyContent: 'center', gap: '.75rem', flexWrap: 'wrap', marginTop: '1rem' }}>
             <span className="card">Honor</span>
@@ -121,21 +121,21 @@ export default function Home() {
                 <h4 className="hdr" style={{ marginBottom: '0.5rem', fontSize: '1.2rem' }}>{announcement.title}</h4>
                 {announcement.imageUrl && (
                   <div
-            style={{
-              width: '100%',
-              aspectRatio: '16 / 10',
-              maxWidth: 960,
-              maxHeight: 600,
-              margin: '0 auto',
-              background: `url(${announcement.imageUrl}) center/cover no-repeat`,
-              backgroundSize: 'cover',
-              borderBottom: '1px solid rgba(148,163,184,0.12)'
-            }}
-          />
+                    style={{
+                      width: '100%',
+                      aspectRatio: '16 / 10',
+                      maxWidth: 960,
+                      maxHeight: 600,
+                      margin: '0 auto',
+                      background: `url(${announcement.imageUrl}) center/cover no-repeat`,
+                      backgroundSize: 'cover',
+                      borderBottom: '1px solid rgba(148,163,184,0.12)'
+                    }}
+                  />
                 )}
-                <div style={{ 
-                  color: 'var(--muted)', 
-                  whiteSpace: 'pre-wrap', 
+                <div style={{
+                  color: 'var(--muted)',
+                  whiteSpace: 'pre-wrap',
                   lineHeight: 1.6,
                   display: '-webkit-box',
                   WebkitLineClamp: 3,

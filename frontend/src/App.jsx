@@ -28,6 +28,10 @@ import PostDetail from './pages/PostDetail.jsx'
 import Dubbing from './pages/Dubbing.jsx'
 import DubbingVideoDetail from './pages/DubbingVideoDetail.jsx'
 import Download from './pages/Download.jsx'
+import Music from './pages/Music.jsx'
+import MusicPlayer from './components/MusicPlayer.jsx'
+import SearchBar from './components/SearchBar.jsx'
+import { MusicPlayerProvider } from './context/MusicPlayerContext.jsx'
 
 
 export default function App() {
@@ -42,8 +46,9 @@ export default function App() {
   }, []); // Only run on mount
 
   return (
-    <>
+    <MusicPlayerProvider>
       <Nav />
+      <MusicPlayer />
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/feed" element={<Feed />} />
@@ -70,9 +75,10 @@ export default function App() {
         <Route path="/dubbing" element={<Dubbing />} />
         <Route path="/dubbing/:id" element={<DubbingVideoDetail />} />
         <Route path="/download" element={<Download />} />
+        <Route path="/music" element={<Music />} />
       </Routes>
       <Footer />
-    </>
+    </MusicPlayerProvider>
   )
 }
 

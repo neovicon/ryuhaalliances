@@ -408,7 +408,9 @@ button.mobile-link {
 .footer {
   background: rgba(11, 11, 12, .85);
   border-top: 1px solid #1f2937;
-  margin-top: 2rem
+  margin-top: 2rem;
+  padding-bottom: 90px;
+  /* Space for music player */
 }
 
 .footer-inner {
