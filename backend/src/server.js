@@ -20,6 +20,8 @@ import attendanceRoutes from './routes/attendance.routes.js';
 import uploadRoutes from './routes/upload.routes.js';
 import imageRoutes from './routes/image.routes.js';
 import dubbingRoutes from './routes/dubbing.routes.js';
+import leadershipRoutes from './routes/leadership.routes.js';
+import eventEntryRoutes from './routes/eventEntry.routes.js';
 
 const app = express();
 
@@ -64,6 +66,8 @@ app.use('/api/attendance', attendanceRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/image', imageRoutes);
 app.use('/api/dubbing', dubbingRoutes);
+app.use('/api/leadership', leadershipRoutes);
+app.use('/api/event-entries', eventEntryRoutes);
 
 
 const PORT = process.env.PORT || 5000;

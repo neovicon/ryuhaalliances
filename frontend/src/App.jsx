@@ -13,6 +13,7 @@ import Home from './pages/Home.jsx'
 import Codex from './pages/Codex.jsx'
 import Events from './pages/Events.jsx'
 import EventDetail from './pages/EventDetail.jsx'
+import EventEntries from './pages/EventEntries.jsx'
 import Blogs from './pages/Blogs.jsx'
 import BlogDetail from './pages/BlogDetail.jsx'
 import HouseDetail from './pages/HouseDetail.jsx'
@@ -63,6 +64,7 @@ export default function App() {
         <Route path="/codex" element={<Codex />} />
         <Route path="/events" element={<Events />} />
         <Route path="/events/:id" element={<EventDetail />} />
+        <Route path="/event-entries" element={<EventEntries />} />
         <Route path="/blogs" element={<Blogs />} />
         <Route path="/blogs/:id" element={<BlogDetail />} />
         <Route path="/articles" element={<Articles />} />
