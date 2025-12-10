@@ -185,14 +185,14 @@ export default function DubbingVideoDetail() {
                         <p style={{ color: 'var(--muted)', marginBottom: '1rem' }}>{video.description}</p>
                     )}
 
-                    <div style={{ position: 'relative', paddingBottom: '56.25%', background: '#000', borderRadius: '8px', overflow: 'hidden' }}>
+                    <div style={{ background: '#000', borderRadius: '8px', overflow: 'hidden' }}>
                         <video
                             src={video.videoUrl}
                             controls
                             preload="metadata"
                             playsInline
                             controlsList="nodownload"
-                            style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
+                            style={{ width: '100%', height: 'auto', display: 'block' }}
                         />
                     </div>
                 </div>

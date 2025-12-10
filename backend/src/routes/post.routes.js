@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { requireAuth, requireAdmin } from '../middleware/auth.js';
 import { addComment, createPost, listPosts, listPostsByUser, react, removePost, removeComment, validateComment, validateCreatePost, validateDelete, validateReact } from '../controllers/post.controller.js';
-import { uploadImage, uploadToStorage } from '../middleware/upload.js';
+import { uploadImage, uploadMedia, uploadToStorage } from '../middleware/upload.js';
 
 const router = Router();
 router.get('/user/:identifier', listPostsByUser);
@@ -23,6 +23,9 @@ router.get('/:id', requireAuth, async (req, res) => {
         if (postObj.image) {
             postObj.image = await getPhotoUrl(postObj.image, req);
         }
+        if (postObj.video) {
+            postObj.video = await getPhotoUrl(postObj.video, req);
+        }
         if (postObj.comments) {
             postObj.comments = await Promise.all(postObj.comments.map(async comment => {
                 if (comment.author && comment.author.photoUrl) {
@@ -39,7 +42,7 @@ router.get('/:id', requireAuth, async (req, res) => {
     }
 });
 router.get('/', requireAuth, listPosts);
-router.post('/', requireAuth, uploadImage.single('image'), uploadToStorage, validateCreatePost, createPost);
+router.post('/', requireAuth, uploadMedia.fields([{ name: 'image', maxCount: 1 }, { name: 'video', maxCount: 1 }]), uploadToStorage, validateCreatePost, createPost);
 router.post('/:id/comments', requireAuth, validateComment, addComment);
 router.post('/:id/react', requireAuth, validateReact, react);
 router.delete('/:id', requireAuth, validateDelete, removePost);

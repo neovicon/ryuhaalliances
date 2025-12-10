@@ -16,7 +16,17 @@ const MusicPlayer = () => {
   } = useMusicPlayer();
 
   const [isDragging, setIsDragging] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const navigate = useNavigate();
+
+  // Detect screen size changes
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Format time in MM:SS
   const formatTime = (seconds) => {
@@ -70,19 +80,20 @@ const MusicPlayer = () => {
         right: 0,
         backgroundColor: '#1a1a1a',
         borderTop: '1px solid #333',
-        padding: '12px 20px',
+        padding: isMobile ? '8px 12px' : '12px 20px',
         display: 'flex',
         alignItems: 'center',
-        gap: '16px',
+        gap: isMobile ? '8px' : '16px',
         zIndex: 1000,
         boxShadow: '0 -2px 10px rgba(0,0,0,0.3)',
+        flexWrap: isMobile ? 'wrap' : 'nowrap',
       }}
     >
       {/* Thumbnail */}
       <div
         style={{
-          width: '56px',
-          height: '56px',
+          width: isMobile ? '40px' : '56px',
+          height: isMobile ? '40px' : '56px',
           borderRadius: '4px',
           overflow: 'hidden',
           flexShrink: 0,
@@ -103,7 +114,7 @@ const MusicPlayer = () => {
             }}
           />
         ) : (
-          <span style={{ fontSize: '24px' }}>🎵</span>
+          <span style={{ fontSize: isMobile ? '18px' : '24px' }}>🎵</span>
         )}
       </div>
 
@@ -111,12 +122,13 @@ const MusicPlayer = () => {
       <div
         onClick={() => navigate('/music')}
         style={{
-          flex: '0 0 200px',
+          flex: isMobile ? '1 1 100%' : '0 0 200px',
           minWidth: 0,
           display: 'flex',
           flexDirection: 'column',
           gap: '4px',
           cursor: 'pointer',
+          order: isMobile ? 3 : 0,
         }}
         onMouseEnter={(e) => {
           e.currentTarget.style.opacity = '0.8';
@@ -128,7 +140,7 @@ const MusicPlayer = () => {
         <div
           style={{
             color: '#fff',
-            fontSize: '14px',
+            fontSize: isMobile ? '12px' : '14px',
             fontWeight: '500',
             whiteSpace: 'nowrap',
             overflow: 'hidden',
@@ -140,7 +152,7 @@ const MusicPlayer = () => {
         <div
           style={{
             color: '#aaa',
-            fontSize: '12px',
+            fontSize: isMobile ? '10px' : '12px',
             whiteSpace: 'nowrap',
             overflow: 'hidden',
             textOverflow: 'ellipsis',
@@ -155,13 +167,13 @@ const MusicPlayer = () => {
         onClick={togglePlay}
         disabled={isLoading}
         style={{
-          width: '40px',
-          height: '40px',
+          width: isMobile ? '36px' : '40px',
+          height: isMobile ? '36px' : '40px',
           borderRadius: '50%',
           border: 'none',
           backgroundColor: '#1db954',
           color: '#fff',
-          fontSize: '16px',
+          fontSize: isMobile ? '14px' : '16px',
           cursor: isLoading ? 'not-allowed' : 'pointer',
           display: 'flex',
           alignItems: 'center',
@@ -183,12 +195,159 @@ const MusicPlayer = () => {
         {isLoading ? '...' : isPlaying ? '⏸' : '▶'}
       </button>
 
+      {/* Music Controls - Hidden on mobile */}
+      {!isMobile && (
+        <div
+          style={{
+            display: 'flex',
+            gap: '8px',
+            flexShrink: 0,
+          }}
+        >
+          {/* Previous Button */}
+          <button
+            onClick={() => {
+              // TODO: Implement previous track functionality when playlist is available
+              console.log('Previous track');
+            }}
+            disabled={!currentTrack}
+            style={{
+              width: '32px',
+              height: '32px',
+              borderRadius: '50%',
+              border: '1px solid #444',
+              backgroundColor: 'transparent',
+              color: '#fff',
+              fontSize: '14px',
+              cursor: currentTrack ? 'pointer' : 'not-allowed',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0,
+              opacity: currentTrack ? 1 : 0.4,
+              transition: 'background-color 0.2s',
+            }}
+            onMouseEnter={(e) => {
+              if (currentTrack) e.currentTarget.style.backgroundColor = '#333';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'transparent';
+            }}
+            title="Previous Track"
+          >
+            ⏮
+          </button>
+
+          {/* Next Button */}
+          <button
+            onClick={() => {
+              // TODO: Implement next track functionality when playlist is available
+              console.log('Next track');
+            }}
+            disabled={!currentTrack}
+            style={{
+              width: '32px',
+              height: '32px',
+              borderRadius: '50%',
+              border: '1px solid #444',
+              backgroundColor: 'transparent',
+              color: '#fff',
+              fontSize: '14px',
+              cursor: currentTrack ? 'pointer' : 'not-allowed',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0,
+              opacity: currentTrack ? 1 : 0.4,
+              transition: 'background-color 0.2s',
+            }}
+            onMouseEnter={(e) => {
+              if (currentTrack) e.currentTarget.style.backgroundColor = '#333';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'transparent';
+            }}
+            title="Next Track"
+          >
+            ⏭
+          </button>
+
+          {/* Shuffle Button */}
+          <button
+            onClick={() => {
+              // TODO: Implement shuffle functionality when playlist is available
+              console.log('Toggle shuffle');
+            }}
+            disabled={!currentTrack}
+            style={{
+              width: '32px',
+              height: '32px',
+              borderRadius: '50%',
+              border: '1px solid #444',
+              backgroundColor: 'transparent',
+              color: '#fff',
+              fontSize: '14px',
+              cursor: currentTrack ? 'pointer' : 'not-allowed',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0,
+              opacity: currentTrack ? 1 : 0.4,
+              transition: 'background-color 0.2s',
+            }}
+            onMouseEnter={(e) => {
+              if (currentTrack) e.currentTarget.style.backgroundColor = '#333';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'transparent';
+            }}
+            title="Shuffle"
+          >
+            🔀
+          </button>
+
+          {/* Repeat Button */}
+          <button
+            onClick={() => {
+              // TODO: Implement repeat functionality when playlist is available
+              console.log('Toggle repeat');
+            }}
+            disabled={!currentTrack}
+            style={{
+              width: '32px',
+              height: '32px',
+              borderRadius: '50%',
+              border: '1px solid #444',
+              backgroundColor: 'transparent',
+              color: '#fff',
+              fontSize: '14px',
+              cursor: currentTrack ? 'pointer' : 'not-allowed',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0,
+              opacity: currentTrack ? 1 : 0.4,
+              transition: 'background-color 0.2s',
+            }}
+            onMouseEnter={(e) => {
+              if (currentTrack) e.currentTarget.style.backgroundColor = '#333';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'transparent';
+            }}
+            title="Repeat"
+          >
+            🔁
+          </button>
+        </div>
+      )}
+
       {/* Mobile Menu Button (3 lines) */}
       <button
         onClick={() => navigate('/music')}
         style={{
-          width: '40px',
-          height: '40px',
+          width: isMobile ? '36px' : '40px',
+          height: isMobile ? '36px' : '40px',
           borderRadius: '50%',
           border: 'none',
           backgroundColor: '#333',
@@ -222,7 +381,7 @@ const MusicPlayer = () => {
           flex: 1,
           display: 'flex',
           alignItems: 'center',
-          gap: '12px',
+          gap: isMobile ? '6px' : '12px',
           minWidth: 0,
         }}
       >
@@ -230,9 +389,9 @@ const MusicPlayer = () => {
         <div
           style={{
             color: '#aaa',
-            fontSize: '12px',
+            fontSize: isMobile ? '10px' : '12px',
             fontFamily: 'monospace',
-            minWidth: '40px',
+            minWidth: isMobile ? '32px' : '40px',
             textAlign: 'right',
           }}
         >
@@ -282,43 +441,45 @@ const MusicPlayer = () => {
         <div
           style={{
             color: '#aaa',
-            fontSize: '12px',
+            fontSize: isMobile ? '10px' : '12px',
             fontFamily: 'monospace',
-            minWidth: '40px',
+            minWidth: isMobile ? '32px' : '40px',
           }}
         >
           {formatTime(duration)}
         </div>
       </div>
 
-      {/* Volume Control */}
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px',
-          flexShrink: 0,
-        }}
-      >
-        <span style={{ color: '#aaa', fontSize: '16px' }}>🔊</span>
-        <input
-          type="range"
-          min="0"
-          max="100"
-          value={volume * 100}
-          onChange={(e) => setVolume(parseInt(e.target.value) / 100)}
+      {/* Volume Control - Hidden on mobile */}
+      {!isMobile && (
+        <div
           style={{
-            width: '80px',
-            height: '4px',
-            borderRadius: '2px',
-            outline: 'none',
-            background: `linear-gradient(to right, #1db954 0%, #1db954 ${volume * 100}%, #444 ${volume * 100}%, #444 100%)`,
-            appearance: 'none',
-            WebkitAppearance: 'none',
-            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            flexShrink: 0,
           }}
-        />
-      </div>
+        >
+          <span style={{ color: '#aaa', fontSize: '16px' }}>🔊</span>
+          <input
+            type="range"
+            min="0"
+            max="100"
+            value={volume * 100}
+            onChange={(e) => setVolume(parseInt(e.target.value) / 100)}
+            style={{
+              width: '80px',
+              height: '4px',
+              borderRadius: '2px',
+              outline: 'none',
+              background: `linear-gradient(to right, #1db954 0%, #1db954 ${volume * 100}%, #444 ${volume * 100}%, #444 100%)`,
+              appearance: 'none',
+              WebkitAppearance: 'none',
+              cursor: 'pointer',
+            }}
+          />
+        </div>
+      )}
     </div>
   );
 };

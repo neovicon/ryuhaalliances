@@ -13,16 +13,33 @@ export async function createPost(req, res) {
   if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
   const content = req.body.content || '';
-  const image = req.file ? req.file.storagePath : null;
 
-  if (!content.trim() && !image) {
-    return res.status(400).json({ error: 'Post must have content or an image' });
+  // Handle both single file (req.file) and multiple fields (req.files)
+  let image = null;
+  let video = null;
+
+  if (req.file) {
+    // Single file upload (backward compatibility)
+    image = req.file.storagePath;
+  } else if (req.files) {
+    // Multiple file fields
+    if (req.files.image && req.files.image[0]) {
+      image = req.files.image[0].storagePath;
+    }
+    if (req.files.video && req.files.video[0]) {
+      video = req.files.video[0].storagePath;
+    }
+  }
+
+  if (!content.trim() && !image && !video) {
+    return res.status(400).json({ error: 'Post must have content, an image, or a video' });
   }
 
   const post = await Post.create({
     author: req.user.id,
     content,
     image,
+    video,
     isPrivate: req.body.isPrivate === 'true' || req.body.isPrivate === true
   });
   await post.populate('author', 'username photoUrl');
@@ -32,6 +49,9 @@ export async function createPost(req, res) {
   }
   if (postObj.image) {
     postObj.image = await getPhotoUrl(postObj.image, req);
+  }
+  if (postObj.video) {
+    postObj.video = await getPhotoUrl(postObj.video, req);
   }
   res.status(201).json({ post: postObj });
 }
@@ -66,6 +86,9 @@ export async function listPosts(req, res) {
     }
     if (postObj.image) {
       postObj.image = await getPhotoUrl(postObj.image, req);
+    }
+    if (postObj.video) {
+      postObj.video = await getPhotoUrl(postObj.video, req);
     }
     return postObj;
   }));
@@ -197,6 +220,9 @@ export async function listPostsByUser(req, res) {
       }
       if (postObj.image) {
         postObj.image = await getPhotoUrl(postObj.image, req);
+      }
+      if (postObj.video) {
+        postObj.video = await getPhotoUrl(postObj.video, req);
       }
       return postObj;
     }));

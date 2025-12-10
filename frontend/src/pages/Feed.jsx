@@ -12,6 +12,7 @@ export default function Feed() {
   const [posts, setPosts] = useState([]);
   const [content, setContent] = useState('');
   const [imageFile, setImageFile] = useState(null);
+  const [videoFile, setVideoFile] = useState(null);
   const [isPrivate, setIsPrivate] = useState(false);
   const [loading, setLoading] = useState(false);
   const [posting, setPosting] = useState(false);
@@ -57,17 +58,19 @@ export default function Feed() {
   }, [loading, hasMore, loadPosts]);
 
   const handlePost = async () => {
-    if (!content.trim() && !imageFile) return;
+    if (!content.trim() && !imageFile && !videoFile) return;
     setPosting(true);
     try {
       const form = new FormData();
       if (content.trim()) form.append('content', content.trim());
       if (imageFile) form.append('image', imageFile);
+      if (videoFile) form.append('video', videoFile);
       if (isPrivate) form.append('isPrivate', 'true');
 
       await client.post('/posts', form, { headers: { 'Content-Type': 'multipart/form-data' } });
       setContent('');
       setImageFile(null);
+      setVideoFile(null);
       setIsPrivate(false);
       loadPosts(true); // Refresh feed
     } catch (error) {
@@ -113,8 +116,20 @@ export default function Feed() {
           </div>
         )}
 
+        {videoFile && (
+          <div style={{ marginBottom: '0.5rem', position: 'relative', display: 'inline-block' }}>
+            <video src={URL.createObjectURL(videoFile)} controls style={{ maxHeight: 200, borderRadius: 8, maxWidth: '100%' }} />
+            <button
+              onClick={() => setVideoFile(null)}
+              style={{ position: 'absolute', top: 5, right: 5, background: 'rgba(0,0,0,0.7)', color: 'white', border: 'none', borderRadius: '50%', width: 24, height: 24, cursor: 'pointer' }}
+            >
+              ✕
+            </button>
+          </div>
+        )}
+
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
-          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
             <label style={{ cursor: 'pointer', color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
               <input
                 type="file"
@@ -123,6 +138,15 @@ export default function Feed() {
                 style={{ display: 'none' }}
               />
               📷 Add Image
+            </label>
+            <label style={{ cursor: 'pointer', color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+              <input
+                type="file"
+                accept="video/*"
+                onChange={e => setVideoFile(e.target.files?.[0] || null)}
+                style={{ display: 'none' }}
+              />
+              🎥 Add Video
             </label>
             <label style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', cursor: 'pointer', fontSize: '0.9rem', color: 'var(--muted)' }}>
               <input
@@ -133,7 +157,7 @@ export default function Feed() {
               Private
             </label>
           </div>
-          <button className="btn" onClick={handlePost} disabled={posting || (!content.trim() && !imageFile)}>
+          <button className="btn" onClick={handlePost} disabled={posting || (!content.trim() && !imageFile && !videoFile)}>
             {posting ? 'Posting...' : 'Post'}
           </button>
         </div>
@@ -187,6 +211,14 @@ export default function Feed() {
                   src={p.image}
                   alt="Post content"
                   style={{ width: '100%', borderRadius: '8px', marginBottom: '0.5rem', border: '1px solid #1f2937' }}
+                />
+              )}
+
+              {p.video && (
+                <video
+                  src={p.video}
+                  controls
+                  style={{ width: '100%', height: 'auto', borderRadius: '8px', marginBottom: '0.5rem', border: '1px solid #1f2937' }}
                 />
               )}
 

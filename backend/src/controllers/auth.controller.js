@@ -124,7 +124,7 @@ export async function resendVerification(req, res) {
 
 export async function sanitizeUser(user, req = null) {
   const userObj = user.toObject ? user.toObject() : user;
-  const { _id, email, username, displayName, sigil, house, photoUrl, heroCardUrl, points, role, moderatorType, status, adminMessage, rank, emailVerified, createdAt, updatedAt } = userObj;
+  const { _id, email, username, displayName, sigil, house, photoUrl, heroCardUrl, points, role, moderatorType, status, adminMessage, rank, memberStatus, emailVerified, createdAt, updatedAt } = userObj;
   return {
     id: _id,
     email,
@@ -143,6 +143,7 @@ export async function sanitizeUser(user, req = null) {
     status,
     adminMessage,
     rank,
+    memberStatus,
     emailVerified: emailVerified || false,
     createdAt,
     updatedAt

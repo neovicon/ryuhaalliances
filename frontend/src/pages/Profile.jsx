@@ -54,7 +54,7 @@ export default function Profile() {
   const isSelf = Boolean(viewerId && profileId && String(viewerId) === String(profileId));
 
   const rankName = profile?.rank || calculateRank(profile?.points || 0);
-  const memberStatusLabel = profile?.memberStatus || 'Not assigned';
+  const memberStatusLabel = profile?.memberStatus !== undefined && profile?.memberStatus !== null ? profile.memberStatus : 'Not assigned';
   const memberSince = profile?.createdAt
     ? new Date(profile.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
     : 'Unknown';
@@ -74,7 +74,8 @@ export default function Profile() {
       { label: 'Member Status', value: memberStatusLabel },
       { label: 'Member Since', value: memberSince },
     ];
-    return rows.filter((row) => row.value !== undefined && row.value !== null && row.value !== '');
+    // Always show all fields including member status
+    return rows.filter((row) => row.value !== undefined && row.value !== null);
   }, [profile, memberSince, rankName, memberStatusLabel]);
 
   useEffect(() => {

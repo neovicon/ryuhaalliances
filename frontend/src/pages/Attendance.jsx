@@ -222,7 +222,7 @@ const Attendance = () => {
       top: 0,
       left: 0,
       height: '100%',
-      zIndex: 50,
+      zIndex: 1050,
       transform: isMobile && !isSidebarOpen ? 'translateX(-100%)' : 'translateX(0)',
       transition: 'transform 0.3s ease-in-out',
       boxShadow: isSidebarOpen ? '4px 0 15px rgba(0,0,0,0.5)' : 'none'
@@ -231,7 +231,7 @@ const Attendance = () => {
       position: 'fixed',
       top: 0, left: 0, right: 0, bottom: 0,
       backgroundColor: 'rgba(0,0,0,0.5)',
-      zIndex: 40,
+      zIndex: 1040,
       display: isMobile && isSidebarOpen ? 'block' : 'none'
     },
     hamburgerBtn: {
@@ -468,7 +468,7 @@ const Attendance = () => {
   };
 
   return (
-    <div style={styles.container}>
+    <div style={{ ...styles.container, paddingBottom: '100px' }}>
 
       {/* --- MOBILE OVERLAY --- */}
       <div style={styles.overlay} onClick={() => setSidebarOpen(false)} />
