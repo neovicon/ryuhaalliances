@@ -43,7 +43,8 @@ export default function Nav() {
     { to: '/feed', label: 'Feed', Icon: Home },
     { to: '/leaderboard', label: 'Leaderboard', Icon: Trophy },
     { to: '/blogs', label: 'Blogs', Icon: BookOpen },
-    { to: '/events', label: 'Events', Icon: Calendar }
+    { to: '/events', label: 'Events', Icon: Calendar },
+    { to: '/event-entries', label: 'Event Entries', Icon: ClipboardList }
   ]
 
   // Hide certain main links for anonymous users
@@ -63,7 +64,7 @@ export default function Nav() {
 
   return (
     <nav className="nav">
-      <div className="container nav-inner">
+      <div className="nav-inner">
         <Link to="/" className="nav-brand link" onClick={() => setOpen(false)}>
           <div className="nav-logo" />
           <h2 className="hdr nav-title">Ryuha Alliance</h2>
