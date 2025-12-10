@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 
-const leadershipCategories = ['Creators', 'Abyssal High', 'Council'];
+const leadershipCategories = ['Creators', 'Abyssal', 'Council'];
 
 const leadershipMemberSchema = new mongoose.Schema({
     category: {

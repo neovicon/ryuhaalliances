@@ -12,18 +12,19 @@ export async function createEvent(req, res) {
   if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
   try {
-    const { title, description, imageUrl } = req.body;
+    const { title, description, imageUrl, inactive } = req.body;
     const event = await Event.create({
       title,
       description,
       imageUrl: imageUrl || null,
+      inactive: inactive === 'true' || inactive === true,
       createdBy: req.user.id,
       lastEditedBy: req.user.id,
     });
 
     await event.populate('createdBy', 'username displayName');
     await event.populate('lastEditedBy', 'username displayName');
-    
+
     const eventObj = event.toObject();
     if (eventObj.imageUrl) {
       eventObj.imageUrl = await getPhotoUrl(eventObj.imageUrl, req);
@@ -71,11 +72,12 @@ export async function updateEvent(req, res) {
 
   try {
     const { id } = req.params;
-    const { title, description, imageUrl } = req.body;
-    
+    const { title, description, imageUrl, inactive } = req.body;
+
     const updateData = { lastEditedBy: req.user.id };
     if (title !== undefined) updateData.title = title;
     if (description !== undefined) updateData.description = description;
+    if (inactive !== undefined) updateData.inactive = inactive === 'true' || inactive === true;
     // Only update imageUrl if a new image was uploaded (imageUrl is set by middleware)
     if (imageUrl !== undefined) {
       updateData.imageUrl = imageUrl || null;
@@ -101,7 +103,7 @@ export async function updateEvent(req, res) {
   }
 }
 
-export const validateDeleteEvent = [ param('id').isMongoId() ];
+export const validateDeleteEvent = [param('id').isMongoId()];
 
 export async function deleteEvent(req, res) {
   const errors = validationResult(req);
@@ -122,7 +124,7 @@ export async function deleteEvent(req, res) {
   }
 }
 
-export const validateGetEvent = [ param('id').isMongoId().withMessage('Invalid event ID') ];
+export const validateGetEvent = [param('id').isMongoId().withMessage('Invalid event ID')];
 
 export async function getEventById(req, res) {
   const errors = validationResult(req);
@@ -179,7 +181,7 @@ export async function addComment(req, res) {
   try {
     const { id } = req.params;
     const event = await Event.findById(id);
-    
+
     if (!event) {
       return res.status(404).json({ error: 'Event not found' });
     }

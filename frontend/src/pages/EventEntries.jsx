@@ -19,6 +19,7 @@ export default function EventEntries() {
     });
     const [mediaFile, setMediaFile] = useState(null);
     const [uploading, setUploading] = useState(false);
+    const [editingEntry, setEditingEntry] = useState(null);
 
     useEffect(() => {
         loadEvents();
@@ -63,31 +64,64 @@ export default function EventEntries() {
 
     async function handleUpload(e) {
         e.preventDefault();
-        if (!mediaFile || !selectedEventId) return;
+        if (!selectedEventId) return;
 
         try {
             setUploading(true);
-            const formData = new FormData();
-            formData.append('eventId', selectedEventId);
-            formData.append('memberName', uploadForm.memberName);
-            formData.append('description', uploadForm.description);
-            formData.append('mediaType', uploadForm.mediaType);
-            formData.append('media', mediaFile);
 
-            await client.post('/event-entries', formData, {
-                headers: { 'Content-Type': 'multipart/form-data' }
-            });
+            if (editingEntry) {
+                // Update existing entry
+                await client.put(`/event-entries/${editingEntry._id}`, {
+                    memberName: uploadForm.memberName,
+                    description: uploadForm.description
+                });
+            } else {
+                // Create new entry
+                if (!mediaFile) return;
+                const formData = new FormData();
+                formData.append('eventId', selectedEventId);
+                formData.append('memberName', uploadForm.memberName);
+                formData.append('description', uploadForm.description);
+                formData.append('mediaType', uploadForm.mediaType);
+                formData.append('media', mediaFile);
+
+                await client.post('/event-entries', formData, {
+                    headers: { 'Content-Type': 'multipart/form-data' }
+                });
+            }
 
             setShowUploadModal(false);
             setUploadForm({ memberName: '', description: '', mediaType: 'image' });
             setMediaFile(null);
+            setEditingEntry(null);
             loadEntries();
         } catch (error) {
-            console.error('Upload failed:', error);
-            alert('Failed to upload entry');
+            console.error('Operation failed:', error);
+            alert('Failed to save entry');
         } finally {
             setUploading(false);
         }
+    }
+
+    async function handleDeleteEntry(entryId) {
+        if (!confirm('Are you sure you want to delete this entry?')) return;
+        try {
+            await client.delete(`/event-entries/${entryId}`);
+            loadEntries();
+        } catch (error) {
+            console.error('Delete failed:', error);
+            alert('Failed to delete entry');
+        }
+    }
+
+    function openEditModal(entry) {
+        setEditingEntry(entry);
+        setUploadForm({
+            memberName: entry.memberName,
+            description: entry.description || '',
+            mediaType: entry.mediaType
+        });
+        setShowUploadModal(true);
     }
 
     return (
@@ -98,7 +132,7 @@ export default function EventEntries() {
                     <p style={{ color: 'var(--muted)' }}>Browse submissions from our community events</p>
                 </div>
 
-                <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
                     <select
                         value={selectedEventId}
                         onChange={(e) => setSelectedEventId(e.target.value)}
@@ -109,19 +143,27 @@ export default function EventEntries() {
                             border: '1px solid #333',
                             borderRadius: '8px',
                             outline: 'none',
-                            minWidth: '200px'
+                            minWidth: '200px',
+                            flex: '1 1 auto'
                         }}
                     >
                         {events.map(ev => (
-                            <option key={ev._id} value={ev._id}>{ev.title}</option>
+                            <option key={ev.id} value={ev.id}>
+                                {ev.title} {ev.inactive ? '(Inactive)' : ''}
+                            </option>
                         ))}
                     </select>
 
                     {user?.role === 'admin' && (
                         <button
                             className="btn"
-                            onClick={() => setShowUploadModal(true)}
-                            style={{ background: 'var(--primary)', border: 'none' }}
+                            onClick={() => {
+                                setEditingEntry(null);
+                                setUploadForm({ memberName: '', description: '', mediaType: 'image' });
+                                setMediaFile(null);
+                                setShowUploadModal(true);
+                            }}
+                            style={{ background: 'var(--primary)', border: 'none', whiteSpace: 'nowrap' }}
                         >
                             + Upload Entry
                         </button>
@@ -139,7 +181,13 @@ export default function EventEntries() {
             ) : (
                 <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '2rem' }}>
                     {entries.map(entry => (
-                        <EntryCard key={entry._id} entry={entry} onUpdate={loadEntries} />
+                        <EntryCard
+                            key={entry._id}
+                            entry={entry}
+                            onUpdate={loadEntries}
+                            onEdit={openEditModal}
+                            onDelete={handleDeleteEntry}
+                        />
                     ))}
                 </div>
             )}
@@ -154,7 +202,9 @@ export default function EventEntries() {
                         background: '#1e1e1e', padding: '2rem', borderRadius: '12px', width: '100%', maxWidth: '500px',
                         border: '1px solid #333', boxShadow: '0 20px 50px rgba(0,0,0,0.5)'
                     }} onClick={e => e.stopPropagation()}>
-                        <h3 className="hdr" style={{ marginBottom: '1.5rem' }}>Upload Entry</h3>
+                        <h3 className="hdr" style={{ marginBottom: '1.5rem' }}>
+                            {editingEntry ? 'Edit Entry' : 'Upload Entry'}
+                        </h3>
 
                         <form onSubmit={handleUpload} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                             <div>
@@ -178,28 +228,32 @@ export default function EventEntries() {
                                 />
                             </div>
 
-                            <div>
-                                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: '#ccc' }}>Media Type</label>
-                                <select
-                                    value={uploadForm.mediaType}
-                                    onChange={e => setUploadForm({ ...uploadForm, mediaType: e.target.value })}
-                                    style={{ width: '100%', padding: '0.75rem', background: '#2d2d2d', border: '1px solid #444', borderRadius: '6px', color: '#fff' }}
-                                >
-                                    <option value="image">Image</option>
-                                    <option value="video">Video</option>
-                                </select>
-                            </div>
+                            {!editingEntry && (
+                                <div>
+                                    <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: '#ccc' }}>Media Type</label>
+                                    <select
+                                        value={uploadForm.mediaType}
+                                        onChange={e => setUploadForm({ ...uploadForm, mediaType: e.target.value })}
+                                        style={{ width: '100%', padding: '0.75rem', background: '#2d2d2d', border: '1px solid #444', borderRadius: '6px', color: '#fff' }}
+                                    >
+                                        <option value="image">Image</option>
+                                        <option value="video">Video</option>
+                                    </select>
+                                </div>
+                            )}
 
-                            <div>
-                                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: '#ccc' }}>File</label>
-                                <input
-                                    type="file"
-                                    required
-                                    accept={uploadForm.mediaType === 'video' ? 'video/*' : 'image/*'}
-                                    onChange={e => setMediaFile(e.target.files[0])}
-                                    style={{ width: '100%', padding: '0.5rem', background: '#2d2d2d', border: '1px solid #444', borderRadius: '6px', color: '#fff' }}
-                                />
-                            </div>
+                            {!editingEntry && (
+                                <div>
+                                    <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: '#ccc' }}>File</label>
+                                    <input
+                                        type="file"
+                                        required
+                                        accept={uploadForm.mediaType === 'video' ? 'video/*' : 'image/*'}
+                                        onChange={e => setMediaFile(e.target.files[0])}
+                                        style={{ width: '100%', padding: '0.5rem', background: '#2d2d2d', border: '1px solid #444', borderRadius: '6px', color: '#fff' }}
+                                    />
+                                </div>
+                            )}
 
                             <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
                                 <button
@@ -214,7 +268,7 @@ export default function EventEntries() {
                                     disabled={uploading}
                                     style={{ flex: 1, padding: '0.75rem', background: 'var(--primary)', border: 'none', color: '#fff', borderRadius: '6px', cursor: uploading ? 'not-allowed' : 'pointer' }}
                                 >
-                                    {uploading ? 'Uploading...' : 'Upload'}
+                                    {uploading ? 'Saving...' : (editingEntry ? 'Update' : 'Upload')}
                                 </button>
                             </div>
                         </form>

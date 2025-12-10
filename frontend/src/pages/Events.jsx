@@ -10,7 +10,7 @@ export default function Events() {
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingEvent, setEditingEvent] = useState(null);
-  const [formData, setFormData] = useState({ title: '', description: '', image: null });
+  const [formData, setFormData] = useState({ title: '', description: '', image: null, inactive: false });
   const [imagePreview, setImagePreview] = useState(null);
   const [uploading, setUploading] = useState(false);
 
@@ -62,6 +62,7 @@ export default function Events() {
       const form = new FormData();
       form.append('title', formData.title);
       form.append('description', formData.description);
+      form.append('inactive', formData.inactive);
       if (formData.image) {
         form.append('image', formData.image);
       }
@@ -70,7 +71,7 @@ export default function Events() {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
 
-      setFormData({ title: '', description: '', image: null });
+      setFormData({ title: '', description: '', image: null, inactive: false });
       setImagePreview(null);
       setShowCreateModal(false);
       await loadEvents();
@@ -93,6 +94,7 @@ export default function Events() {
       const form = new FormData();
       form.append('title', formData.title);
       form.append('description', formData.description);
+      form.append('inactive', formData.inactive);
       if (formData.image) {
         form.append('image', formData.image);
       }
@@ -101,7 +103,7 @@ export default function Events() {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
 
-      setFormData({ title: '', description: '', image: null });
+      setFormData({ title: '', description: '', image: null, inactive: false });
       setImagePreview(null);
       setEditingEvent(null);
       await loadEvents();
@@ -130,6 +132,7 @@ export default function Events() {
     setFormData({
       title: event.title,
       description: event.description,
+      inactive: event.inactive || false,
       image: null
     });
     setImagePreview(event.imageUrl || null);
@@ -137,7 +140,7 @@ export default function Events() {
 
   const cancelEdit = () => {
     setEditingEvent(null);
-    setFormData({ title: '', description: '', image: null });
+    setFormData({ title: '', description: '', image: null, inactive: false });
     setImagePreview(null);
   };
 
@@ -266,6 +269,22 @@ export default function Events() {
                 onChange={e => setFormData({ ...formData, description: e.target.value })}
                 style={{ minHeight: 150, resize: 'vertical' }}
               />
+
+              {user?.role === 'admin' && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <input
+                    type="checkbox"
+                    id="create-inactive"
+                    checked={formData.inactive}
+                    onChange={e => setFormData({ ...formData, inactive: e.target.checked })}
+                    style={{ width: 'auto' }}
+                  />
+                  <label htmlFor="create-inactive" style={{ color: 'var(--text)', cursor: 'pointer' }}>
+                    Mark as Inactive
+                  </label>
+                </div>
+              )}
+
               <div>
                 <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--muted)', fontSize: '0.9rem' }}>
                   Event Image (optional)
@@ -297,7 +316,7 @@ export default function Events() {
                   className="btn"
                   onClick={() => {
                     setShowCreateModal(false);
-                    setFormData({ title: '', description: '', image: null });
+                    setFormData({ title: '', description: '', image: null, inactive: false });
                     setImagePreview(null);
                   }}
                   disabled={uploading}
@@ -347,6 +366,22 @@ export default function Events() {
                 onChange={e => setFormData({ ...formData, description: e.target.value })}
                 style={{ minHeight: 150, resize: 'vertical' }}
               />
+
+              {user?.role === 'admin' && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <input
+                    type="checkbox"
+                    id="edit-inactive"
+                    checked={formData.inactive}
+                    onChange={e => setFormData({ ...formData, inactive: e.target.checked })}
+                    style={{ width: 'auto' }}
+                  />
+                  <label htmlFor="edit-inactive" style={{ color: 'var(--text)', cursor: 'pointer' }}>
+                    Mark as Inactive
+                  </label>
+                </div>
+              )}
+
               <div>
                 <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--muted)', fontSize: '0.9rem' }}>
                   Event Image (optional - leave empty to keep current)

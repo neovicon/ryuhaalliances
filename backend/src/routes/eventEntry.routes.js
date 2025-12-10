@@ -1,5 +1,5 @@
 import express from 'express';
-import { createEntry, getEntries, addReaction, addComment, deleteEntry } from '../controllers/eventEntry.controller.js';
+import { createEntry, getEntries, addReaction, addComment, deleteEntry, updateEntry } from '../controllers/eventEntry.controller.js';
 import { requireAuth, requireAdmin } from '../middleware/auth.js';
 import multer from 'multer';
 
@@ -23,6 +23,7 @@ router.post('/:id/comment', requireAuth, addComment);
 
 // Admin routes
 router.post('/', requireAuth, requireAdmin, upload.single('media'), createEntry);
+router.put('/:id', requireAuth, requireAdmin, updateEntry);
 router.delete('/:id', requireAuth, requireAdmin, deleteEntry);
 
 export default router;

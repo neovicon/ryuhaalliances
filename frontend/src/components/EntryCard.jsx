@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useAuth } from '../store/auth';
 import client from '../api/client';
 
-export default function EntryCard({ entry, onUpdate }) {
+export default function EntryCard({ entry, onUpdate, onEdit, onDelete }) {
     const { user } = useAuth();
     const [comment, setComment] = useState('');
     const [submittingComment, setSubmittingComment] = useState(false);
@@ -68,7 +68,31 @@ export default function EntryCard({ entry, onUpdate }) {
 
             {/* Content Section */}
             <div style={{ padding: '1.5rem' }}>
-                <h3 className="hdr" style={{ fontSize: '1.25rem', marginBottom: '0.5rem' }}>{entry.memberName}</h3>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <h3 className="hdr" style={{ fontSize: '1.25rem', marginBottom: '0.5rem' }}>{entry.memberName}</h3>
+                    {user?.role === 'admin' && (
+                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                            <button
+                                onClick={() => onEdit(entry)}
+                                style={{
+                                    background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem', color: 'var(--muted)'
+                                }}
+                                title="Edit"
+                            >
+                                ✏️
+                            </button>
+                            <button
+                                onClick={() => onDelete(entry._id)}
+                                style={{
+                                    background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem', color: '#ef4444'
+                                }}
+                                title="Delete"
+                            >
+                                🗑️
+                            </button>
+                        </div>
+                    )}
+                </div>
                 {entry.description && (
                     <p style={{ color: 'var(--muted)', lineHeight: 1.6, marginBottom: '1.5rem' }}>
                         {entry.description}

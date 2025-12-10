@@ -331,7 +331,7 @@ export default function Home() {
           </div>
         ) : (
           <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem' }}>
-            {['Creators', 'Abyssal High', 'Council'].map(category => {
+            {['Creators', 'Abyssal', 'Council'].map(category => {
               const categoryMembers = leadershipMembers.filter(m => m.category === category);
 
               return (
@@ -502,7 +502,7 @@ export default function Home() {
                     }}
                   >
                     <option value="Creators">Creators</option>
-                    <option value="Abyssal High">Abyssal High</option>
+                    <option value="Abyssal">Abyssal</option>
                     <option value="Council">Council</option>
                   </select>
                   <div style={{ position: 'absolute', right: '1rem', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: '#888' }}>
@@ -727,6 +727,16 @@ export default function Home() {
           <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))' }}>
             {events.map((event) => (
               <div key={event.id} className="card" style={{ cursor: 'pointer' }} onClick={() => navigate(`/events/${event.id}`)}>
+                {event.imageUrl && (
+                  <div style={{
+                    width: '100%',
+                    aspectRatio: '16/9',
+                    background: `url(${event.imageUrl}) center/cover no-repeat`,
+                    borderRadius: '8px',
+                    marginBottom: '1rem',
+                    border: '1px solid rgba(148,163,184,0.1)'
+                  }} />
+                )}
                 <div style={{ fontWeight: 700 }}>{event.title}</div>
                 <div style={{ color: 'var(--muted)', fontSize: 12, marginTop: 2 }}>
                   {event.createdAt ? new Date(event.createdAt).toLocaleDateString() : ''}

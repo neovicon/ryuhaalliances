@@ -11,6 +11,7 @@ const eventSchema = new mongoose.Schema({
   imageUrl: { type: String },
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   lastEditedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  inactive: { type: Boolean, default: false },
   comments: { type: [commentSchema], default: [] },
 }, { timestamps: true });
 

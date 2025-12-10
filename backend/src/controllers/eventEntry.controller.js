@@ -46,7 +46,7 @@ export const createEntry = async (req, res) => {
 
         const entry = new EventEntry({
             event: eventId,
-            uploader: req.user._id,
+            uploader: req.user.id,
             memberName,
             description,
             mediaUrl: mediaUrl, // Storing the direct URL
@@ -95,7 +95,7 @@ export const addReaction = async (req, res) => {
             // Registered user reaction
             if (!req.user) return res.status(401).json({ message: "Unauthorized" });
 
-            const existingReactionIndex = entry.reactions.findIndex(r => r.user.toString() === req.user._id.toString());
+            const existingReactionIndex = entry.reactions.findIndex(r => r.user.toString() === req.user.id.toString());
 
             if (existingReactionIndex > -1) {
                 // Update or remove if same? Let's just update or toggle.
@@ -106,7 +106,7 @@ export const addReaction = async (req, res) => {
                     entry.reactions[existingReactionIndex].type = type;
                 }
             } else {
-                entry.reactions.push({ user: req.user._id, type });
+                entry.reactions.push({ user: req.user.id, type });
             }
         }
 
@@ -128,7 +128,7 @@ export const addComment = async (req, res) => {
         if (!entry) return res.status(404).json({ message: "Entry not found" });
 
         entry.comments.push({
-            user: req.user._id,
+            user: req.user.id,
             content
         });
 
@@ -151,5 +151,23 @@ export const deleteEntry = async (req, res) => {
         res.status(200).json({ message: "Entry deleted successfully" });
     } catch (error) {
         res.status(500).json({ message: "Failed to delete entry", error: error.message });
+    }
+};
+
+export const updateEntry = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { memberName, description } = req.body;
+
+        const entry = await EventEntry.findById(id);
+        if (!entry) return res.status(404).json({ message: "Entry not found" });
+
+        if (memberName) entry.memberName = memberName;
+        if (description) entry.description = description;
+
+        await entry.save();
+        res.status(200).json(entry);
+    } catch (error) {
+        res.status(500).json({ message: "Failed to update entry", error: error.message });
     }
 };
