@@ -1,82 +1,54 @@
-import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 
-export function getTransport() {
-  const { SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, EMAIL_USER, EMAIL_APP_PASSWORD } = process.env;
-
-  // Support Gmail with app password
-  if (EMAIL_USER && EMAIL_APP_PASSWORD) {
-    return nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: EMAIL_USER,
-        pass: EMAIL_APP_PASSWORD,
-      },
-    });
-  }
-
-  // Support custom SMTP
-  if (SMTP_HOST && SMTP_PORT && SMTP_USER && SMTP_PASS) {
-    return nodemailer.createTransport({
-      host: SMTP_HOST,
-      port: Number(SMTP_PORT),
-      secure: Number(SMTP_PORT) === 465,
-      auth: { user: SMTP_USER, pass: SMTP_PASS },
-    });
-  }
-
-  // Fallback: console logger transport for dev
-  return nodemailer.createTransport({
-    jsonTransport: true,
-  });
-}
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function sendEmail({ to, subject, html }) {
-  const { EMAIL_USER, MAIL_FROM, SMTP_HOST } = process.env;
-  const from = MAIL_FROM || EMAIL_USER || 'no-reply@ryuha.local';
-  const transport = getTransport();
+  const { EMAIL_USER, MAIL_FROM, RESEND_API_KEY } = process.env;
+  const from = MAIL_FROM || 'Ryuha Alliance <onboarding@resend.dev>'; // Default Resend testing domain
 
-  // Log email to console if no credentials configured (Dev mode)
-  if (!EMAIL_USER && !SMTP_HOST) {
-    console.log('\n========== EMAIL DEBUG ==========');
+  if (!RESEND_API_KEY) {
+    console.error('RESEND_API_KEY is missing');
+    // Fallback logging for dev if key missing
+    console.log('\n========== EMAIL DEBUG (No Key) ==========');
     console.log(`To: ${to}`);
     console.log(`Subject: ${subject}`);
     console.log('Content:', html);
-    console.log('=================================\n');
+    console.log('==========================================\n');
+    return;
   }
 
-  return transport.sendMail({ from, to, subject, html });
+  try {
+    const data = await resend.emails.send({
+      from,
+      to,
+      subject,
+      html,
+    });
+    return data;
+  } catch (error) {
+    console.error('Resend Error:', error);
+    throw error;
+  }
 }
 
 export async function sendBulkEmails({ recipients, subject, html }) {
-  const transport = getTransport();
-  const { EMAIL_USER, MAIL_FROM } = process.env;
-  const from = MAIL_FROM || EMAIL_USER || 'no-reply@ryuha.local';
+  const { MAIL_FROM } = process.env;
+  const from = MAIL_FROM || 'Ryuha Alliance <onboarding@resend.dev>';
 
-  // Send emails in batches to avoid overwhelming the server
-  const batchSize = 10;
+  // Resend supports batch sending, but for simplicity and rate limits on free tier, 
+  // we'll stick to sequential or small batches if needed. 
+  // For now, let's map over recipients.
+
   const results = [];
-
-  for (let i = 0; i < recipients.length; i += batchSize) {
-    const batch = recipients.slice(i, i + batchSize);
-    const batchPromises = batch.map(email =>
-      transport.sendMail({ from, to: email, subject, html })
-        .then(() => ({ email, success: true }))
-        .catch(error => {
-          console.error(`Failed to send email to ${email}:`, error);
-          return { email, success: false, error: error.message };
-        })
-    );
-
-    const batchResults = await Promise.all(batchPromises);
-    results.push(...batchResults);
-
-    // Small delay between batches to avoid rate limiting
-    if (i + batchSize < recipients.length) {
-      await new Promise(resolve => setTimeout(resolve, 100));
+  for (const email of recipients) {
+    try {
+      await sendEmail({ to: email, subject, html });
+      results.push({ email, success: true });
+    } catch (error) {
+      results.push({ email, success: false, error: error.message });
     }
+    // Small delay to be safe
+    await new Promise(r => setTimeout(r, 100));
   }
-
   return results;
 }
-
-

@@ -30,6 +30,7 @@
     "multer": "^2.0.2",
     "nanoid": "^5.1.6",
     "nodemailer": "^7.0.10",
+    "resend": "^6.6.0",
     "supabase": "^2.62.5"
   },
   "devDependencies": {
