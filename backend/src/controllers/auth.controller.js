@@ -264,3 +264,182 @@ export const validateVerifyEmailCode = [
 ];
 
 
+
+export async function forgotPassword(req, res) {
+  try {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ error: 'Email is required' });
+
+    const user = await User.findOne({ email });
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    if (user.status !== 'approved') return res.status(403).json({ error: 'Account not approved' });
+
+    // Generate 6-digit code
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = new Date();
+    expiresAt.setMinutes(expiresAt.getMinutes() + 15);
+
+    user.passwordResetCode = code;
+    user.passwordResetExpires = expiresAt;
+    await user.save();
+
+    const html = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background: linear-gradient(135deg, #b10f2e 0%, #8b0d26 100%); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
+            .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 8px 8px; }
+            .code { background: white; padding: 20px; text-align: center; border-radius: 8px; margin: 20px 0; }
+            .code-number { font-size: 32px; font-weight: bold; color: #b10f2e; letter-spacing: 8px; }
+            .footer { text-align: center; margin-top: 30px; color: #666; font-size: 12px; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1 style="margin: 0;">Ryuha Alliance</h1>
+            </div>
+            <div class="content">
+              <h2>Password Reset Code</h2>
+              <p>You requested to reset your password. Use the following code:</p>
+              <div class="code">
+                <div class="code-number">${code}</div>
+              </div>
+              <p>This code will expire in 15 minutes.</p>
+              <div class="footer">
+                <p>If you didn't request this, please ignore this email.</p>
+              </div>
+            </div>
+          </div>
+        </body>
+      </html>
+    `;
+
+    await sendEmail({
+      to: user.email,
+      subject: 'Password Reset Code',
+      html
+    });
+
+    res.json({ ok: true, message: 'Reset code sent to your email' });
+  } catch (error) {
+    console.error('Forgot password error:', error);
+    res.status(500).json({ error: 'Failed to send reset code' });
+  }
+}
+
+export async function verifyResetCode(req, res) {
+  try {
+    const { email, code } = req.body;
+    const user = await User.findOne({ email, status: 'approved' });
+
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    if (!user.passwordResetCode || user.passwordResetCode !== code) {
+      return res.status(400).json({ error: 'Invalid reset code' });
+    }
+    if (new Date() > user.passwordResetExpires) {
+      return res.status(400).json({ error: 'Reset code has expired' });
+    }
+
+    res.json({ ok: true });
+  } catch (error) {
+    console.error('Verify reset code error:', error);
+    res.status(500).json({ error: 'Verification failed' });
+  }
+}
+
+export async function resetPassword(req, res) {
+  try {
+    const { email, code, newPassword } = req.body;
+    if (!newPassword || newPassword.length < 8) {
+      return res.status(400).json({ error: 'Password must be at least 8 characters' });
+    }
+
+    const user = await User.findOne({ email, status: 'approved' });
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    if (!user.passwordResetCode || user.passwordResetCode !== code) {
+      return res.status(400).json({ error: 'Invalid reset code' });
+    }
+    if (new Date() > user.passwordResetExpires) {
+      return res.status(400).json({ error: 'Reset code has expired' });
+    }
+
+    const passwordHash = await bcrypt.hash(newPassword, 12);
+    user.passwordHash = passwordHash;
+    user.passwordResetCode = undefined;
+    user.passwordResetExpires = undefined;
+    await user.save();
+
+    res.json({ ok: true, message: 'Password reset successfully' });
+  } catch (error) {
+    console.error('Reset password error:', error);
+    res.status(500).json({ error: 'Failed to reset password' });
+  }
+}
+
+export async function sendLoginLink(req, res) {
+  try {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ error: 'Email is required' });
+
+    const user = await User.findOne({ email });
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    if (user.status !== 'approved') return res.status(403).json({ error: 'Account not approved' });
+
+    const token = signJwt({ id: user._id, type: 'login-link' }, { expiresIn: '15m' });
+    const base = process.env.CLIENT_ORIGIN?.replace(/\/$/, '') || 'http://localhost:5173';
+    const link = `${base}/login?token=${token}&action=magic-login`;
+
+    const html = `
+      <p>Click <a href="${link}">here</a> to login to your account.</p>
+      <p>This link expires in 15 minutes.</p>
+    `;
+
+    await sendEmail({
+      to: user.email,
+      subject: 'Login Link',
+      html
+    });
+
+    res.json({ ok: true, message: 'Login link sent to your email' });
+  } catch (error) {
+    console.error('Send login link error:', error);
+    res.status(500).json({ error: 'Failed to send login link' });
+  }
+}
+
+export async function verifyLoginLink(req, res) {
+  try {
+    const { token } = req.body;
+    if (!token) return res.status(400).json({ error: 'Token is required' });
+
+    let decoded;
+    try {
+      decoded = verifyJwt(token);
+    } catch (e) {
+      return res.status(400).json({ error: 'Invalid or expired token' });
+    }
+
+    if (decoded.type !== 'login-link') {
+      return res.status(400).json({ error: 'Invalid token type' });
+    }
+
+    const user = await User.findById(decoded.id);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    if (user.status !== 'approved') {
+      return res.status(403).json({ error: 'Account not approved' });
+    }
+
+    const authToken = signJwt({ id: user._id, role: user.role, username: user.username });
+    res.json({ token: authToken, user: await sanitizeUser(user, req) });
+  } catch (error) {
+    console.error('Verify login link error:', error);
+    res.status(500).json({ error: 'Login failed' });
+  }
+}

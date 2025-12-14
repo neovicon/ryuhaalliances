@@ -73,6 +73,7 @@ app.use('/api/event-entries', eventEntryRoutes);
 const PORT = process.env.PORT || 5000;
 connectDB().then(() => {
   app.listen(PORT, () => console.log(`API running on :${PORT}`));
+  console.log('Server restarted at ' + new Date().toISOString());
 }).catch((err) => {
   console.error('DB connection failed', err);
   process.exit(1);
