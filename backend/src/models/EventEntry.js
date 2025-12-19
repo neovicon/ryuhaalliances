@@ -6,7 +6,7 @@ const eventEntrySchema = new mongoose.Schema({
     memberName: { type: String, required: true },
     description: { type: String },
     mediaUrl: { type: String, required: true },
-    mediaType: { type: String, enum: ['image', 'video'], required: true },
+    mediaType: { type: String, enum: ['image', 'video', 'audio'], required: true },
 
     // Registered user reactions
     reactions: [{

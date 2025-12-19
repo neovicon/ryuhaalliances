@@ -57,6 +57,14 @@ export default function EntryCard({ entry, onUpdate, onEdit, onDelete }) {
                         controls
                         style={{ width: '100%', maxHeight: '500px', display: 'block' }}
                     />
+                ) : entry.mediaType === 'audio' ? (
+                    <div style={{ width: '100%', padding: '2rem', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#1a1a1a' }}>
+                        <audio
+                            src={entry.mediaUrl}
+                            controls
+                            style={{ width: '100%' }}
+                        />
+                    </div>
                 ) : (
                     <img
                         src={entry.mediaUrl}

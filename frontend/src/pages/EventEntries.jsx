@@ -238,6 +238,7 @@ export default function EventEntries() {
                                     >
                                         <option value="image">Image</option>
                                         <option value="video">Video</option>
+                                        <option value="audio">Audio (MP3)</option>
                                     </select>
                                 </div>
                             )}
@@ -248,7 +249,7 @@ export default function EventEntries() {
                                     <input
                                         type="file"
                                         required
-                                        accept={uploadForm.mediaType === 'video' ? 'video/*' : 'image/*'}
+                                        accept={uploadForm.mediaType === 'video' ? 'video/*' : uploadForm.mediaType === 'audio' ? 'audio/*' : 'image/*'}
                                         onChange={e => setMediaFile(e.target.files[0])}
                                         style={{ width: '100%', padding: '0.5rem', background: '#2d2d2d', border: '1px solid #444', borderRadius: '6px', color: '#fff' }}
                                     />

@@ -24,7 +24,10 @@ export default function Events() {
     try {
       setLoading(true);
       const { data } = await client.get('/events');
-      setEvents(data.events);
+      const filteredEvents = isModeratorOrAdmin
+        ? data.events
+        : data.events.filter(e => !e.inactive);
+      setEvents(filteredEvents);
     } catch (error) {
       console.error('Error loading events:', error);
     } finally {
