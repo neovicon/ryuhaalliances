@@ -14,6 +14,7 @@ export default function Feed() {
   const [imageFile, setImageFile] = useState(null);
   const [videoFile, setVideoFile] = useState(null);
   const [isPrivate, setIsPrivate] = useState(false);
+  const [mentionEveryone, setMentionEveryone] = useState(false);
   const [loading, setLoading] = useState(false);
   const [posting, setPosting] = useState(false);
   const [cursor, setCursor] = useState(null);
@@ -66,12 +67,14 @@ export default function Feed() {
       if (imageFile) form.append('image', imageFile);
       if (videoFile) form.append('video', videoFile);
       if (isPrivate) form.append('isPrivate', 'true');
+      if (mentionEveryone) form.append('mentionEveryone', 'true');
 
       await client.post('/posts', form, { headers: { 'Content-Type': 'multipart/form-data' } });
       setContent('');
       setImageFile(null);
       setVideoFile(null);
       setIsPrivate(false);
+      setMentionEveryone(false);
       loadPosts(true); // Refresh feed
     } catch (error) {
       console.error('Failed to create post:', error);
@@ -156,6 +159,16 @@ export default function Feed() {
               />
               Private
             </label>
+            {user?.role === 'admin' && (
+              <label style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', cursor: 'pointer', fontSize: '0.9rem', color: 'var(--primary)', fontWeight: 'bold' }}>
+                <input
+                  type="checkbox"
+                  checked={mentionEveryone}
+                  onChange={e => setMentionEveryone(e.target.checked)}
+                />
+                Mention Everyone
+              </label>
+            )}
           </div>
           <button className="btn" onClick={handlePost} disabled={posting || (!content.trim() && !imageFile && !videoFile)}>
             {posting ? 'Posting...' : 'Post'}
@@ -266,6 +279,6 @@ export default function Feed() {
           <div style={{ textAlign: 'center', color: 'var(--muted)', padding: '1rem' }}>No more posts</div>
         )}
       </div>
-    </div>
+    </div >
   );
 }

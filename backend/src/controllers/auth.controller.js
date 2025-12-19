@@ -4,6 +4,7 @@ import User, { allowedHouses } from '../models/User.js';
 import { signJwt, verifyJwt } from '../utils/jwt.js';
 import { getPhotoUrl } from '../utils/photoUrl.js';
 import { sendEmail } from '../services/mailer.js';
+import * as notificationService from '../services/notification.service.js';
 
 export const validateSignup = [
   body('email').isEmail().withMessage('Please provide a valid email address'),
@@ -63,6 +64,17 @@ export async function signup(req, res) {
     displayName: cleanDisplayName
   });
   const token = signJwt({ id: user._id, role: user.role, username: user.username });
+
+  // Create notification for admins
+  notificationService.createNotification({
+    target: 'admins',
+    sender: user._id,
+    type: 'signup',
+    title: 'New User Signup',
+    message: `A new user ${user.username} has signed up and is pending approval.`,
+    link: `/admin/users` // Assuming there's an admin users page
+  });
+
   return res.status(201).json({ token, user: await sanitizeUser(user, req) });
 }
 

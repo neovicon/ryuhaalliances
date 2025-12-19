@@ -2,6 +2,7 @@ import { body, validationResult, param } from 'express-validator';
 import Article from '../models/Article.js';
 import User from '../models/User.js';
 import { getPhotoUrl } from '../utils/photoUrl.js';
+import * as notificationService from '../services/notification.service.js';
 
 export const validateCreateArticle = [
   body('title').notEmpty().withMessage('Title is required'),
@@ -28,6 +29,17 @@ export async function createArticle(req, res) {
       articleObj.imageUrl = await getPhotoUrl(articleObj.imageUrl, req);
     }
     const { _id, ...rest } = articleObj;
+
+    // Create notification
+    notificationService.createNotification({
+      target: 'all',
+      sender: req.user.id,
+      type: 'article',
+      title: 'New Article',
+      message: `${req.user.username} posted a new article: ${title}`,
+      link: `/articles/${_id}`
+    });
+
     res.status(201).json({ article: { id: _id, ...rest } });
   } catch (error) {
     console.error('Error creating article:', error);
@@ -102,6 +114,17 @@ export async function addComment(req, res) {
       }));
     }
     const { _id, ...rest } = obj;
+
+    // Create notification
+    notificationService.createNotification({
+      target: 'all',
+      sender: req.user.id,
+      type: 'comment',
+      title: 'New Comment on Article',
+      message: `${req.user.username} commented on the article: ${article.title}`,
+      link: `/articles/${_id}`
+    });
+
     res.status(201).json({ article: { id: _id, ...rest } });
   } catch (err) {
     console.error('Error adding comment:', err);

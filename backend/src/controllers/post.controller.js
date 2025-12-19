@@ -3,6 +3,7 @@ import Post from '../models/Post.js';
 import User from '../models/User.js';
 import { getPhotoUrl } from '../utils/photoUrl.js';
 import mongoose from 'mongoose';
+import * as notificationService from '../services/notification.service.js';
 
 export const validateCreatePost = [
   body('content').optional().isString().isLength({ max: 2000 }),
@@ -53,6 +54,29 @@ export async function createPost(req, res) {
   if (postObj.video) {
     postObj.video = await getPhotoUrl(postObj.video, req);
   }
+
+  // Create notification
+  const isMentionEveryone = req.body.mentionEveryone === 'true' || req.body.mentionEveryone === true;
+  if (isMentionEveryone && req.user.role === 'admin') {
+    notificationService.createNotification({
+      target: 'all',
+      sender: req.user.id,
+      type: 'mention_everyone',
+      title: 'Mention Everyone',
+      message: `${req.user.username} mentioned everyone in a post`,
+      link: `/posts/${post._id}`
+    });
+  } else {
+    notificationService.createNotification({
+      target: 'all',
+      sender: req.user.id,
+      type: 'post',
+      title: 'New Post',
+      message: `${req.user.username} shared a new post`,
+      link: `/posts/${post._id}`
+    });
+  }
+
   res.status(201).json({ post: postObj });
 }
 
@@ -120,6 +144,17 @@ export async function addComment(req, res) {
       return comment;
     }));
   }
+
+  // Create notification
+  notificationService.createNotification({
+    target: 'all',
+    sender: req.user.id,
+    type: 'comment',
+    title: 'New Comment on Post',
+    message: `${req.user.username} commented on a post`,
+    link: `/posts/${post._id}`
+  });
+
   res.status(201).json({ post: postObj });
 }
 

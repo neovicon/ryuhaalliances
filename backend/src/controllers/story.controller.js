@@ -2,6 +2,7 @@ import { body, validationResult, param } from 'express-validator';
 import Story from '../models/Story.js';
 import User from '../models/User.js';
 import { getPhotoUrl } from '../utils/photoUrl.js';
+import * as notificationService from '../services/notification.service.js';
 
 export const validateCreateStory = [
   body('title').notEmpty().withMessage('Title is required'),
@@ -18,6 +19,17 @@ export async function createStory(req, res) {
     const obj = story.toObject();
     if (obj.imageUrl) obj.imageUrl = await getPhotoUrl(obj.imageUrl, req);
     const { _id, ...rest } = obj;
+
+    // Create notification
+    notificationService.createNotification({
+      target: 'all',
+      sender: req.user.id,
+      type: 'story',
+      title: 'New Story',
+      message: `${req.user.username} posted a new story: ${title}`,
+      link: `/stories/${_id}`
+    });
+
     res.status(201).json({ story: { id: _id, ...rest } });
   } catch (err) {
     console.error('Error creating story:', err);
@@ -92,6 +104,17 @@ export async function addComment(req, res) {
       }));
     }
     const { _id, ...rest } = obj;
+
+    // Create notification
+    notificationService.createNotification({
+      target: 'all',
+      sender: req.user.id,
+      type: 'comment',
+      title: 'New Comment on Story',
+      message: `${req.user.username} commented on the story: ${story.title}`,
+      link: `/stories/${_id}`
+    });
+
     res.status(201).json({ story: { id: _id, ...rest } });
   } catch (err) {
     console.error('Error adding story comment:', err);

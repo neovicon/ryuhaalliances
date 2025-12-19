@@ -2,6 +2,7 @@ import { body, param, validationResult } from 'express-validator';
 import DubbingVideo from '../models/DubbingVideo.js';
 import User from '../models/User.js';
 import { getPhotoUrl } from '../utils/photoUrl.js';
+import * as notificationService from '../services/notification.service.js';
 
 // Get all dubbing videos (public access)
 export async function getAllDubbingVideos(req, res) {
@@ -133,6 +134,17 @@ export async function createDubbingVideo(req, res) {
         }
 
         const { _id, ...rest } = videoObj;
+
+        // Create notification
+        notificationService.createNotification({
+            target: 'all',
+            sender: req.user.id,
+            type: 'dubbing',
+            title: 'New VA Video',
+            message: `${req.user.username} uploaded a new VA video: ${title}`,
+            link: `/dubbing/${_id}`
+        });
+
         res.status(201).json({ video: { id: _id, ...rest }, message: 'Video uploaded successfully' });
     } catch (error) {
         console.error('Error creating dubbing video:', error);
@@ -230,6 +242,16 @@ export async function addComment(req, res) {
         if (commentObj.user?.photoUrl) {
             commentObj.user.photoUrl = await getPhotoUrl(commentObj.user.photoUrl, req);
         }
+
+        // Create notification
+        notificationService.createNotification({
+            target: 'all',
+            sender: req.user.id,
+            type: 'comment',
+            title: 'New Comment on VA Video',
+            message: `${req.user.username} commented on the VA video: ${video.title}`,
+            link: `/dubbing/${id}`
+        });
 
         res.json({ comment: commentObj, message: 'Comment added successfully' });
     } catch (error) {

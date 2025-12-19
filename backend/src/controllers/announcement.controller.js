@@ -3,6 +3,7 @@ import Announcement from '../models/Announcement.js';
 import User from '../models/User.js';
 import { getPhotoUrl } from '../utils/photoUrl.js';
 import { sendBulkEmails } from '../services/mailer.js';
+import * as notificationService from '../services/notification.service.js';
 
 export const validateCreateAnnouncement = [
   body('title').notEmpty().withMessage('Title is required'),
@@ -42,6 +43,16 @@ export async function createAnnouncement(req, res) {
       imageUrl: fullImageUrl
     }).catch(error => {
       console.error('Error sending announcement emails:', error);
+    });
+
+    // Create notification
+    notificationService.createNotification({
+      target: 'all',
+      sender: req.user.id,
+      type: 'announcement',
+      title: 'New Announcement',
+      message: `${req.user.username} posted a new announcement: ${title}`,
+      link: `/announcements/${announcementId}`
     });
 
     res.status(201).json({ announcement: { id: _id, ...rest } });
@@ -239,6 +250,17 @@ export async function addComment(req, res) {
       }));
     }
     const { _id, ...rest } = announcementObj;
+
+    // Create notification
+    notificationService.createNotification({
+      target: 'all',
+      sender: req.user.id,
+      type: 'comment',
+      title: 'New Comment on Announcement',
+      message: `${req.user.username} commented on the announcement: ${announcement.title}`,
+      link: `/announcements/${_id}`
+    });
+
     res.status(201).json({ announcement: { id: _id, ...rest } });
   } catch (error) {
     console.error('Error adding comment:', error);

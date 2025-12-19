@@ -1,6 +1,7 @@
 import { body, validationResult, param, query } from 'express-validator';
 import Blog from '../models/Blog.js';
 import { getPhotoUrl } from '../utils/photoUrl.js';
+import * as notificationService from '../services/notification.service.js';
 
 export const validateCreateBlog = [
   body('title').notEmpty().withMessage('Title is required'),
@@ -29,6 +30,17 @@ export async function createBlog(req, res) {
       blogObj.imageUrl = await getPhotoUrl(blogObj.imageUrl, req);
     }
     const { _id, ...rest } = blogObj;
+
+    // Create notification
+    notificationService.createNotification({
+      target: 'all',
+      sender: req.user.id,
+      type: 'blog',
+      title: 'New Blog',
+      message: `${req.user.username} posted a new blog: ${title}`,
+      link: `/blogs/${_id}`
+    });
+
     res.status(201).json({ blog: { id: _id, ...rest } });
   } catch (error) {
     console.error('Error creating blog:', error);
@@ -221,6 +233,17 @@ export async function addComment(req, res) {
       }));
     }
     const { _id, ...rest } = blogObj;
+
+    // Create notification
+    notificationService.createNotification({
+      target: 'all',
+      sender: req.user.id,
+      type: 'comment',
+      title: 'New Comment on Blog',
+      message: `${req.user.username} commented on the blog: ${blog.title}`,
+      link: `/blogs/${_id}`
+    });
+
     res.status(201).json({ blog: { id: _id, ...rest } });
   } catch (error) {
     console.error('Error adding comment to blog:', error);
