@@ -12,8 +12,12 @@ import {
   LogOut,
   ChevronDown,
   Menu as MenuIcon,
-  X
+  X,
+  Bell,
+  MessageCircle
 } from 'lucide-react'
+import { useNotifications } from '../context/NotificationContext'
+import NotificationList from './NotificationList'
 
 export default function Nav() {
   const { pathname } = useLocation()
@@ -22,11 +26,14 @@ export default function Nav() {
   const [moreOpen, setMoreOpen] = useState(false)
   const moreRef = useRef(null)
   const { user, logout } = useAuth()
+  const { unreadCount } = useNotifications()
+  const [notifOpen, setNotifOpen] = useState(false)
+  const notifRef = useRef(null)
 
   useEffect(() => {
     function onDoc(e) {
-      if (!moreRef.current) return
-      if (!moreRef.current.contains(e.target)) setMoreOpen(false)
+      if (moreRef.current && !moreRef.current.contains(e.target)) setMoreOpen(false)
+      if (notifRef.current && !notifRef.current.contains(e.target)) setNotifOpen(false)
     }
     document.addEventListener('click', onDoc)
     return () => document.removeEventListener('click', onDoc)
@@ -42,7 +49,7 @@ export default function Nav() {
   const mainLinks = [
     { to: '/feed', label: 'Feed', Icon: Home },
     { to: '/leaderboard', label: 'Leaderboard', Icon: Trophy },
-    { to: '/blogs', label: 'Blogs', Icon: BookOpen },
+    { to: '/messenger', label: 'Messenger', Icon: MessageCircle },
     { to: '/events', label: 'Events', Icon: Calendar },
     { to: '/event-entries', label: 'Event Entries', Icon: ClipboardList }
   ]
@@ -55,6 +62,7 @@ export default function Nav() {
   })
 
   const secondaryLinks = [
+    { to: '/blogs', label: 'Blogs' },
     { to: '/announcements', label: 'Announcements' },
     { to: '/articles', label: 'Articles' },
     { to: '/stories', label: 'Stories' },
@@ -103,6 +111,24 @@ export default function Nav() {
             </div>
           </div>
 
+          {user && (
+            <div className="nav-secondary" ref={notifRef}>
+              <div className="notification-bell-container" onClick={() => setNotifOpen(!notifOpen)}>
+                <Bell size={20} />
+                {unreadCount > 0 && (
+                  <span className="notification-badge">
+                    {unreadCount > 99 ? '99+' : unreadCount}
+                  </span>
+                )}
+              </div>
+              {notifOpen && (
+                <div className="notification-dropdown">
+                  <NotificationList onClose={() => setNotifOpen(false)} />
+                </div>
+              )}
+            </div>
+          )}
+
           <div className="nav-cta-group">
             {!user ? (
               <>
@@ -120,6 +146,23 @@ export default function Nav() {
           <button className="nav-toggle" onClick={() => setOpen(o => !o)} aria-label="Toggle navigation">
             <MenuIcon />
           </button>
+          {user && (
+            <div className="nav-secondary" ref={notifRef} style={{ marginLeft: '0.5rem' }}>
+              <div className="notification-bell-container" onClick={() => setNotifOpen(!notifOpen)}>
+                <Bell size={20} />
+                {unreadCount > 0 && (
+                  <span className="notification-badge">
+                    {unreadCount > 99 ? '99+' : unreadCount}
+                  </span>
+                )}
+              </div>
+              {notifOpen && (
+                <div className="notification-dropdown">
+                  <NotificationList onClose={() => setNotifOpen(false)} />
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Mobile menu overlay (rendered into body via portal to avoid stacking-context clipping) */}
