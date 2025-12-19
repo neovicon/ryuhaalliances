@@ -1,5 +1,10 @@
 import dotenv from 'dotenv';
 dotenv.config();
+import crypto from 'crypto';
+
+if (!global.crypto) {
+  global.crypto = crypto;
+}
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -22,12 +27,69 @@ import imageRoutes from './routes/image.routes.js';
 import dubbingRoutes from './routes/dubbing.routes.js';
 import leadershipRoutes from './routes/leadership.routes.js';
 import eventEntryRoutes from './routes/eventEntry.routes.js';
+import notificationRoutes from './routes/notification.routes.js';
+
+import { createServer } from 'http';
+import { Server } from 'socket.io';
+import messageRoutes from './routes/message.routes.js';
+import Message from './models/Message.js';
 
 const app = express();
+const httpServer = createServer(app);
+const io = new Server(httpServer, {
+  cors: {
+    origin: [
+      process.env.CLIENT_ORIGIN || 'https://ryuhaalliance.devsandbox.me',
+      'http://localhost:5173'
+    ],
+    credentials: true
+  }
+});
+
+io.on('connection', (socket) => {
+  console.log('New client connected:', socket.id);
+
+  socket.on('join_chat', (userData) => {
+    socket.join('global_chat');
+    console.log(`User ${userData.username} joined global chat`);
+  });
+
+  socket.on('send_message', async (data) => {
+    try {
+      const { sender, content } = data;
+
+      const senderId = sender?._id || sender?.id || sender;
+
+      if (!senderId) {
+        console.error('Invalid sender data:', sender);
+        return;
+      }
+
+      // Save to DB
+      const newMessage = await Message.create({
+        sender: senderId,
+        content
+      });
+
+      // Populate sender info
+      await newMessage.populate('sender', 'username photoUrl');
+
+      // Broadcast to everyone in global chat
+      io.to('global_chat').emit('receive_message', newMessage);
+    } catch (error) {
+      console.error('Error saving message:', error);
+    }
+  });
+
+  socket.on('disconnect', () => {
+    console.log('Client disconnected:', socket.id);
+  });
+});
 
 const corsOptions = {
   origin: [
     process.env.CLIENT_ORIGIN || 'https://ryuhaalliance.devsandbox.me',
+    'http://localhost:5173'
   ],
   credentials: true,
   optionsSuccessStatus: 200
@@ -68,11 +130,13 @@ app.use('/api/image', imageRoutes);
 app.use('/api/dubbing', dubbingRoutes);
 app.use('/api/leadership', leadershipRoutes);
 app.use('/api/event-entries', eventEntryRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/messages', messageRoutes);
 
 
 const PORT = process.env.PORT || 5000;
 connectDB().then(() => {
-  app.listen(PORT, () => console.log(`API running on :${PORT}`));
+  httpServer.listen(PORT, () => console.log(`API running on :${PORT}`));
   console.log('Server restarted at ' + new Date().toISOString());
 }).catch((err) => {
   console.error('DB connection failed', err);
