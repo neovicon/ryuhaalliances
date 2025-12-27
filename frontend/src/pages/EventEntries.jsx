@@ -148,13 +148,13 @@ export default function EventEntries() {
                         }}
                     >
                         {events.map(ev => (
-                            <option key={ev.id} value={ev.id}>
+                            <option key={ev._id} value={ev._id}>
                                 {ev.title} {ev.inactive ? '(Inactive)' : ''}
                             </option>
                         ))}
                     </select>
 
-                    {user?.role === 'admin' && (
+                    {(user?.role === 'admin' || user?.role === 'moderator') && (
                         <button
                             className="btn"
                             onClick={() => {
