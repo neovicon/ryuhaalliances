@@ -38,7 +38,7 @@ export default function EventEntries() {
             const { data } = await client.get('/events');
             setEvents(data.events || []);
             if (data.events && data.events.length > 0) {
-                setSelectedEventId(data.events[0]._id);
+                setSelectedEventId(data.events[0].id);
             }
         } catch (error) {
             console.error('Error loading events:', error);
@@ -68,16 +68,20 @@ export default function EventEntries() {
 
         try {
             setUploading(true);
+            console.log('Starting upload for event:', selectedEventId);
+            console.log('Form data:', uploadForm);
 
             if (editingEntry) {
-                // Update existing entry
+                console.log('Updating entry:', editingEntry._id);
                 await client.put(`/event-entries/${editingEntry._id}`, {
                     memberName: uploadForm.memberName,
                     description: uploadForm.description
                 });
             } else {
-                // Create new entry
-                if (!mediaFile) return;
+                if (!mediaFile) {
+                    alert('Please select a file to upload');
+                    return;
+                }
                 const formData = new FormData();
                 formData.append('eventId', selectedEventId);
                 formData.append('memberName', uploadForm.memberName);
@@ -85,9 +89,11 @@ export default function EventEntries() {
                 formData.append('mediaType', uploadForm.mediaType);
                 formData.append('media', mediaFile);
 
-                await client.post('/event-entries', formData, {
+                console.log('Posting new entry...');
+                const response = await client.post('/event-entries', formData, {
                     headers: { 'Content-Type': 'multipart/form-data' }
                 });
+                console.log('Upload successful:', response.data);
             }
 
             setShowUploadModal(false);
@@ -95,9 +101,11 @@ export default function EventEntries() {
             setMediaFile(null);
             setEditingEntry(null);
             loadEntries();
+            alert('Entry saved successfully!');
         } catch (error) {
             console.error('Operation failed:', error);
-            alert('Failed to save entry');
+            const errorMsg = error.response?.data?.message || error.message || 'Unknown error';
+            alert(`Failed to save entry: ${errorMsg}`);
         } finally {
             setUploading(false);
         }
@@ -148,7 +156,7 @@ export default function EventEntries() {
                         }}
                     >
                         {events.map(ev => (
-                            <option key={ev._id} value={ev._id}>
+                            <option key={ev.id} value={ev.id}>
                                 {ev.title} {ev.inactive ? '(Inactive)' : ''}
                             </option>
                         ))}
