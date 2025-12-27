@@ -1,4 +1,5 @@
 import Message from '../models/Message.js';
+import { getPhotoUrl } from '../utils/photoUrl.js';
 
 export const getMessages = async (req, res) => {
     try {
@@ -17,8 +18,16 @@ export const getMessages = async (req, res) => {
 
         const nextCursor = messages.length === limit ? messages[messages.length - 1]._id : null;
 
+        const processedMessages = await Promise.all(messages.reverse().map(async (msg) => {
+            const msgObj = msg.toObject();
+            if (msgObj.sender && msgObj.sender.photoUrl) {
+                msgObj.sender.photoUrl = await getPhotoUrl(msgObj.sender.photoUrl, req);
+            }
+            return msgObj;
+        }));
+
         res.json({
-            messages: messages.reverse(), // Return in chronological order for the UI
+            messages: processedMessages,
             nextCursor
         });
     } catch (error) {

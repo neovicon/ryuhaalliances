@@ -33,6 +33,7 @@ import { createServer } from 'http';
 import { Server } from 'socket.io';
 import messageRoutes from './routes/message.routes.js';
 import Message from './models/Message.js';
+import { getPhotoUrl } from './utils/photoUrl.js';
 
 const app = express();
 const httpServer = createServer(app);
@@ -74,8 +75,13 @@ io.on('connection', (socket) => {
       // Populate sender info
       await newMessage.populate('sender', 'username photoUrl');
 
+      const msgObj = newMessage.toObject();
+      if (msgObj.sender && msgObj.sender.photoUrl) {
+        msgObj.sender.photoUrl = await getPhotoUrl(msgObj.sender.photoUrl);
+      }
+
       // Broadcast to everyone in global chat
-      io.to('global_chat').emit('receive_message', newMessage);
+      io.to('global_chat').emit('receive_message', msgObj);
     } catch (error) {
       console.error('Error saving message:', error);
     }

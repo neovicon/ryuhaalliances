@@ -146,10 +146,10 @@ export default function Messenger() {
                     }}
                     onScroll={handleScroll}
                 >
-                    {loading && <div style={{ textAlign: 'center', color: 'var(--muted)' }}>Loading...</div>}
+                    {loading ? <div key="loading" style={{ textAlign: 'center', color: 'var(--muted)' }}>Loading...</div> : null}
 
-                    {hasMore && !loading && (
-                        <div style={{ textAlign: 'center', padding: '0.5rem' }}>
+                    {hasMore && !loading ? (
+                        <div key="load-more" style={{ textAlign: 'center', padding: '0.5rem' }}>
                             <button
                                 onClick={() => loadMessages(cursor)}
                                 className="btn"
@@ -158,15 +158,17 @@ export default function Messenger() {
                                 Load older messages
                             </button>
                         </div>
-                    )}
+                    ) : null}
 
                     {messages.map((msg, index) => {
+                        if (!msg || !msg.sender) return null;
                         const isOwn = msg.sender._id === user._id;
-                        const showAvatar = index === 0 || messages[index - 1].sender._id !== msg.sender._id;
+                        const prevMsg = index > 0 ? messages[index - 1] : null;
+                        const showAvatar = !prevMsg || !prevMsg.sender || prevMsg.sender._id !== msg.sender._id;
 
                         return (
                             <div
-                                key={msg._id || index}
+                                key={msg._id || `msg-${index}-${msg.createdAt}`}
                                 style={{
                                     display: 'flex',
                                     flexDirection: isOwn ? 'row-reverse' : 'row',
