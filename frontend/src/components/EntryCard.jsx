@@ -102,7 +102,7 @@ export default function EntryCard({ entry, onUpdate, onEdit, onDelete }) {
                     )}
                 </div>
                 {entry.description && (
-                    <p style={{ color: 'var(--muted)', lineHeight: 1.6, marginBottom: '1.5rem' }}>
+                    <p style={{ color: 'var(--muted)', lineHeight: 1.6, marginBottom: '1.5rem', whiteSpace: 'pre-wrap' }}>
                         {entry.description}
                     </p>
                 )}
@@ -206,7 +206,7 @@ export default function EntryCard({ entry, onUpdate, onEdit, onDelete }) {
                                     }} />
                                     <div>
                                         <div style={{ fontSize: '0.9rem', fontWeight: 600, marginBottom: 2 }}>{c.user?.username || 'Unknown'}</div>
-                                        <div style={{ color: 'var(--muted)', fontSize: '0.9rem', lineHeight: 1.5 }}>{c.content}</div>
+                                        <div style={{ color: 'var(--muted)', fontSize: '0.9rem', lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>{c.content}</div>
                                     </div>
                                 </div>
                             ))}

@@ -182,7 +182,7 @@ export default function DubbingVideoDetail() {
                     </div>
 
                     {video.description && (
-                        <p style={{ color: 'var(--muted)', marginBottom: '1rem' }}>{video.description}</p>
+                        <p style={{ color: 'var(--muted)', marginBottom: '1rem', whiteSpace: 'pre-wrap' }}>{video.description}</p>
                     )}
 
                     <div style={{ background: '#000', borderRadius: '8px', overflow: 'hidden' }}>
