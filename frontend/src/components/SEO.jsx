@@ -4,7 +4,7 @@ import { useEffect } from 'react';
  * SEO Component for dynamic meta tags
  * Usage: <SEO title="Page Title" description="..." keywords="..." />
  */
-export default function SEO({ 
+export default function SEO({
   title = 'Ryuha Alliance - United Warriors Community',
   description = 'Join Ryuha Alliance, a legendary gathering of warriors, dreamers, and adventurers from all walks of anime fandom. Honor, Discipline, Courage, Growth, Unity.',
   keywords = 'Ryuha Alliance, anime community, warriors, anime fandom, gaming community, alliance',
@@ -16,7 +16,11 @@ export default function SEO({
   useEffect(() => {
     const baseUrl = window.location.origin;
     const fullUrl = url ? `${baseUrl}${url}` : window.location.href;
-    const imageUrl = image.startsWith('http') ? image : `${baseUrl}${image}`;
+
+    // Fallback to default image if none provided
+    const defaultImage = '/assets/cover.jpg';
+    const effectiveImage = image || defaultImage;
+    const imageUrl = effectiveImage.startsWith('http') ? effectiveImage : `${baseUrl}${effectiveImage}`;
 
     // Update title
     document.title = title;
@@ -35,7 +39,7 @@ export default function SEO({
     // Basic meta tags
     updateMetaTag('description', description);
     updateMetaTag('keywords', keywords);
-    
+
     // Open Graph tags
     updateMetaTag('og:title', title, 'property');
     updateMetaTag('og:description', description, 'property');
