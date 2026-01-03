@@ -26,10 +26,11 @@ function getHouseImageSrc(houseName) {
 export default function Leaderboard() {
   const navigate = useNavigate();
   const [rows, setRows] = useState([]);
+  const [houseFunds, setHouseFunds] = useState([]);
   const [search, setSearch] = useState('');
 
-  useEffect(() => { (async () => { const { data } = await client.get('/users/leaderboard'); setRows(data.top || []); })(); }, []);
-  
+  useEffect(() => { (async () => { const { data } = await client.get('/users/leaderboard'); setRows(data.top || []); setHouseFunds(data.houses || []); })(); }, []);
+
   // Apply search filter (by username or house) before grouping
   const filteredRows = rows.filter((user) => {
     if (!search) return true;
@@ -48,14 +49,14 @@ export default function Leaderboard() {
     acc[house].push(user);
     return acc;
   }, {});
-  
+
   // Sort houses by total points (sum of all members' points)
   const sortedHouses = Object.entries(groupedUsers).sort((a, b) => {
     const aTotal = a[1].reduce((sum, u) => sum + (u.points || 0), 0);
     const bTotal = b[1].reduce((sum, u) => sum + (u.points || 0), 0);
     return bTotal - aTotal;
   });
-  
+
   return (
     <div className="container">
       <h3 className="hdr">Leaderboard</h3>
@@ -77,16 +78,16 @@ export default function Leaderboard() {
           <button className="btn" onClick={() => setSearch('')} style={{ whiteSpace: 'nowrap' }}>Clear</button>
         ) : null}
       </div>
-      
+
       {/* Houses Leaderboard */}
       {sortedHouses.map(([houseName, users]) => {
         const sortedUsers = [...users].sort((a, b) => (b.points || 0) - (a.points || 0));
         const houseTotal = users.reduce((sum, u) => sum + (u.points || 0), 0);
-        
+
         return (
           <div key={houseName} className="card" style={{ marginBottom: '1.5rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem', paddingBottom: '1rem', borderBottom: '2px solid #1f2937' }}>
-              <img 
+              <img
                 src={getHouseImageSrc(houseName)}
                 alt={houseName}
                 onError={(e) => {
@@ -101,12 +102,14 @@ export default function Leaderboard() {
               />
               <div style={{ flex: 1 }}>
                 <h4 className="hdr" style={{ margin: 0, fontSize: '1.5rem' }}>{houseName}</h4>
-                <div style={{ color: 'var(--muted)', fontSize: '0.9rem' }}>
-                  {users.length} member{users.length !== 1 ? 's' : ''} • Total: {houseTotal} points
+                <div style={{ color: 'var(--muted)', fontSize: '0.9rem', display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                  <span>{users.length} member{users.length !== 1 ? 's' : ''}</span>
+                  <span>Total: {houseTotal} points</span>
+                  <span style={{ color: '#10b981', fontWeight: 600 }}>House Funds: {houseFunds.find(h => h.name === houseName)?.funds || 0} CP</span>
                 </div>
               </div>
             </div>
-            
+
             {sortedUsers.map((r, i) => {
               const userRank = r.rank || calculateRank(r.points || 0);
               return (
@@ -120,13 +123,13 @@ export default function Leaderboard() {
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                     {r.photoUrl ? (
-                      <img 
-                        src={r.photoUrl} 
+                      <img
+                        src={r.photoUrl}
                         alt={r.username}
-                        style={{ 
-                          width: 40, 
-                          height: 40, 
-                          borderRadius: 20, 
+                        style={{
+                          width: 40,
+                          height: 40,
+                          borderRadius: 20,
                           border: '1px solid #1f2937',
                           objectFit: 'cover'
                         }}
@@ -138,10 +141,10 @@ export default function Leaderboard() {
                         }}
                       />
                     ) : null}
-                    <div style={{ 
-                      width: 40, 
-                      height: 40, 
-                      borderRadius: 20, 
+                    <div style={{
+                      width: 40,
+                      height: 40,
+                      borderRadius: 20,
                       background: r.photoUrl ? 'transparent' : 'linear-gradient(135deg, var(--primary) 0%, #8b0d26 100%)',
                       border: '1px solid #1f2937',
                       display: r.photoUrl ? 'none' : 'flex',
@@ -155,7 +158,7 @@ export default function Leaderboard() {
                       {r.username?.[0] || 'U'}
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <img 
+                      <img
                         src={getRankImageSrc(userRank)}
                         alt={userRank}
                         onError={(e) => {

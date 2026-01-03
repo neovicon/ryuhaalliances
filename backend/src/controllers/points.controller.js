@@ -1,4 +1,5 @@
 import { body, validationResult, param } from 'express-validator';
+import mongoose from 'mongoose';
 import User from '../models/User.js';
 import { getPhotoUrl } from '../utils/photoUrl.js';
 import { RANKS } from '../utils/rank.js';
@@ -37,7 +38,10 @@ export async function leaderboard(req, res) {
     userObj.photoUrl = await getPhotoUrl(userObj.photoUrl, req);
     return userObj;
   }));
-  res.json({ top: topWithFullUrl });
+
+  const houses = await mongoose.model('House').find({}, 'name funds');
+
+  res.json({ top: topWithFullUrl, houses });
 }
 
 

@@ -24,7 +24,9 @@ export default function Events() {
     try {
       setLoading(true);
       const { data } = await client.get('/events');
-      const filteredEvents = isModeratorOrAdmin
+      // Backend already filters if not admin, but we'll double check here
+      const isAdmin = user && user.role === 'admin';
+      const filteredEvents = isAdmin
         ? data.events
         : data.events.filter(e => !e.inactive);
       setEvents(filteredEvents);

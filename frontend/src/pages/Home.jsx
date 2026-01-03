@@ -37,7 +37,12 @@ export default function Home() {
     try {
       setLoadingEvents(true);
       const { data } = await client.get('/events');
-      setEvents(data.events.slice(0, 3)); // Show only first 3 events
+      // Backend already filters if not admin, but we'll double check here
+      const isAdmin = user && user.role === 'admin';
+      const filteredEvents = isAdmin
+        ? data.events
+        : data.events.filter(e => !e.inactive);
+      setEvents(filteredEvents.slice(0, 3)); // Show only first 3 events
     } catch (error) {
       console.error('Error loading events:', error);
     } finally {

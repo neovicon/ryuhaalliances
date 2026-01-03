@@ -30,6 +30,7 @@ import Dubbing from './pages/Dubbing.jsx'
 import DubbingVideoDetail from './pages/DubbingVideoDetail.jsx'
 import Download from './pages/Download.jsx'
 import Music from './pages/Music.jsx'
+import Beastlord from './pages/Beastlord.jsx'
 import MusicPlayer from './components/MusicPlayer.jsx'
 import SearchBar from './components/SearchBar.jsx'
 import Messenger from './pages/Messenger.jsx'
@@ -85,6 +86,7 @@ export default function App() {
           <Route path="/dubbing/:id" element={<DubbingVideoDetail />} />
           <Route path="/download" element={<Download />} />
           <Route path="/music" element={<Music />} />
+          <Route path="/beastlord" element={<Beastlord />} />
         </Routes>
         {useLocation().pathname !== '/messenger' && <Footer />}
       </NotificationProvider>

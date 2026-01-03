@@ -39,7 +39,13 @@ export async function createEvent(req, res) {
 
 export async function listEvents(req, res) {
   try {
-    const events = await Event.find()
+    const filter = {};
+    // Only admins can see inactive events
+    if (!req.user || req.user.role !== 'admin') {
+      filter.inactive = false;
+    }
+
+    const events = await Event.find(filter)
       .populate('createdBy', 'username displayName')
       .populate('lastEditedBy', 'username displayName')
       .sort({ createdAt: -1 });
@@ -141,6 +147,10 @@ export async function getEventById(req, res) {
 
     if (!event) {
       return res.status(404).json({ error: 'Event not found' });
+    }
+
+    if (event.inactive && (!req.user || req.user.role !== 'admin')) {
+      return res.status(403).json({ error: 'This event is currently inactive and restricted to admins' });
     }
 
     const eventObj = event.toObject();

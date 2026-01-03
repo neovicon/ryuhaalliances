@@ -50,8 +50,7 @@ export default function Nav() {
     { to: '/feed', label: 'Feed', Icon: Home },
     { to: '/leaderboard', label: 'Leaderboard', Icon: Trophy },
     { to: '/messenger', label: 'Messenger', Icon: MessageCircle },
-    { to: '/events', label: 'Events', Icon: Calendar },
-    { to: '/event-entries', label: 'Event Entries', Icon: ClipboardList }
+    { to: '/beastlord', label: 'Beastlord', Icon: Trophy }
   ]
 
   // Hide certain main links for anonymous users
@@ -62,6 +61,8 @@ export default function Nav() {
   })
 
   const secondaryLinks = [
+    { to: '/events', label: 'Events' },
+    { to: '/event-entries', label: 'Event Entries' },
     { to: '/blogs', label: 'Blogs' },
     { to: '/announcements', label: 'Announcements' },
     { to: '/articles', label: 'Articles' },

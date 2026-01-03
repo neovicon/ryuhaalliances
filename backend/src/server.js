@@ -28,6 +28,7 @@ import dubbingRoutes from './routes/dubbing.routes.js';
 import leadershipRoutes from './routes/leadership.routes.js';
 import eventEntryRoutes from './routes/eventEntry.routes.js';
 import notificationRoutes from './routes/notification.routes.js';
+import beastlordRoutes from './routes/beastlord.routes.js';
 
 import { createServer } from 'http';
 import { Server } from 'socket.io';
@@ -134,6 +135,7 @@ app.use('/api/attendance', attendanceRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/image', imageRoutes);
 app.use('/api/dubbing', dubbingRoutes);
+app.use('/api/beastlord', beastlordRoutes);
 app.use('/api/leadership', leadershipRoutes);
 app.use('/api/event-entries', eventEntryRoutes);
 app.use('/api/notifications', notificationRoutes);

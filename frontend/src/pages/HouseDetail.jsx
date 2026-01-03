@@ -71,18 +71,18 @@ export default function HouseDetail() {
       try {
         setLoadingHouse(true);
         const { data } = await client.get('/admin/house', { params: { houseName } });
-      setHouseData(data.house || { 
-        name: houseName, 
-        description: getHouseDescription(houseName), 
-        status: 'Active'
-      });
-    } catch (error) {
-      console.error('Error loading house:', error);
-      setHouseData({ 
-        name: houseName, 
-        description: getHouseDescription(houseName), 
-        status: 'Active'
-      });
+        setHouseData(data.house || {
+          name: houseName,
+          description: getHouseDescription(houseName),
+          status: 'Active'
+        });
+      } catch (error) {
+        console.error('Error loading house:', error);
+        setHouseData({
+          name: houseName,
+          description: getHouseDescription(houseName),
+          status: 'Active'
+        });
       } finally {
         setLoadingHouse(false);
       }
@@ -169,8 +169,33 @@ export default function HouseDetail() {
                 <div style={{ fontWeight: 600, fontSize: '1.1rem' }}>House {houseData.name || houseName}</div>
               </div>
               <div>
-                <div style={{ color: 'var(--muted)', fontSize: '0.9rem', marginBottom: '0.25rem' }}>Status</div>
-                <div style={{ fontWeight: 600 }}>{houseData.status || 'Active'}</div>
+                <div style={{ color: 'var(--muted)', fontSize: '0.9rem', marginBottom: '0.25rem' }}>House Funds</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                  <div style={{ fontWeight: 600, fontSize: '1.2rem', color: '#10b981' }}>{houseData.funds || 0} CP</div>
+                  <button
+                    className="btn"
+                    onClick={async () => {
+                      const amount = prompt("Enter CP amount to donate to House Funds:");
+                      if (amount && !isNaN(amount) && parseInt(amount) > 0) {
+                        try {
+                          await client.post('/beastlord/donate', {
+                            amount: parseInt(amount),
+                            targetHouseName: houseData.name
+                          });
+                          alert(`Thank you for donating ${amount} CP!`);
+                          // Refresh house data
+                          const { data } = await client.get('/admin/house', { params: { houseName: houseData.name } });
+                          setHouseData(data.house);
+                        } catch (err) {
+                          alert(err.response?.data?.error || "Donation failed");
+                        }
+                      }
+                    }}
+                    style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem' }}
+                  >
+                    Donate CP
+                  </button>
+                </div>
               </div>
             </div>
           </div>
