@@ -12,6 +12,7 @@ export default function Beastlord() {
 
     // Donation States
     const [donation, setDonation] = useState('');
+    const [editFunds, setEditFunds] = useState('');
     const [sourceUser, setSourceUser] = useState('');
     const [targetHouseTransfer, setTargetHouseTransfer] = useState(''); // For admin donation
     const [members, setMembers] = useState([]);
@@ -93,6 +94,7 @@ export default function Beastlord() {
                 int: data.creature.int,
                 wis: data.creature.wis,
             });
+            setEditFunds(data.house.funds);
         }
     }, [data]);
 
@@ -104,6 +106,20 @@ export default function Beastlord() {
                 stats: editStats
             });
             alert('Stats updated!');
+            fetchData(selectedHouse);
+        } catch (err) {
+            alert(err.response?.data?.error || 'Update failed');
+        }
+    };
+
+    const handleFundsUpdate = async (e) => {
+        e.preventDefault();
+        try {
+            await client.post('/beastlord/update-funds', {
+                targetHouseName: selectedHouse,
+                funds: editFunds
+            });
+            alert('House funds updated!');
             fetchData(selectedHouse);
         } catch (err) {
             alert(err.response?.data?.error || 'Update failed');
@@ -212,6 +228,24 @@ export default function Beastlord() {
                                                 ))}
                                             </div>
                                             <button type="submit" className="buy-btn" style={{ width: '100%', marginTop: '1rem' }}>Apply Attributes</button>
+                                        </form>
+                                    </section>
+                                )}
+
+                                {data.isAdmin && (
+                                    <section className="stat-editor-section bl-card">
+                                        <h3 className="section-title">Funds Modulation</h3>
+                                        <form onSubmit={handleFundsUpdate} className="donate-form">
+                                            <div className="input-group">
+                                                <label>Total House Funds (CP)</label>
+                                                <input
+                                                    type="number"
+                                                    className="house-select"
+                                                    value={editFunds}
+                                                    onChange={e => setEditFunds(e.target.value)}
+                                                />
+                                            </div>
+                                            <button type="submit" className="buy-btn" style={{ width: '100%' }}>Update Funds</button>
                                         </form>
                                     </section>
                                 )}

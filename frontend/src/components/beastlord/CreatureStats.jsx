@@ -115,6 +115,14 @@ export default function CreatureStats({ creature }) {
                             <span className="misc-val">+{creature.spRegen || 0}</span>
                         </div>
                         <div className="misc-item">
+                            <span>HP Regen</span>
+                            <span className="misc-val">+{creature.hpRegen || 0}</span>
+                        </div>
+                        <div className="misc-item">
+                            <span>MP Regen</span>
+                            <span className="misc-val">+{creature.mpRegen || 0}</span>
+                        </div>
+                        <div className="misc-item">
                             <span>Hit Accuracy</span>
                             <span className="misc-val">{creature.hitAccuracy || 0}%</span>
                         </div>

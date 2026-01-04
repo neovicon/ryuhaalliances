@@ -59,16 +59,17 @@
 
 .hero-content h2 {
   font-family: 'Orbitron', sans-serif;
-  font-size: 5rem;
+  font-size: clamp(2rem, 10vw, 5.5rem);
   font-weight: 900;
   text-transform: uppercase;
-  letter-spacing: 15px;
+  letter-spacing: clamp(5px, 2vw, 15px);
   background: linear-gradient(to bottom, #fff, var(--primary));
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
   margin-bottom: 2rem;
   filter: drop-shadow(0 0 30px var(--primary-glow));
+  padding: 0 1rem;
 }
 
 .enter-btn {
@@ -91,6 +92,14 @@
   background: var(--primary);
   box-shadow: 0 0 50px var(--primary-glow);
   transform: translateY(-5px);
+}
+
+@media (max-width: 768px) {
+  .enter-btn {
+    padding: 0.8rem 2rem;
+    font-size: 1rem;
+    letter-spacing: 3px;
+  }
 }
 
 .beastlord-header,
@@ -251,11 +260,14 @@
 
 .creature-name {
   font-family: 'Orbitron', sans-serif;
-  font-size: 3rem;
+  font-size: clamp(1.8rem, 5vw, 3rem);
   color: #f8fafc;
   text-transform: uppercase;
   margin: 0 0 1rem 0;
   text-shadow: 0 0 20px var(--primary-glow);
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  line-height: 1.2;
 }
 
 .creature-desc {

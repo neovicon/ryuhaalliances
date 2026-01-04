@@ -70,6 +70,9 @@ const recalculateStats = (creature) => {
     creature.iq = Math.round(battleIQ);
 
     creature.spRegen = parseFloat(((creature.maxSp * 0.007) + (creature.dex || 0)).toFixed(2));
+    creature.hpRegen = parseFloat(((creature.maxHp * 0.005) + (creature.dur || 0) * 0.8).toFixed(2));
+    creature.mpRegen = parseFloat(((creature.maxMp * 0.006) + (creature.wis || 0) * 0.6).toFixed(2));
+
     creature.hitAccuracy = parseFloat((35 + (creature.dex || 0) * 0.3 + (creature.int || 0) * 0.2 + battleIQ * 0.15).toFixed(2));
     creature.tenacity = parseFloat(((creature.wis || 0) * 0.25 + battleIQ * 0.15 + (creature.dur || 0) * 0.1).toFixed(2));
     creature.statusResistance = parseFloat(((creature.dur || 0) * 0.2 + (creature.wis || 0) * 0.3).toFixed(2));
@@ -197,6 +200,43 @@ export const updateCreatureStats = async (req, res) => {
         res.json({ message: 'Stats updated successfully', creature });
     } catch (error) {
         console.error('updateCreatureStats error:', error);
+        res.status(500).json({ error: 'Server error' });
+    }
+};
+
+export const updateHouseFunds = async (req, res) => {
+    try {
+        const { targetHouseName, funds } = req.body;
+        const user = await User.findById(req.user.id);
+
+        if (user.role !== 'admin') {
+            return res.status(403).json({ error: 'Unauthorized: Only admins can adjust house funds directly' });
+        }
+
+        const house = await House.findOne({ name: targetHouseName });
+        if (!house) return res.status(404).json({ error: 'House not found' });
+
+        const oldFunds = house.funds;
+        house.funds = parseInt(funds);
+
+        if (isNaN(house.funds)) {
+            return res.status(400).json({ error: 'Invalid funds amount' });
+        }
+
+        await house.save();
+
+        // Log Transaction
+        await Transaction.create({
+            house: house.name,
+            user: user._id,
+            type: 'ADJUSTMENT',
+            amount: house.funds - oldFunds,
+            description: `Manual fund adjustment by Admin from ${oldFunds} CP to ${house.funds} CP`
+        });
+
+        res.json({ message: 'House funds updated successfully', funds: house.funds });
+    } catch (error) {
+        console.error('updateHouseFunds error:', error);
         res.status(500).json({ error: 'Server error' });
     }
 };

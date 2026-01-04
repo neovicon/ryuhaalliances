@@ -50,7 +50,7 @@ export default function Nav() {
     { to: '/feed', label: 'Feed', Icon: Home },
     { to: '/leaderboard', label: 'Leaderboard', Icon: Trophy },
     { to: '/messenger', label: 'Messenger', Icon: MessageCircle },
-    { to: '/beastlord', label: 'Beastlord', Icon: Trophy }
+    { to: '/events', label: 'Events', Icon: Calendar }
   ]
 
   // Hide certain main links for anonymous users
@@ -61,8 +61,8 @@ export default function Nav() {
   })
 
   const secondaryLinks = [
-    { to: '/events', label: 'Events' },
     { to: '/event-entries', label: 'Event Entries' },
+    { to: '/beastlord', label: 'Beastlord' },
     { to: '/blogs', label: 'Blogs' },
     { to: '/announcements', label: 'Announcements' },
     { to: '/articles', label: 'Articles' },
@@ -207,24 +207,36 @@ export default function Nav() {
                   </Link>
                 ))}
                 {/* Secondary + conditional links */}
+                <Link to="/events" className="mobile-link" onClick={() => setOpen(false)}>
+                  <Calendar size={18} style={{ marginRight: 12 }} />
+                  <span>Events</span>
+                </Link>
+                <Link to="/event-entries" className="mobile-link" onClick={() => setOpen(false)}>
+                  <span style={{ width: 18, marginRight: 12 }} />
+                  <span>Event Entries</span>
+                </Link>
+                <Link to="/beastlord" className="mobile-link" onClick={() => setOpen(false)}>
+                  <Trophy size={18} style={{ marginRight: 12 }} />
+                  <span>Beastlord</span>
+                </Link>
                 <Link to="/attendance" className="mobile-link" onClick={() => setOpen(false)}>
-                  <span style={{ width: 20 }} />
+                  <ClipboardList size={18} style={{ marginRight: 12 }} />
                   <span>Attendance</span>
                 </Link>
                 <Link to="/announcements" className="mobile-link" onClick={() => setOpen(false)}>
-                  <span style={{ width: 20 }} />
+                  <Bell size={18} style={{ marginRight: 12 }} />
                   <span>Announcements</span>
                 </Link>
                 <Link to="/articles" className="mobile-link" onClick={() => setOpen(false)}>
-                  <span style={{ width: 20 }} />
+                  <BookOpen size={18} style={{ marginRight: 12 }} />
                   <span>Articles</span>
                 </Link>
                 <Link to="/stories" className="mobile-link" onClick={() => setOpen(false)}>
-                  <span style={{ width: 20 }} />
+                  <BookOpen size={18} style={{ marginRight: 12 }} />
                   <span>Stories</span>
                 </Link>
                 <Link to="/dubbing" className="mobile-link" onClick={() => setOpen(false)}>
-                  <span style={{ width: 20 }} />
+                  <MessageCircle size={18} style={{ marginRight: 12 }} />
                   <span>Ryuha VA</span>
                 </Link>
                 <Link to="/download" className="mobile-link" onClick={() => setOpen(false)}>
