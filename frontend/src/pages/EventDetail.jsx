@@ -96,8 +96,23 @@ export default function EventDetail() {
           />
         )}
         <div style={{ padding: '2rem' }}>
-          <h1 className="hdr" style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>
+          <h1 className="hdr" style={{ fontSize: '2rem', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
             {event.title}
+            {event.inactive && (
+              <span style={{
+                fontSize: '0.8rem',
+                background: 'rgba(239, 68, 68, 0.2)',
+                color: '#f87171',
+                padding: '4px 10px',
+                borderRadius: '6px',
+                border: '1px solid rgba(239, 68, 68, 0.3)',
+                textTransform: 'uppercase',
+                letterSpacing: '1px',
+                fontWeight: '600'
+              }}>
+                Inactive
+              </span>
+            )}
           </h1>
           <div style={{
             color: 'var(--muted)',

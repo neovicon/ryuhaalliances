@@ -24,12 +24,8 @@ export default function Events() {
     try {
       setLoading(true);
       const { data } = await client.get('/events');
-      // Backend already filters if not admin, but we'll double check here
-      const isAdmin = user && user.role === 'admin';
-      const filteredEvents = isAdmin
-        ? data.events
-        : data.events.filter(e => !e.inactive);
-      setEvents(filteredEvents);
+      // Backend already filters based on user role
+      setEvents(data.events);
     } catch (error) {
       console.error('Error loading events:', error);
     } finally {
@@ -189,8 +185,22 @@ export default function Events() {
                 />
               )}
               <div style={{ padding: '1.5rem' }}>
-                <h3 className="hdr" style={{ margin: '0 0 0.5rem 0', fontSize: '1.25rem' }}>
+                <h3 className="hdr" style={{ margin: '0 0 0.5rem 0', fontSize: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   {event.title}
+                  {event.inactive && (
+                    <span style={{
+                      fontSize: '0.7rem',
+                      background: 'rgba(239, 68, 68, 0.2)',
+                      color: '#f87171',
+                      padding: '2px 6px',
+                      borderRadius: '4px',
+                      border: '1px solid rgba(239, 68, 68, 0.3)',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.5px'
+                    }}>
+                      Inactive
+                    </span>
+                  )}
                 </h3>
                 <div style={{
                   color: 'var(--muted)',

@@ -14,6 +14,23 @@ export function requireAuth(req, res, next) {
   }
 }
 
+export function optionalAuth(req, res, next) {
+  const header = req.headers.authorization || '';
+  const token = header.startsWith('Bearer ') ? header.slice(7) : null;
+  if (!token) {
+    req.user = null;
+    return next();
+  }
+  try {
+    const decoded = verifyJwt(token);
+    req.user = decoded;
+    next();
+  } catch {
+    req.user = null;
+    next();
+  }
+}
+
 // Helper function to load full user data including moderatorType
 async function loadUserData(req) {
   if (!req.user || !req.user.id) return null;

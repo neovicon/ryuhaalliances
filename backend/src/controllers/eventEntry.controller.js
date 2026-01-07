@@ -68,10 +68,17 @@ export const getEntries = async (req, res) => {
 
         const entries = await EventEntry.find(filter)
             .populate('uploader', 'username')
+            .populate('event', 'inactive') // Populate event to check if it's inactive
             .populate('comments.user', 'username photoUrl')
             .sort({ createdAt: -1 });
 
-        res.status(200).json(entries);
+        // Filter out entries from inactive events for non-privileged users
+        const isPrivileged = req.user && (req.user.role === 'admin' || req.user.role === 'moderator');
+        const filteredEntries = isPrivileged
+            ? entries
+            : entries.filter(entry => !entry.event?.inactive);
+
+        res.status(200).json(filteredEntries);
     } catch (error) {
         res.status(500).json({ message: "Failed to fetch entries", error: error.message });
     }
