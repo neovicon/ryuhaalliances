@@ -109,3 +109,6 @@ uploads/*
 Thumbs.db
 .DS_Store
 
+azure_env.json
+azure_settings_array.json
+
