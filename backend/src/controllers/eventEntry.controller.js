@@ -72,11 +72,8 @@ export const getEntries = async (req, res) => {
             .populate('comments.user', 'username photoUrl')
             .sort({ createdAt: -1 });
 
-        // Filter out entries from inactive events for non-privileged users
-        const isPrivileged = req.user && (req.user.role === 'admin' || req.user.role === 'moderator');
-        const filteredEntries = isPrivileged
-            ? entries
-            : entries.filter(entry => !entry.event?.inactive);
+        // All users can now see entries from both active and inactive events
+        const filteredEntries = entries;
 
         res.status(200).json(filteredEntries);
     } catch (error) {

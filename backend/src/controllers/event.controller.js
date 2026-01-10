@@ -40,13 +40,7 @@ export async function createEvent(req, res) {
 export async function listEvents(req, res) {
   try {
     const filter = {};
-    // Only admins or moderators can see inactive events
-    // Non-privileged users should only see active events (inactive: false or not set)
-    const isPrivileged = req.user && (req.user.role === 'admin' || req.user.role === 'moderator');
-    if (!isPrivileged) {
-      filter.inactive = { $ne: true };
-    }
-    // If privileged, no filter is applied, so they see all events
+    // All users can now see both active and inactive events
 
     const events = await Event.find(filter)
       .populate('createdBy', 'username displayName')
@@ -152,10 +146,7 @@ export async function getEventById(req, res) {
       return res.status(404).json({ error: 'Event not found' });
     }
 
-    const isPrivileged = req.user && (req.user.role === 'admin' || req.user.role === 'moderator');
-    if (event.inactive && !isPrivileged) {
-      return res.status(403).json({ error: 'This event is currently inactive and restricted to admins/moderators' });
-    }
+    // All users can now view inactive events
 
     const eventObj = event.toObject();
     if (eventObj.imageUrl) {
