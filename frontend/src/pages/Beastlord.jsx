@@ -122,12 +122,12 @@ export default function Beastlord() {
     const handleSkillUpdate = async (e) => {
         e.preventDefault();
         try {
-            await client.post('/api/beastlord/update-skills', {
-                creatureId: data.creature?._id,
+            await client.post('/beastlord/update-skills', {
+                targetHouseName: selectedHouse,
                 skills: editSkills
             });
             alert('Skills updated successfully!');
-            fetchData();
+            fetchData(selectedHouse);
         } catch (error) {
             console.error('Error updating skills:', error);
             alert('Failed to update skills');
@@ -142,14 +142,14 @@ export default function Beastlord() {
 
         try {
             // 1. Upload the file
-            const uploadRes = await client.post('/api/upload', formData, {
+            const uploadRes = await client.post('/upload', formData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
 
             const { key } = uploadRes.data;
 
             // 2. Get the public URL via the image controller
-            const imageRes = await client.get(`/api/image/${key}`);
+            const imageRes = await client.get(`/image/${key}`);
             const { url } = imageRes.data;
 
             handleSingleSkillChange(idx, 'image', url);
@@ -338,6 +338,57 @@ export default function Beastlord() {
                                             </form>
                                         </section>
 
+                                        <section className="donation-section bl-card">
+                                            <h3 className="section-title">Resource Transfer</h3>
+                                            <form onSubmit={handleDonation} className="donate-form">
+                                                {data.isAdmin && (
+                                                    <div className="input-group">
+                                                        <label>Target House</label>
+                                                        <select
+                                                            className="house-select"
+                                                            value={targetHouseTransfer}
+                                                            onChange={e => setTargetHouseTransfer(e.target.value)}
+                                                        >
+                                                            <option value="">-- {data.house.name} (Default) --</option>
+                                                            {data.allHouses.map(h => (
+                                                                <option key={h.name} value={h.name}>{h.name}</option>
+                                                            ))}
+                                                        </select>
+                                                    </div>
+                                                )}
+
+                                                <div className="input-group">
+                                                    <label>Source Member</label>
+                                                    <select
+                                                        className="house-select"
+                                                        value={sourceUser}
+                                                        onChange={e => setSourceUser(e.target.value)}
+                                                        required
+                                                    >
+                                                        <option value="">-- Select Member --</option>
+                                                        {members.map(m => (
+                                                            <option key={m._id} value={m._id}>{m.username} ({m.points} CP)</option>
+                                                        ))}
+                                                    </select>
+                                                </div>
+
+                                                <div className="input-group">
+                                                    <label>CP Amount</label>
+                                                    <input
+                                                        type="number"
+                                                        className="house-select"
+                                                        placeholder="Amount"
+                                                        value={donation}
+                                                        onChange={e => setDonation(e.target.value)}
+                                                        min="1"
+                                                        required
+                                                    />
+                                                </div>
+
+                                                <button type="submit" className="buy-btn">Execute Transfer</button>
+                                            </form>
+                                        </section>
+
                                         <section className="skill-editor-section bl-card" style={{ gridColumn: '1 / -1' }}>
                                             <div className="section-header-flex">
                                                 <h3 className="section-title">Technique & Skill Matrix Modulation</h3>
@@ -424,56 +475,6 @@ export default function Beastlord() {
                                     </>
                                 )}
 
-                                <section className="donation-section bl-card">
-                                    <h3 className="section-title">Resource Transfer</h3>
-                                    <form onSubmit={handleDonation} className="donate-form">
-                                        {data.isAdmin && (
-                                            <div className="input-group">
-                                                <label>Target House</label>
-                                                <select
-                                                    className="house-select"
-                                                    value={targetHouseTransfer}
-                                                    onChange={e => setTargetHouseTransfer(e.target.value)}
-                                                >
-                                                    <option value="">-- {data.house.name} (Default) --</option>
-                                                    {data.allHouses.map(h => (
-                                                        <option key={h.name} value={h.name}>{h.name}</option>
-                                                    ))}
-                                                </select>
-                                            </div>
-                                        )}
-
-                                        <div className="input-group">
-                                            <label>Source Member</label>
-                                            <select
-                                                className="house-select"
-                                                value={sourceUser}
-                                                onChange={e => setSourceUser(e.target.value)}
-                                                required
-                                            >
-                                                <option value="">-- Select Member --</option>
-                                                {members.map(m => (
-                                                    <option key={m._id} value={m._id}>{m.username} ({m.points} CP)</option>
-                                                ))}
-                                            </select>
-                                        </div>
-
-                                        <div className="input-group">
-                                            <label>CP Amount</label>
-                                            <input
-                                                type="number"
-                                                className="house-select"
-                                                placeholder="Amount"
-                                                value={donation}
-                                                onChange={e => setDonation(e.target.value)}
-                                                min="1"
-                                                required
-                                            />
-                                        </div>
-
-                                        <button type="submit" className="buy-btn">Execute Transfer</button>
-                                    </form>
-                                </section>
 
                                 <section className="logs-section bl-card" style={{ gridColumn: '1 / -1' }}>
                                     <h3 className="section-title">Recent Activity</h3>
