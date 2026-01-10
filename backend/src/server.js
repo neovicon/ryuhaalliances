@@ -41,7 +41,7 @@ const httpServer = createServer(app);
 const io = new Server(httpServer, {
   cors: {
     origin: [
-      process.env.CLIENT_ORIGIN || 'https://ryuhaalliance.devsandbox.me',
+      process.env.CLIENT_ORIGIN || 'https://ryuhaalliance.online',
       'http://localhost:5173'
     ],
     credentials: true
@@ -95,7 +95,7 @@ io.on('connection', (socket) => {
 
 const corsOptions = {
   origin: [
-    process.env.CLIENT_ORIGIN || 'https://ryuhaalliance.devsandbox.me',
+    process.env.CLIENT_ORIGIN || 'https://ryuhaalliance.online',
     'http://localhost:5173'
   ],
   credentials: true,
