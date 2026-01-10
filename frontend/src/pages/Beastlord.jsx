@@ -82,7 +82,8 @@ export default function Beastlord() {
     };
 
     const sanctuaryRef = React.useRef(null);
-    const [editStats, setEditStats] = useState({ str: 0, dex: 0, spd: 0, dur: 0, int: 0, wis: 0 });
+    const [editStats, setEditStats] = useState({ str: 0, dex: 0, spd: 0, dur: 0, int: 0, wis: 0, baseHp: 500, baseMp: 300, baseSp: 300, baseIq: 50, baseTurnOrder: -50 });
+    const [editSkills, setEditSkills] = useState([]);
 
     useEffect(() => {
         if (data?.creature) {
@@ -93,7 +94,13 @@ export default function Beastlord() {
                 dur: data.creature.dur,
                 int: data.creature.int,
                 wis: data.creature.wis,
+                baseHp: data.creature.baseHp || 500,
+                baseMp: data.creature.baseMp || 300,
+                baseSp: data.creature.baseSp || 300,
+                baseIq: data.creature.baseIq || 50,
+                baseTurnOrder: data.creature.baseTurnOrder || -50,
             });
+            setEditSkills(data.creature.skills || []);
             setEditFunds(data.house.funds);
         }
     }, [data]);
@@ -105,11 +112,66 @@ export default function Beastlord() {
                 targetHouseName: selectedHouse,
                 stats: editStats
             });
-            alert('Stats updated!');
+            alert('Attributes updated!');
             fetchData(selectedHouse);
         } catch (err) {
             alert(err.response?.data?.error || 'Update failed');
         }
+    };
+
+    const handleSkillUpdate = async (e) => {
+        e.preventDefault();
+        try {
+            await client.post('/api/beastlord/update-skills', {
+                creatureId: data.creature?._id,
+                skills: editSkills
+            });
+            alert('Skills updated successfully!');
+            fetchData();
+        } catch (error) {
+            console.error('Error updating skills:', error);
+            alert('Failed to update skills');
+        }
+    };
+
+    const handleImageUpload = async (idx, file) => {
+        if (!file) return;
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        try {
+            // 1. Upload the file
+            const uploadRes = await client.post('/api/upload', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+
+            const { key } = uploadRes.data;
+
+            // 2. Get the public URL via the image controller
+            const imageRes = await client.get(`/api/image/${key}`);
+            const { url } = imageRes.data;
+
+            handleSingleSkillChange(idx, 'image', url);
+        } catch (error) {
+            console.error('Error uploading image:', error);
+            alert('Failed to upload image. Please try again.');
+        }
+    };
+
+    const handleSingleSkillChange = (idx, field, value) => {
+        const newSkills = [...editSkills];
+        newSkills[idx] = { ...newSkills[idx], [field]: value };
+        setEditSkills(newSkills);
+    };
+
+    const addSkill = () => {
+        setEditSkills([...editSkills, { name: 'New Skill', desc: '', cost: 0, costType: 'NONE', damage: 0, cooldown: '0', isUltimate: false, image: '' }]);
+    };
+
+    const removeSkill = (idx) => {
+        const newSkills = editSkills.filter((_, i) => i !== idx);
+        setEditSkills(newSkills);
     };
 
     const handleFundsUpdate = async (e) => {
@@ -214,8 +276,8 @@ export default function Beastlord() {
                                     <section className="stat-editor-section bl-card">
                                         <h3 className="section-title">Attribute Modulation</h3>
                                         <form onSubmit={handleStatUpdate} className="donate-form">
-                                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                                                {Object.keys(editStats).map(stat => (
+                                            <div className="admin-grid-two">
+                                                {['str', 'dex', 'spd', 'dur', 'int', 'wis'].map(stat => (
                                                     <div key={stat} className="input-group">
                                                         <label>{stat.toUpperCase()}</label>
                                                         <input
@@ -233,21 +295,133 @@ export default function Beastlord() {
                                 )}
 
                                 {data.isAdmin && (
-                                    <section className="stat-editor-section bl-card">
-                                        <h3 className="section-title">Funds Modulation</h3>
-                                        <form onSubmit={handleFundsUpdate} className="donate-form">
-                                            <div className="input-group">
-                                                <label>Total House Funds (CP)</label>
-                                                <input
-                                                    type="number"
-                                                    className="house-select"
-                                                    value={editFunds}
-                                                    onChange={e => setEditFunds(e.target.value)}
-                                                />
+                                    <>
+                                        <section className="stat-editor-section bl-card">
+                                            <h3 className="section-title">Base Parameter Modulation</h3>
+                                            <form onSubmit={handleStatUpdate} className="donate-form">
+                                                <div className="admin-grid-two">
+                                                    {[
+                                                        { key: 'baseHp', label: 'Base HP' },
+                                                        { key: 'baseMp', label: 'Base MP' },
+                                                        { key: 'baseSp', label: 'Base SP' },
+                                                        { key: 'baseIq', label: 'Base IQ' },
+                                                        { key: 'baseTurnOrder', label: 'Base Turn Order' }
+                                                    ].map(param => (
+                                                        <div key={param.key} className="input-group">
+                                                            <label>{param.label}</label>
+                                                            <input
+                                                                type="number"
+                                                                className="house-select"
+                                                                value={editStats[param.key]}
+                                                                onChange={e => setEditStats({ ...editStats, [param.key]: e.target.value })}
+                                                            />
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                                <button type="submit" className="buy-btn" style={{ width: '100%', marginTop: '1rem' }}>Apply Base Parameters</button>
+                                            </form>
+                                        </section>
+
+                                        <section className="stat-editor-section bl-card">
+                                            <h3 className="section-title">Funds Modulation</h3>
+                                            <form onSubmit={handleFundsUpdate} className="donate-form">
+                                                <div className="input-group">
+                                                    <label>Total House Funds (CP)</label>
+                                                    <input
+                                                        type="number"
+                                                        className="house-select"
+                                                        value={editFunds}
+                                                        onChange={e => setEditFunds(e.target.value)}
+                                                    />
+                                                </div>
+                                                <button type="submit" className="buy-btn" style={{ width: '100%' }}>Update Funds</button>
+                                            </form>
+                                        </section>
+
+                                        <section className="skill-editor-section bl-card" style={{ gridColumn: '1 / -1' }}>
+                                            <div className="section-header-flex">
+                                                <h3 className="section-title">Technique & Skill Matrix Modulation</h3>
+                                                <button className="add-skill-btn" onClick={addSkill}>+ Add New Skill</button>
                                             </div>
-                                            <button type="submit" className="buy-btn" style={{ width: '100%' }}>Update Funds</button>
-                                        </form>
-                                    </section>
+                                            <form onSubmit={handleSkillUpdate} className="skills-edit-form">
+                                                <div className="skills-edit-grid">
+                                                    {editSkills.map((skill, idx) => (
+                                                        <div key={idx} className="skill-edit-card">
+                                                            <div className="skill-edit-header">
+                                                                <h4><i className="bi bi-cpu"></i> Skill #{idx + 1}</h4>
+                                                                <button type="button" className="remove-skill-btn" onClick={() => removeSkill(idx)}>
+                                                                    <i className="bi bi-trash"></i> DELETE
+                                                                </button>
+                                                            </div>
+
+                                                            <div className="skill-field-group">
+                                                                <div className="input-group">
+                                                                    <label><i className="bi bi-tag"></i> Name</label>
+                                                                    <input type="text" value={skill.name} onChange={e => handleSingleSkillChange(idx, 'name', e.target.value)} placeholder="Technique Name" />
+                                                                </div>
+
+                                                                <div className="input-group">
+                                                                    <label><i className="bi bi-image"></i> Image URL / Upload</label>
+                                                                    <div className="upload-row">
+                                                                        <input type="text" value={skill.image} onChange={e => handleSingleSkillChange(idx, 'image', e.target.value)} placeholder="https://..." />
+                                                                        <div className="file-upload-wrapper">
+                                                                            <input
+                                                                                type="file"
+                                                                                accept="image/*"
+                                                                                id={`file-${idx}`}
+                                                                                onChange={e => handleImageUpload(idx, e.target.files[0])}
+                                                                                style={{ display: 'none' }}
+                                                                            />
+                                                                            <label htmlFor={`file-${idx}`} className="upload-icon-btn" title="Upload Image">
+                                                                                <i className="bi bi-cloud-arrow-up"></i>
+                                                                            </label>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+
+                                                                <div className="field-sub-grid">
+                                                                    <div className="input-group">
+                                                                        <label><i className="bi bi-lightning"></i> Damage</label>
+                                                                        <input type="number" value={skill.damage} onChange={e => handleSingleSkillChange(idx, 'damage', e.target.value)} />
+                                                                    </div>
+                                                                    <div className="input-group">
+                                                                        <label><i className="bi bi-hourglass-split"></i> Cooldown</label>
+                                                                        <input type="text" value={skill.cooldown} onChange={e => handleSingleSkillChange(idx, 'cooldown', e.target.value)} />
+                                                                    </div>
+                                                                </div>
+
+                                                                <div className="field-sub-grid">
+                                                                    <div className="input-group">
+                                                                        <label><i className="bi bi-gem"></i> Cost</label>
+                                                                        <input type="number" value={skill.cost} onChange={e => handleSingleSkillChange(idx, 'cost', e.target.value)} />
+                                                                    </div>
+                                                                    <div className="input-group">
+                                                                        <label><i className="bi bi-droplet"></i> Type</label>
+                                                                        <select value={skill.costType} onChange={e => handleSingleSkillChange(idx, 'costType', e.target.value)}>
+                                                                            <option value="NONE">NONE</option>
+                                                                            <option value="MP">MP</option>
+                                                                            <option value="SP">SP</option>
+                                                                        </select>
+                                                                    </div>
+                                                                </div>
+
+                                                                <div className="input-group">
+                                                                    <label><i className="bi bi-justify-left"></i> Description</label>
+                                                                    <textarea value={skill.desc} onChange={e => handleSingleSkillChange(idx, 'desc', e.target.value)} placeholder="Describe the effect..." />
+                                                                </div>
+
+                                                                <div className="checkbox-group" onClick={() => handleSingleSkillChange(idx, 'isUltimate', !skill.isUltimate)}>
+                                                                    <input type="checkbox" checked={skill.isUltimate} onChange={e => { }} id={`ult-${idx}`} />
+                                                                    <label htmlFor={`ult-${idx}`}>Ultimate Technique (S-Rank)</label>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                                <button type="submit" className="buy-btn" style={{ width: '100%', marginTop: '1.5rem' }}>Commit Skill Matrix Changes</button>
+                                            </form>
+                                        </section>
+                                    </>
                                 )}
 
                                 <section className="donation-section bl-card">

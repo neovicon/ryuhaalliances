@@ -160,7 +160,14 @@ export default function CreatureStats({ creature }) {
                     <div className="skills-grid">
                         {creature.skills.map((skill, idx) => (
                             <div key={idx} className={`skill-card ${skill.isUltimate ? 'ultimate' : ''}`}>
-                                <span className="skill-name">{skill.name}</span>
+                                <div className="skill-header">
+                                    {skill.image && (
+                                        <div className="skill-icon-container">
+                                            <img src={skill.image} alt={skill.name} className="skill-icon" onError={(e) => e.target.style.display = 'none'} />
+                                        </div>
+                                    )}
+                                    <span className="skill-name">{skill.name}</span>
+                                </div>
                                 <p className="skill-desc">{skill.desc}</p>
                                 <div className="skill-meta">
                                     {skill.cost > 0 && (
