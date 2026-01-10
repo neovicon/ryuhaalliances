@@ -159,13 +159,16 @@ export default function CreatureStats({ creature }) {
                     <h3 className="section-title">Techniques & Skills</h3>
                     <div className="skills-grid">
                         {creature.skills.map((skill, idx) => (
-                            <div key={idx} className={`skill-card ${skill.isUltimate ? 'ultimate' : ''}`}>
+                            <div
+                                key={idx}
+                                className={`skill-card ${skill.isUltimate ? 'ultimate' : ''}`}
+                                style={skill.image ? {
+                                    backgroundImage: `linear-gradient(rgba(15, 23, 42, 0.85), rgba(15, 23, 42, 0.95)), url(${skill.image})`,
+                                    backgroundSize: 'cover',
+                                    backgroundPosition: 'center',
+                                } : {}}
+                            >
                                 <div className="skill-header">
-                                    {skill.image && (
-                                        <div className="skill-icon-container">
-                                            <img src={skill.image} alt={skill.name} className="skill-icon" onError={(e) => e.target.style.display = 'none'} />
-                                        </div>
-                                    )}
                                     <span className="skill-name">{skill.name}</span>
                                 </div>
                                 <p className="skill-desc">{skill.desc}</p>

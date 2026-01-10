@@ -416,18 +416,41 @@
   border: 1px solid var(--border);
   padding: 2rem;
   border-radius: 1.5rem;
-  transition: all 0.3s;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
+  overflow: hidden;
+  z-index: 1;
 }
 
 .skill-card:hover {
   border-color: var(--primary);
-  transform: scale(1.02);
+  transform: translateY(-5px) scale(1.02);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.skill-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.05));
+  opacity: 0;
+  transition: opacity 0.4s;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.skill-card:hover::after {
+  opacity: 1;
 }
 
 .skill-card.ultimate {
   border: 1px solid var(--accent);
   background: linear-gradient(to bottom right, rgba(244, 63, 94, 0.05), var(--card-bg));
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.1);
+}
+
+.skill-card.ultimate:hover {
+  box-shadow: 0 0 30px rgba(59, 130, 246, 0.2);
 }
 
 .skill-name {
