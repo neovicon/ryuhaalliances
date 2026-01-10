@@ -56,22 +56,28 @@ const BASE_MP = 300;
 const BASE_SP = 300;
 
 const recalculateStats = (creature) => {
-    creature.hp = Math.round(BASE_HP * (1 + (creature.dur || 0) / 50));
-    creature.mp = Math.round(BASE_MP * (1 + (creature.int || 0) / 50));
-    creature.sp = Math.round(BASE_SP * (1 + (creature.dex || 0) / 50));
+    // Use stored base values or defaults
+    const bHp = creature.baseHp || 500;
+    const bMp = creature.baseMp || 300;
+    const bSp = creature.baseSp || 300;
+    const bIq = creature.baseIq || 50;
+    const bTo = creature.baseTurnOrder || -50;
+
+    creature.hp = Math.round(bHp * (1 + (creature.dur || 0) / 50));
+    creature.mp = Math.round(bMp * (1 + (creature.int || 0) / 50));
+    creature.sp = Math.round(bSp * (1 + (creature.dex || 0) / 50));
 
     creature.maxHp = creature.hp;
     creature.maxMp = creature.mp;
     creature.maxSp = creature.sp;
 
     // Derived Stats
-    const baseIQ = 50;
-    const battleIQ = baseIQ * (1 + (creature.wis || 0) / 100);
+    const battleIQ = bIq * (1 + (creature.wis || 0) / 100);
     creature.iq = Math.round(battleIQ);
 
-    creature.spRegen = parseFloat(((creature.maxSp * 0.007) + (creature.dex || 0)).toFixed(2));
-    creature.hpRegen = parseFloat(((creature.maxHp * 0.005) + (creature.dur || 0) * 0.8).toFixed(2));
-    creature.mpRegen = parseFloat(((creature.maxMp * 0.006) + (creature.wis || 0) * 0.6).toFixed(2));
+    creature.spRegen = parseFloat(((creature.sp * 0.007) + (creature.dex || 0)).toFixed(2));
+    creature.hpRegen = parseFloat(((creature.hp * 0.005) + (creature.dur || 0) * 0.8).toFixed(2));
+    creature.mpRegen = parseFloat(((creature.mp * 0.006) + (creature.wis || 0) * 0.6).toFixed(2));
 
     creature.hitAccuracy = parseFloat((35 + (creature.dex || 0) * 0.3 + (creature.int || 0) * 0.2 + battleIQ * 0.15).toFixed(2));
     creature.tenacity = parseFloat(((creature.wis || 0) * 0.25 + battleIQ * 0.15 + (creature.dur || 0) * 0.1).toFixed(2));
@@ -91,7 +97,7 @@ const recalculateStats = (creature) => {
     creature.critChance = (creature.dex || 0) / 2;
     creature.atkSpdMult = parseFloat((1 + (creature.dex || 0) / 200).toFixed(3));
     creature.dmgReduction = parseFloat((100 / (100 + (creature.dur || 0))).toFixed(3));
-    creature.turnOrder = (creature.spd || 0) - 50;
+    creature.turnOrder = (creature.spd || 0) + bTo;
 
     return creature;
 };
@@ -187,7 +193,7 @@ export const updateCreatureStats = async (req, res) => {
         if (!creature) return res.status(404).json({ error: 'Creature not found' });
 
         // Update core stats
-        const allowedStats = ['str', 'dex', 'spd', 'dur', 'int', 'wis'];
+        const allowedStats = ['str', 'dex', 'spd', 'dur', 'int', 'wis', 'baseHp', 'baseMp', 'baseSp', 'baseIq', 'baseTurnOrder'];
         for (const stat of allowedStats) {
             if (stats[stat] !== undefined) {
                 creature[stat] = parseInt(stats[stat]);
@@ -200,6 +206,39 @@ export const updateCreatureStats = async (req, res) => {
         res.json({ message: 'Stats updated successfully', creature });
     } catch (error) {
         console.error('updateCreatureStats error:', error);
+        res.status(500).json({ error: 'Server error' });
+    }
+};
+
+export const updateCreatureSkills = async (req, res) => {
+    try {
+        const { targetHouseName, skills } = req.body;
+        const user = await User.findById(req.user.id);
+
+        if (user.role !== 'admin') {
+            return res.status(403).json({ error: 'Unauthorized: Only admins can modify skills directly' });
+        }
+
+        const creature = await Creature.findOne({ house: targetHouseName });
+        if (!creature) return res.status(404).json({ error: 'Creature not found' });
+
+        // Validate and update skills
+        creature.skills = skills.map(s => ({
+            name: s.name,
+            desc: s.desc,
+            cost: parseInt(s.cost) || 0,
+            costType: s.costType || 'NONE',
+            damage: parseInt(s.damage) || 0,
+            cooldown: s.cooldown || '0',
+            isUltimate: !!s.isUltimate,
+            image: s.image || ''
+        }));
+
+        await creature.save();
+
+        res.json({ message: 'Skills updated successfully', creature });
+    } catch (error) {
+        console.error('updateCreatureSkills error:', error);
         res.status(500).json({ error: 'Server error' });
     }
 };

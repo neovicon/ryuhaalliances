@@ -10,6 +10,14 @@ const creatureSchema = new mongoose.Schema({
     dur: { type: Number, default: 10 },
     int: { type: Number, default: 10 },
     wis: { type: Number, default: 10 },
+
+    // New Base Parameters for custom balancing
+    baseHp: { type: Number, default: 500 },
+    baseMp: { type: Number, default: 300 },
+    baseSp: { type: Number, default: 300 },
+    baseIq: { type: Number, default: 50 },
+    baseTurnOrder: { type: Number, default: -50 },
+
     hp: { type: Number, default: 500 },
     maxHp: { type: Number, default: 500 },
     mp: { type: Number, default: 300 },
@@ -20,8 +28,10 @@ const creatureSchema = new mongoose.Schema({
     evasionChance: { type: Number, default: 1 }, // SPD/10 where SPD=10
     atkSpdMult: { type: Number, default: 1.05 }, // 1 + DEX/200 where DEX=10
     dmgReduction: { type: Number, default: 0.909 }, // 100 / (100 + DUR) where DUR=10
-    iq: { type: Number, default: 10 }, // Computed from WIS
-    turnOrder: { type: Number, default: -40 }, // SPD - 50
+    iq: { type: Number, default: 60 }, // Computed from WIS + baseIq
+    turnOrder: { type: Number, default: -40 }, // SPD + baseTurnOrder
+    hpRegen: { type: Number, default: 0 },
+    mpRegen: { type: Number, default: 0 },
     spRegen: { type: Number, default: 0 },
     hitAccuracy: { type: Number, default: 0 },
     tenacity: { type: Number, default: 0 },
@@ -35,7 +45,8 @@ const creatureSchema = new mongoose.Schema({
         costType: { type: String, enum: ['MP', 'SP', 'NONE'], default: 'NONE' },
         damage: Number,
         cooldown: String,
-        isUltimate: { type: Boolean, default: false }
+        isUltimate: { type: Boolean, default: false },
+        image: { type: String, default: '' }
     }],
     inventory: [{ type: String }],
 }, { timestamps: true });
