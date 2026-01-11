@@ -163,7 +163,7 @@ export default function CreatureStats({ creature }) {
                                 key={idx}
                                 className={`skill-card ${skill.isUltimate ? 'ultimate' : ''}`}
                                 style={skill.image ? {
-                                    backgroundImage: `linear-gradient(rgba(15, 23, 42, 0.85), rgba(15, 23, 42, 0.95)), url(${skill.image})`,
+                                    backgroundImage: `linear-gradient(rgba(15, 23, 42, 0.3), rgba(15, 23, 42, 0.9)), url(${skill.image})`,
                                     backgroundSize: 'cover',
                                     backgroundPosition: 'center',
                                 } : {}}
