@@ -17,6 +17,19 @@ export default function Beastlord() {
     const [targetHouseTransfer, setTargetHouseTransfer] = useState(''); // For admin donation
     const [members, setMembers] = useState([]);
 
+    // Item Management States
+    const [items, setItems] = useState([]);
+    const [newItem, setNewItem] = useState({ name: '', cost: 0, rarity: 'Normal', desc: '', statsText: '', stats: {} });
+
+    const fetchItems = async () => {
+        try {
+            const res = await client.get('/beastlord/items');
+            setItems(res.data.items || []);
+        } catch (error) {
+            console.error('Error fetching items:', error);
+        }
+    };
+
     const fetchData = useCallback(async (houseName = '') => {
         setLoading(true);
         try {
@@ -30,6 +43,10 @@ export default function Beastlord() {
             const membersHouse = houseName || res.data.house.name;
             const membersRes = await client.get(`/users/by-house/${membersHouse}`);
             setMembers(membersRes.data.users || []);
+
+            if (res.data.isAdmin) {
+                fetchItems();
+            }
 
         } catch (err) {
             console.error(err);
@@ -131,6 +148,44 @@ export default function Beastlord() {
         } catch (error) {
             console.error('Error updating skills:', error);
             alert('Failed to update skills');
+        }
+    };
+
+    const handleItemManage = async (e) => {
+        e.preventDefault();
+        try {
+            // Simple parsing for stats object from statsText
+            // Expecting format: "+10 STR, +5 SPD"
+            const stats = {};
+            const parts = newItem.statsText.split(',').map(p => p.trim());
+            parts.forEach(p => {
+                const match = p.match(/([+-]?\d+)\s+(\w+)/);
+                if (match) {
+                    const val = parseInt(match[1]);
+                    const key = match[2].toLowerCase();
+                    // Map common aliases
+                    const keyMap = { hp: 'maxHp', mp: 'maxMp', sp: 'maxSp', to: 'turnOrder' };
+                    stats[keyMap[key] || key] = val;
+                }
+            });
+
+            await client.post('/beastlord/items', { ...newItem, stats });
+            alert('Item saved successfully!');
+            setNewItem({ name: '', cost: 0, rarity: 'Normal', desc: '', statsText: '', stats: {} });
+            fetchItems();
+        } catch (err) {
+            alert(err.response?.data?.error || 'Item save failed');
+        }
+    };
+
+    const handleItemDelete = async (id) => {
+        if (!confirm('Are you sure you want to delete this item?')) return;
+        try {
+            await client.delete(`/beastlord/items/${id}`);
+            alert('Item deleted!');
+            fetchItems();
+        } catch (err) {
+            alert(err.response?.data?.error || 'Delete failed');
         }
     };
 
@@ -391,6 +446,70 @@ export default function Beastlord() {
 
                                         <section className="skill-editor-section bl-card" style={{ gridColumn: '1 / -1' }}>
                                             <div className="section-header-flex">
+                                                <h3 className="section-title">Item Matrix Modulation</h3>
+                                            </div>
+                                            <form onSubmit={handleItemManage} className="donate-form" style={{ marginBottom: '2rem' }}>
+                                                <div className="admin-grid-two">
+                                                    <div className="input-group">
+                                                        <label>Item Name</label>
+                                                        <input type="text" className="house-select" value={newItem.name} onChange={e => setNewItem({ ...newItem, name: e.target.value })} required />
+                                                    </div>
+                                                    <div className="input-group">
+                                                        <label>Cost (CP)</label>
+                                                        <input type="number" className="house-select" value={newItem.cost} onChange={e => setNewItem({ ...newItem, cost: e.target.value })} required />
+                                                    </div>
+                                                    <div className="input-group">
+                                                        <label>Rarity</label>
+                                                        <select className="house-select" value={newItem.rarity} onChange={e => setNewItem({ ...newItem, rarity: e.target.value })}>
+                                                            <option value="Normal">Normal</option>
+                                                            <option value="Rare">Rare</option>
+                                                            <option value="Epic">Epic</option>
+                                                            <option value="Legendary">Legendary</option>
+                                                        </select>
+                                                    </div>
+                                                    <div className="input-group">
+                                                        <label>Stats (e.g., +10 STR, +5 SPD)</label>
+                                                        <input type="text" className="house-select" value={newItem.statsText} onChange={e => setNewItem({ ...newItem, statsText: e.target.value })} placeholder="+10 STR, +5 SPD" />
+                                                    </div>
+                                                </div>
+                                                <div className="input-group" style={{ marginTop: '1rem' }}>
+                                                    <label>Description</label>
+                                                    <textarea className="house-select" value={newItem.desc} onChange={e => setNewItem({ ...newItem, desc: e.target.value })} rows="2"></textarea>
+                                                </div>
+                                                <button type="submit" className="buy-btn" style={{ width: '100%', marginTop: '1rem' }}>Create / Update Item</button>
+                                            </form>
+
+                                            <div className="logs-table-container">
+                                                <table className="logs-table">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Name</th>
+                                                            <th>Rarity</th>
+                                                            <th>Cost</th>
+                                                            <th>Stats</th>
+                                                            <th>Actions</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {items.map(item => (
+                                                            <tr key={item._id}>
+                                                                <td>{item.name}</td>
+                                                                <td>{item.rarity}</td>
+                                                                <td>{item.cost} CP</td>
+                                                                <td>{item.statsText}</td>
+                                                                <td>
+                                                                    <button className="undo-btn" style={{ marginRight: '0.5rem' }} onClick={() => setNewItem({ ...item, statsText: item.statsText || '' })}>Edit</button>
+                                                                    <button className="undo-btn" style={{ backgroundColor: '#f43f5e' }} onClick={() => handleItemDelete(item._id)}>Delete</button>
+                                                                </td>
+                                                            </tr>
+                                                        ))}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </section>
+
+                                        <section className="skill-editor-section bl-card" style={{ gridColumn: '1 / -1' }}>
+                                            <div className="section-header-flex">
                                                 <h3 className="section-title">Technique & Skill Matrix Modulation</h3>
                                                 <button className="add-skill-btn" onClick={addSkill}>+ Add New Skill</button>
                                             </div>
@@ -511,5 +630,3 @@ export default function Beastlord() {
         </div>
     );
 }
-
-
