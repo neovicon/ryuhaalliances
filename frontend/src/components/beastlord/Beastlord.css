@@ -468,6 +468,7 @@
   color: var(--text-dim);
   margin-bottom: 1.5rem;
   line-height: 1.6;
+  white-space: pre-wrap;
 }
 
 .skill-meta {
@@ -953,6 +954,8 @@
   font-size: 0.95rem;
   width: 100%;
   transition: all 0.3s;
+  color: white;
+  white-space: pre-wrap;
 }
 
 .skill-edit-card input:focus,
