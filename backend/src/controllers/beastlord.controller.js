@@ -2,13 +2,6 @@ import House from '../models/House.js';
 import Creature from '../models/Creature.js';
 import User from '../models/User.js';
 import Transaction from '../models/Transaction.js';
-import mongoose from 'mongoose';
-import { DEFAULT_CREATURES, FALLBACK_CREATURE } from '../config/beastlordConfig.js';
-
-import House from '../models/House.js';
-import Creature from '../models/Creature.js';
-import User from '../models/User.js';
-import Transaction from '../models/Transaction.js';
 import Item from '../models/Item.js';
 import mongoose from 'mongoose';
 import { DEFAULT_CREATURES, FALLBACK_CREATURE } from '../config/beastlordConfig.js';
