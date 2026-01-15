@@ -87,6 +87,17 @@ export const DEFAULT_CREATURES = {
             { name: 'Emerald Constriction', desc: 'Uses its massive length to crush the life out of prey.', cost: 250, costType: 'SP', damage: 1000, cooldown: '1 ROUND' },
             { name: 'Instant Death Gaze', desc: 'A direct look that spells absolute doom for any mortal.', cost: 900, costType: 'MP', damage: 5000, cooldown: '1 TIME USE ONLY', isUltimate: true }
         ]
+    },
+    'Von Einzbern': {
+        name: 'Justeacia',
+        description: 'A legendary homunculus guardian of the Von Einzbern family, wielding high-level alchemy and spatial magic.',
+        str: 180, dur: 200, spd: 220, int: 380, dex: 240, wis: 300,
+        skills: [
+            { name: 'Alchemical Burst', desc: 'Fires a concentrated blast of alchemical energy at the target.', cost: 60, costType: 'MP', damage: 450, cooldown: 'NONE' },
+            { name: 'Grail\'s Protection', desc: 'Summons a barrier of holy energy to mitigate damage.', cost: 120, costType: 'MP', damage: 0, cooldown: '2 ROUNDS' },
+            { name: 'Spatial Warp', desc: 'Warps the space around enemies to cause internal damage.', cost: 250, costType: 'MP', damage: 1200, cooldown: '1 ROUND' },
+            { name: 'Heaven\'s Feel', desc: 'Unleashes the absolute magic of the Einzbern family.', cost: 850, costType: 'MP', damage: 4000, cooldown: '1 TIME USE ONLY', isUltimate: true }
+        ]
     }
 };
 

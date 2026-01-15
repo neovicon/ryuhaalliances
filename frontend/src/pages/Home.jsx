@@ -703,6 +703,7 @@ export default function Home() {
             { name: 'Obsidian Order', img: '/assets/obsidian_order.jpeg' },
             { name: 'Council of IV', img: '/assets/counsil_of_iv.jpeg' },
             { name: 'Abyssal IV', img: '/assets/abyssal_iv.jpeg' },
+            { name: 'Von Einzbern', img: '/assets/von_einzbern.jpeg' },
           ].map(d => (
             <div key={d.name} className="card" style={{ padding: 0, overflow: 'hidden', cursor: 'pointer' }} onClick={() => navigate(`/houses/${d.name.toLowerCase().replace(/\s+/g, '-')}`)}>
               <div style={{ position: 'relative', height: 150, background: `url(${d.img}) center/cover no-repeat` }}>

@@ -426,6 +426,7 @@ function getDefaultHouseDescription(houseName) {
     'Obsidian Order': 'The elite and mysterious order, Obsidian Order represents power, strategy, and the mastery of both light and shadow. Members are the architects of change.',
     'Council of IV': 'A house of wisdom and governance, Council of IV represents leadership, unity, and the collective strength of those who guide and protect.',
     'Abyssal IV': 'A house of depth and mystery, Abyssal IV represents the hidden depths of power, resilience, and the unyielding force that emerges from the shadows.',
+    'Von Einzbern': 'An ancient and noble lineage of magi, the Von Einzbern house is synonymous with alchemical mastery and the pursuit of the Holy Grail. They value tradition, precision, and the manifestation of supreme magical mysteries.',
   };
   return descriptions[houseName] || 'A distinguished house within the Ryuha Alliance, dedicated to honor, discipline, and unity.';
 }

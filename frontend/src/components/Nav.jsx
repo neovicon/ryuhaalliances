@@ -47,29 +47,26 @@ export default function Nav() {
   }
 
   const mainLinks = [
-    { to: '/feed', label: 'Feed', Icon: Home },
-    { to: '/leaderboard', label: 'Leaderboard', Icon: Trophy },
-    { to: '/messenger', label: 'Messenger', Icon: MessageCircle },
+    { to: '/blogs', label: 'Blogs', Icon: BookOpen },
+    { to: '/stories', label: 'Stories', Icon: BookOpen },
+    { to: '/articles', label: 'Articles', Icon: BookOpen },
     { to: '/events', label: 'Events', Icon: Calendar }
   ]
 
-  // Hide certain main links for anonymous users
-  const visibleMainLinks = mainLinks.filter(l => {
-    // hide feed and leaderboard for anonymous users
-    if (!user && (l.to === '/feed' || l.to === '/leaderboard')) return false
-    return true
-  })
-
   const secondaryLinks = [
-    { to: '/event-entries', label: 'Event Entries' },
-    { to: '/beastlord', label: 'Beastlord' },
-    { to: '/blogs', label: 'Blogs' },
-    { to: '/announcements', label: 'Announcements' },
-    { to: '/articles', label: 'Articles' },
-    { to: '/stories', label: 'Stories' },
-    { to: '/attendance', label: 'Attendance' },
-    { to: '/dubbing', label: 'Ryuha VA' },
+    { to: '/feed', label: 'Feed', Icon: Home, auth: true },
+    { to: '/leaderboard', label: 'Leaderboard', Icon: Trophy, auth: true },
+    { to: '/messenger', label: 'Messenger', Icon: MessageCircle, auth: true },
+    { to: '/event-entries', label: 'Event Entries', Icon: Calendar },
+    { to: '/beastlord', label: 'Beastlord', Icon: Trophy },
+    { to: '/announcements', label: 'Announcements', Icon: Bell },
+    { to: '/attendance', label: 'Attendance', Icon: ClipboardList },
+    { to: '/dubbing', label: 'Ryuha VA', Icon: MessageCircle },
   ]
+
+  // Filter links based on visibility
+  const visibleMainLinks = mainLinks.filter(l => !l.auth || user)
+  const visibleSecondaryLinks = secondaryLinks.filter(l => !l.auth || user)
 
   return (
     <nav className="nav">
@@ -98,7 +95,7 @@ export default function Nav() {
               </button>
               {moreOpen && (
                 <div className="more-panel">
-                  {secondaryLinks.map(l => (
+                  {visibleSecondaryLinks.map(l => (
                     <Link key={l.to} to={l.to} className="more-item" onClick={() => setMoreOpen(false)}>
                       {l.label}
                     </Link>
@@ -194,55 +191,27 @@ export default function Nav() {
                 <X size={24} />
               </button>
               <div className="mobile-links">
-                {user && mainLinks.map(({ to, label, Icon }) => (
+                {visibleMainLinks.map(({ to, label, Icon }) => (
                   <Link key={to} to={to} className={`mobile-link ${isActive(to) ? 'active' : ''}`} onClick={() => setOpen(false)}>
                     <Icon size={18} style={{ marginRight: 12 }} />
                     <span>{label}</span>
                   </Link>
                 ))}
-                {!user && visibleMainLinks.map(({ to, label, Icon }) => (
+
+                <div style={{ height: 1, background: 'rgba(255,255,255,0.1)', margin: '8px 0' }} />
+
+                {visibleSecondaryLinks.map(({ to, label, Icon }) => (
                   <Link key={to} to={to} className={`mobile-link ${isActive(to) ? 'active' : ''}`} onClick={() => setOpen(false)}>
-                    <Icon size={18} style={{ marginRight: 12 }} />
+                    {Icon ? <Icon size={18} style={{ marginRight: 12 }} /> : <span style={{ width: 18, marginRight: 12 }} />}
                     <span>{label}</span>
                   </Link>
                 ))}
-                {/* Secondary + conditional links */}
-                <Link to="/events" className="mobile-link" onClick={() => setOpen(false)}>
-                  <Calendar size={18} style={{ marginRight: 12 }} />
-                  <span>Events</span>
-                </Link>
-                <Link to="/event-entries" className="mobile-link" onClick={() => setOpen(false)}>
-                  <span style={{ width: 18, marginRight: 12 }} />
-                  <span>Event Entries</span>
-                </Link>
-                <Link to="/beastlord" className="mobile-link" onClick={() => setOpen(false)}>
-                  <Trophy size={18} style={{ marginRight: 12 }} />
-                  <span>Beastlord</span>
-                </Link>
-                <Link to="/attendance" className="mobile-link" onClick={() => setOpen(false)}>
-                  <ClipboardList size={18} style={{ marginRight: 12 }} />
-                  <span>Attendance</span>
-                </Link>
-                <Link to="/announcements" className="mobile-link" onClick={() => setOpen(false)}>
-                  <Bell size={18} style={{ marginRight: 12 }} />
-                  <span>Announcements</span>
-                </Link>
-                <Link to="/articles" className="mobile-link" onClick={() => setOpen(false)}>
-                  <BookOpen size={18} style={{ marginRight: 12 }} />
-                  <span>Articles</span>
-                </Link>
-                <Link to="/stories" className="mobile-link" onClick={() => setOpen(false)}>
-                  <BookOpen size={18} style={{ marginRight: 12 }} />
-                  <span>Stories</span>
-                </Link>
-                <Link to="/dubbing" className="mobile-link" onClick={() => setOpen(false)}>
-                  <MessageCircle size={18} style={{ marginRight: 12 }} />
-                  <span>Ryuha VA</span>
-                </Link>
+
                 <Link to="/download" className="mobile-link" onClick={() => setOpen(false)}>
-                  <span style={{ width: 20 }} />
+                  <span style={{ width: 18, marginRight: 12 }} />
                   <span>Download App</span>
                 </Link>
+
                 {user?.role === 'admin' && (
                   <Link to="/admin" className="mobile-link" onClick={() => setOpen(false)}>Admin</Link>
                 )}
@@ -253,7 +222,7 @@ export default function Nav() {
                   <Link to="/profile" className="mobile-link" onClick={() => setOpen(false)}><User size={18} style={{ marginRight: 12 }} />Profile</Link>
                 )}
 
-                <div style={{ height: 1, background: 'rgba(0,0,0,0.06)', margin: '12px 0' }} />
+                <div style={{ height: 1, background: 'rgba(255,255,255,0.1)', margin: '12px 0' }} />
 
                 {!user ? (
                   <>
