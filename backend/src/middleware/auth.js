@@ -134,7 +134,8 @@ export async function requireArtisanOrAdmin(req, res, next) {
 }
 
 // Combined permissions (multiple moderator types can access)
-export const requireAestherOrOverseer = requireModeratorType(['Aesther', 'Overseer']);
-export const requireAestherOrVigilOrOverseer = requireModeratorType(['Aesther', 'Vigil', 'Overseer']);
+export const requireAestherOrOverseer = requireModeratorType(['Aesther', 'Overseer', 'Emissary']);
+export const requireAestherOrVigilOrOverseer = requireModeratorType(['Aesther', 'Vigil', 'Overseer', 'Emissary']);
+export const requireAestherOrEmissary = requireModeratorType(['Aesther', 'Emissary']);
 
 

@@ -249,7 +249,7 @@ export async function updateHouse(req, res) {
 
 export const validateAddModerator = [
   body('userId').notEmpty().withMessage('User ID is required'),
-  body('moderatorType').isIn(['Arbiter', 'Artisan', 'Vigil', 'Aesther', 'Gatekeeper', 'Overseer']).withMessage('Valid moderator type is required'),
+  body('moderatorType').isIn(['Arbiter', 'Artisan', 'Vigil', 'Aesther', 'Gatekeeper', 'Overseer', 'Emissary']).withMessage('Valid moderator type is required'),
 ];
 
 export async function addModerator(req, res) {

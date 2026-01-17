@@ -7,7 +7,7 @@ const HOUSES = ['Pendragon', 'Phantomhive', 'Tempest', 'Zoldyck', 'Fritz', 'Elri
 
 const MEMBER_STATUSES = ['Creator of the Realm', 'Guardian', 'Lord of the House', 'General', 'Seeker', 'Herald', 'Watcher', 'Knight of Genesis', 'Knight of I', 'Knight of II', 'Knight of III', 'Knight of IV', 'Knight of V', 'Commoner'];
 
-const MODERATOR_TYPES = ['Arbiter', 'Artisan', 'Vigil', 'Aesther', 'Gatekeeper', 'Overseer'];
+const MODERATOR_TYPES = ['Arbiter', 'Artisan', 'Vigil', 'Aesther', 'Gatekeeper', 'Overseer', 'Emissary'];
 
 export default function Admin() {
   const { user: authUser } = useAuth();
@@ -1189,6 +1189,7 @@ export default function Admin() {
                   {moderatorModal.moderatorType === 'Aesther' && 'Moderator permissions'}
                   {moderatorModal.moderatorType === 'Gatekeeper' && 'Moderator permissions'}
                   {moderatorModal.moderatorType === 'Overseer' && 'Moderator permissions'}
+                  {moderatorModal.moderatorType === 'Emissary' && 'Can CRUD Announcements, Events and Articles'}
                 </div>
               </div>
               <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>

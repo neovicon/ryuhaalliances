@@ -20,8 +20,8 @@ export default function Announcements() {
   const [verificationSuccess, setVerificationSuccess] = useState(false);
 
   const isAdmin = user && user.role === 'admin';
-  const isAestherOrVigil = user && user.role === 'moderator' && (user.moderatorType === 'Aesther' || user.moderatorType === 'Vigil');
-  const isPrivileged = isAdmin || isAestherOrVigil;
+  const isContentModerator = user && user.role === 'moderator' && (user.moderatorType === 'Aesther' || user.moderatorType === 'Vigil' || user.moderatorType === 'Overseer' || user.moderatorType === 'Emissary');
+  const isPrivileged = isAdmin || isContentModerator;
   const showEmailVerification = user && !user.emailVerified;
 
   useEffect(() => {

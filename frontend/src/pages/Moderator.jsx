@@ -236,7 +236,8 @@ export default function Moderator() {
       'Artisan': 'Profile Manager',
       'Arbiter': 'Discipline Officer',
       'Overseer': 'Announcement Manager',
-      'Gatekeeper': 'Membership Officer'
+      'Gatekeeper': 'Membership Officer',
+      'Emissary': 'Alliance Emissary'
     };
     return titles[moderatorType] || 'Moderator';
   };
@@ -248,7 +249,8 @@ export default function Moderator() {
       'Artisan': 'Manage member profiles: update Hero Licenses and upload Certificates.',
       'Arbiter': 'Remove members and upload warning notices.',
       'Overseer': 'Manage announcements for the alliance.',
-      'Gatekeeper': 'Approve new member applications.'
+      'Gatekeeper': 'Approve new member applications.',
+      'Emissary': 'Manage announcements, events, and articles for the alliance.'
     };
     return descriptions[moderatorType] || 'Moderate content and manage members.';
   };
@@ -272,19 +274,27 @@ export default function Moderator() {
         </div>
       </div>
 
-      {/* Aesther: Events & Announcements */}
-      {(moderatorType === 'Aesther' || moderatorType === 'Overseer' || user.role === 'admin') && (
+      {/* Aesther, Overseer & Emissary: Events, Announcements & Articles */}
+      {(moderatorType === 'Aesther' || moderatorType === 'Overseer' || moderatorType === 'Emissary' || user.role === 'admin') && (
         <div className="card" style={{ marginBottom: '1.5rem' }}>
           <h3 className="hdr" style={{ marginBottom: '1rem' }}>
-            {moderatorType === 'Aesther' ? 'Events & Announcements' : 'Announcements'}
+            {moderatorType === 'Aesther' ? 'Events & Announcements' :
+              moderatorType === 'Emissary' ? 'Alliance Management' : 'Announcements'}
           </h3>
           <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-            <button className="btn" onClick={() => navigate('/events')}>
-              Manage Events
-            </button>
+            {(moderatorType === 'Aesther' || moderatorType === 'Emissary' || user.role === 'admin') && (
+              <button className="btn" onClick={() => navigate('/events')}>
+                Manage Events
+              </button>
+            )}
             <button className="btn" onClick={() => navigate('/announcements')}>
               Manage Announcements
             </button>
+            {(moderatorType === 'Emissary' || user.role === 'admin') && (
+              <button className="btn" onClick={() => navigate('/articles')}>
+                Manage Articles
+              </button>
+            )}
           </div>
         </div>
       )}

@@ -15,6 +15,7 @@ export default function Events() {
   const [uploading, setUploading] = useState(false);
 
   const isModeratorOrAdmin = user && (user.role === 'moderator' || user.role === 'admin');
+  const isEventManager = user && (user.role === 'admin' || (user.role === 'moderator' && (user.moderatorType === 'Aesther' || user.moderatorType === 'Emissary')));
 
   useEffect(() => {
     loadEvents();
@@ -157,7 +158,7 @@ export default function Events() {
     <div className="container" style={{ padding: '2rem 1rem' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
         <h2 className="hdr">Events</h2>
-        {isModeratorOrAdmin && (
+        {isEventManager && (
           <button className="btn" onClick={() => setShowCreateModal(true)}>
             Create Event
           </button>
@@ -166,7 +167,7 @@ export default function Events() {
 
       {events.length === 0 ? (
         <div className="card" style={{ textAlign: 'center', padding: '3rem', color: 'var(--muted)' }}>
-          No events yet. {isModeratorOrAdmin && 'Create one to get started!'}
+          No events yet. {isEventManager && 'Create one to get started!'}
         </div>
       ) : (
         <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem' }}>
@@ -225,7 +226,7 @@ export default function Events() {
                     <div>{new Date(event.createdAt).toLocaleDateString()}</div>
                   )}
                 </div>
-                {isModeratorOrAdmin && (
+                {isEventManager && (
                   <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }} onClick={(e) => e.stopPropagation()}>
                     <button
                       className="btn"
@@ -285,7 +286,7 @@ export default function Events() {
                 style={{ minHeight: 150, resize: 'vertical' }}
               />
 
-              {user?.role === 'admin' && (
+              {isEventManager && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <input
                     type="checkbox"
@@ -382,7 +383,7 @@ export default function Events() {
                 style={{ minHeight: 150, resize: 'vertical' }}
               />
 
-              {user?.role === 'admin' && (
+              {isEventManager && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <input
                     type="checkbox"
