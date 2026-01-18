@@ -45,9 +45,9 @@ export default function Dubbing() {
         <div className="container" style={{ padding: '2rem 1rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
                 <div>
-                    <h2 className="hdr">Ryuha VA</h2>
+                    <h2 className="hdr">Gacha Animations</h2>
                     <p style={{ color: 'var(--muted)', margin: '0.5rem 0 0 0' }}>
-                        Watch amazing anime voice acting videos from our talented community
+                        Watch amazing gacha animations from our talented community
                     </p>
                 </div>
                 {canUpload && (
@@ -223,7 +223,7 @@ function UploadModal({ onClose, onSuccess }) {
     return (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '1rem' }} onClick={onClose}>
             <div className="card" style={{ maxWidth: 500, width: '100%', maxHeight: '90vh', overflow: 'auto' }} onClick={(e) => e.stopPropagation()}>
-                <h3 className="hdr" style={{ marginBottom: '1.5rem' }}>Upload VA Video</h3>
+                <h3 className="hdr" style={{ marginBottom: '1.5rem' }}>Upload Gacha Animation</h3>
                 <form onSubmit={handleSubmit}>
                     <div style={{ marginBottom: '1rem' }}>
                         <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--muted)', fontSize: '0.9rem' }}>

@@ -152,7 +152,7 @@ export default function DubbingVideoDetail() {
     return (
         <div className="container" style={{ padding: '2rem 1rem', maxWidth: 900 }}>
             <div style={{ marginBottom: '1rem' }}>
-                <Link to="/dubbing" className="link" style={{ fontSize: '0.9rem' }}>← Back to Ryuha VA</Link>
+                <Link to="/dubbing" className="link" style={{ fontSize: '0.9rem' }}>← Back to Gacha Animations</Link>
             </div>
 
             <div className="card">

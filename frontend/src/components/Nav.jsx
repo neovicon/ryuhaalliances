@@ -63,7 +63,7 @@ export default function Nav() {
     { to: '/beastlord', label: 'Beastlord', Icon: Trophy },
     { to: '/announcements', label: 'Announcements', Icon: Bell },
     { to: '/attendance', label: 'Attendance', Icon: ClipboardList },
-    { to: '/dubbing', label: 'Ryuha VA', Icon: MessageCircle },
+    { to: '/dubbing', label: 'Gacha Animations', Icon: MessageCircle },
   ]
 
   // Filter links based on visibility
