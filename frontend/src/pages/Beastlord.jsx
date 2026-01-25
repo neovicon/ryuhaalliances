@@ -247,6 +247,99 @@ export default function Beastlord() {
         sanctuaryRef.current?.scrollIntoView({ behavior: 'smooth' });
     };
 
+    const toBoldSerif = (text) => {
+        if (!text) return '';
+        return text.split('').map(char => {
+            const code = char.charCodeAt(0);
+            if (code >= 65 && code <= 90) { // A-Z
+                return String.fromCodePoint(0x1D400 + (code - 65));
+            } else if (code >= 97 && code <= 122) { // a-z
+                return String.fromCodePoint(0x1D41A + (code - 97));
+            }
+            // Exclude digits to match user's example
+            return char;
+        }).join('');
+    };
+
+    const [showPromptModal, setShowPromptModal] = useState(false);
+    const [generatedPrompt, setGeneratedPrompt] = useState('');
+
+    const generateBeastPrompt = () => {
+        if (!data?.creature) return;
+        const c = data.creature;
+
+        let p = `${toBoldSerif('NAME')}: ${toBoldSerif(c.name.toUpperCase())}\n\n`;
+        p += `${toBoldSerif('DESCRIPTION')}\n${c.description || "A mystical creature of great potential."}\n\n`;
+
+        p += `${toBoldSerif('SKILLS')}\n\n`;
+
+        const normalSkills = c.skills.filter(s => !s.isUltimate);
+        normalSkills.forEach(s => {
+            p += `${toBoldSerif(s.name.toUpperCase())} (${s.costType === 'SP' ? 'Physical Attack' : s.costType === 'MP' ? 'Magical Attack' : 'Special Attack'})\n`;
+            p += `${s.desc}\n`;
+            if (s.cost > 0) p += `${toBoldSerif(s.costType === 'SP' ? 'Stamina Cost' : 'Mana Cost')}: ${s.cost} ${s.costType}\n`;
+            p += `${toBoldSerif(s.costType === 'SP' ? 'Physical Damage' : 'Magic Damage')}: ${s.damage}\n`;
+            const cdText = s.cooldown && s.cooldown.toLowerCase() !== 'none' ? s.cooldown : 'None';
+            p += `${toBoldSerif('Cooldown')}: ${toBoldSerif(cdText.charAt(0))}${cdText.slice(1)}\n\n\n`;
+        });
+
+        const ultimateSkills = c.skills.filter(s => s.isUltimate);
+        if (ultimateSkills.length > 0) {
+            p += `${toBoldSerif('ULTIMATE SKILL')}\n\n`;
+            ultimateSkills.forEach(s => {
+                p += `${toBoldSerif(s.name.toUpperCase())} (Ultimate – ${s.costType === 'SP' ? 'Physical' : 'Magical'})\n`;
+                p += `${s.desc}\n`;
+                if (s.cost > 0) p += `${toBoldSerif(s.costType === 'SP' ? 'Stamina Cost' : 'Mana Cost')}: ${s.cost} ${s.costType}\n`;
+                p += `${toBoldSerif(s.costType === 'SP' ? 'Physical Damage' : 'Magic Damage')}: ${s.damage}\n`;
+                p += `${toBoldSerif('Cooldown')}: ${toBoldSerif(s.cooldown || '1 Time use per Battle')}\n\n\n`;
+            });
+        }
+
+        p += `${toBoldSerif('STATUS')}:\n\n`;
+        p += `${toBoldSerif('Max HP')}: ${c.hp}\n`;
+        p += `${toBoldSerif('Max MP')}: ${c.mp}\n`;
+        p += `${toBoldSerif('Max SP')}: ${c.sp}\n`;
+        p += `${toBoldSerif('Critical')}: ${c.critChance}%\n`;
+        p += `${toBoldSerif('Evasion')}: ${c.evasionChance}%\n`;
+        p += `${toBoldSerif('Attack Speed')}: ${c.atkSpdMult}x\n`;
+        p += `${toBoldSerif('Physical/Magic Damage Reduction')}: ${Math.round((1 - c.dmgReduction) * 100)}%\n`;
+        p += `${toBoldSerif('Turn Order')}: ${c.turnOrder}\n`;
+        p += `${toBoldSerif('Base HP')}: ${c.baseHp || 500}\n`;
+        p += `${toBoldSerif('Base MP')}: ${c.baseMp || 300}\n`;
+        p += `${toBoldSerif('Base SP')}: ${c.baseSp || 300}\n`;
+        p += `${toBoldSerif('HP Regen Per Turn')}: ${c.hpRegen || 0} HP\n`;
+        p += `${toBoldSerif('MP Regen Per Turn')}: ${c.mpRegen || 0} MP\n`;
+        p += `${toBoldSerif('SP Regen Per Turn')}: ${c.spRegen || 0} SP\n`;
+        p += `${toBoldSerif('Hit Accuracy')}: ${c.hitAccuracy || 0}%\n`;
+        p += `${toBoldSerif('Tenacity')}: ${c.tenacity || 0}%\n`;
+        p += `${toBoldSerif('Status Resistance')}: ${c.statusResistance || 0}%\n`;
+        p += `${toBoldSerif('Base IQ')}: ${c.baseIq || 50}\n`;
+        p += `${toBoldSerif('Battle IQ')}: ${c.iq}\n`;
+        p += `${toBoldSerif('Decision Making Accuracy')}: ${c.decisionMakingAccuracy || 0}%\n`;
+        p += `${toBoldSerif('Behavior')}: ${c.behavior}\n\n`;
+
+        const stats = [
+            { k: 'STR', v: c.str },
+            { k: 'DUR', v: c.dur },
+            { k: 'SPD', v: c.spd },
+            { k: 'INT', v: c.int },
+            { k: 'DEX', v: c.dex },
+            { k: 'WIS', v: c.wis }
+        ];
+
+        stats.forEach(s => {
+            p += `${toBoldSerif(s.k)} - ${s.v}\n`;
+        });
+
+        setGeneratedPrompt(p);
+        setShowPromptModal(true);
+    };
+
+    const copyToClipboard = () => {
+        navigator.clipboard.writeText(generatedPrompt);
+        alert('Prompt copied to clipboard!');
+    };
+
     if (loading && !data) return <div className="p-8 text-center text-white">Initializing Sanctuary Interface...</div>;
     if (!data) return <div className="p-8 text-center text-red-500">Access Denied or System Offline.</div>;
 
@@ -286,6 +379,15 @@ export default function Beastlord() {
                             >
                                 Profile
                             </button>
+                            {data.isAdmin && (
+                                <button
+                                    className="tab-btn"
+                                    onClick={generateBeastPrompt}
+                                    style={{ border: '1px solid var(--primary)', color: 'var(--primary)' }}
+                                >
+                                    Generate Prompt
+                                </button>
+                            )}
                             <button
                                 className={`tab-btn ${tab === 'store' ? 'active' : ''}`}
                                 onClick={() => setTab('store')}
@@ -465,6 +567,7 @@ export default function Beastlord() {
                                                             <option value="Rare">Rare</option>
                                                             <option value="Epic">Epic</option>
                                                             <option value="Legendary">Legendary</option>
+                                                            <option value="Mythical">Mythical</option>
                                                         </select>
                                                     </div>
                                                     <div className="input-group">
@@ -627,6 +730,27 @@ export default function Beastlord() {
                     )}
                 </main>
             </div>
+
+            {showPromptModal && (
+                <div className="prompt-modal-overlay" onClick={() => setShowPromptModal(false)}>
+                    <div className="prompt-modal-content" onClick={e => e.stopPropagation()}>
+                        <div className="prompt-modal-header">
+                            <h3>Beast Prompt</h3>
+                            <button className="close-btn" onClick={() => setShowPromptModal(false)}>&times;</button>
+                        </div>
+                        <div className="prompt-modal-body">
+                            <textarea
+                                readOnly
+                                value={generatedPrompt}
+                                className="prompt-textarea"
+                            />
+                        </div>
+                        <div className="prompt-modal-footer">
+                            <button className="buy-btn" onClick={copyToClipboard} style={{ width: '100%' }}>Copy to Clipboard</button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

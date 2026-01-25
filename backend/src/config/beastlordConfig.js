@@ -1,7 +1,7 @@
 export const DEFAULT_CREATURES = {
     'Dragneel': {
-        name: 'Magmascorpius',
-        description: 'Lava-scaled dragon that torches and melts enemies with extreme heat, magma blasts, and fiery breaths.',
+        name: 'Icarus, "Sun Stalker"',
+        description: 'A divine holy angel from the gates of heaven, born from the light itself that possesses wings and scale armors made of gold that never varnishes. From the east where it rises with the sun, in the highest point of the tallest mountain — the angel’s eyes opens. Humming a tune that matches the core of the sun — It uses a bow with an arrow lighting from its hum, heating up the arrow from its bow.',
         str: 250, dur: 300, spd: 150, int: 100, dex: 100, wis: 100,
         skills: [
             { name: 'Inferno Breath', desc: 'Shoots and breathes fire through his mouth, burning and damaging enemies to ashes.', cost: 23, costType: 'MP', damage: 183, cooldown: 'NONE' },
@@ -23,8 +23,8 @@ export const DEFAULT_CREATURES = {
         ]
     },
     'Pendragon': {
-        name: 'Voidkin Runt',
-        description: 'A high-agility Arch-Devil Succubus and sovereign of the House of Pendragon. A walking contradiction of ethereal grace and crushing abyssal power.',
+        name: 'Aetheria Vir Nyx',
+        description: 'A draconic sovereign forged from void essence and primordial flame, with scaled limbs, razor-edged wings, and horns that channel cosmic energy. She commands both physical might of ancient dragons and arcane power of the void, fighting with tactical precision—though unexpected battlefield shifts or multi-target chaos can still lead to rare miscalculations.',
         str: 220, dur: 180, spd: 320, int: 200, dex: 250, wis: 150,
         skills: [
             { name: 'Abyssal Pulse', desc: 'The core crystal hums with the frequency of a dying star, releasing crushing power.', cost: 80, costType: 'MP', damage: 300, cooldown: '1 ROUND' },
@@ -89,8 +89,8 @@ export const DEFAULT_CREATURES = {
         ]
     },
     'Von Einzbern': {
-        name: 'Justeacia',
-        description: 'A legendary homunculus guardian of the Von Einzbern family, wielding high-level alchemy and spatial magic.',
+        name: 'Drakaroth',
+        description: 'Drakaroth is an Undead Frozen Skeleton Dragon, an ancient wyrm reborn through the will of Morgylia Noctfrost. His massive skeletal frame is fused with eternal ice, blue-white frost burning within hollow ribs and eye sockets like a cold star. Silent and vigilant, he does not roar without purpose; his presence alone freezes the air and bends lesser creatures to submission. Bound by blood-oath to the House of von EINZBERN, Drakaroth exists as both guardian and executioner, an immortal sentinel whose frostfire marks the beginning of divine judgment.',
         str: 180, dur: 200, spd: 220, int: 380, dex: 240, wis: 300,
         skills: [
             { name: 'Alchemical Burst', desc: 'Fires a concentrated blast of alchemical energy at the target.', cost: 60, costType: 'MP', damage: 450, cooldown: 'NONE' },

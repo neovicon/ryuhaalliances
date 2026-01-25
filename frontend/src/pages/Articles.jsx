@@ -14,7 +14,7 @@ export default function Articles() {
   const [imagePreview, setImagePreview] = useState(null);
   const [uploading, setUploading] = useState(false);
 
-  const isVigil = user && (user.role === 'admin' || (user.role === 'moderator' && user.moderatorType === 'Vigil'));
+  const isArticleModerator = user && (user.role === 'admin' || (user.role === 'moderator' && (user.moderatorType === 'Aesther' || user.moderatorType === 'Vigil' || user.moderatorType === 'Overseer' || user.moderatorType === 'Emissary')));
   const isUser = !!user;
 
   useEffect(() => {
@@ -24,8 +24,8 @@ export default function Articles() {
   async function loadItems() {
     try {
       setLoading(true);
-      // Vigil sees all, others see active only
-      const params = isVigil ? {} : { activeOnly: 'true' };
+      // Article moderator sees all, others see active only
+      const params = isArticleModerator ? {} : { activeOnly: 'true' };
       const { data } = await client.get('/articles', { params });
       setItems(data.articles || []);
     } catch (error) {
@@ -129,7 +129,7 @@ export default function Articles() {
     <div className="container" style={{ padding: '2rem 1rem' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
         <h2 className="hdr">Articles</h2>
-        {isVigil && (
+        {isArticleModerator && (
           <button className="btn" onClick={() => { setShowCreateModal(true); setEditingItem(null); }}>
             Create Article
           </button>
@@ -160,7 +160,7 @@ export default function Articles() {
                 </div>
                 <div style={{ color: 'var(--muted)', fontSize: '0.85rem', marginBottom: '1rem', lineHeight: '1.6', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{item.content}</div>
                 <div style={{ borderTop: '1px solid #1f2937', paddingTop: '0.75rem', marginTop: '1rem', fontSize: '0.85rem', color: 'var(--muted)' }}>{item.createdAt && <div>{new Date(item.createdAt).toLocaleDateString()}</div>}</div>
-                {isVigil && (
+                {isArticleModerator && (
                   <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }} onClick={(e) => e.stopPropagation()}>
                     <button className="btn" onClick={() => startEdit(item)} style={{ flex: 1 }}>Edit</button>
                     <button className="btn" onClick={() => handleDelete(item.id)} style={{ flex: 1, background: 'rgba(239, 68, 68, 0.2)', border: '1px solid rgba(239, 68, 68, 0.4)' }}>Delete</button>

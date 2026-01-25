@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import client from '../../api/client';
 import './Beastlord.css';
 
-const CATEGORIES = ['All', 'Normal', 'Rare', 'Epic', 'Legendary'];
+const CATEGORIES = ['All', 'Normal', 'Rare', 'Epic', 'Legendary', 'Mythical'];
 
 export default function Store({ isLord, onPurchase, houseFunds, targetHouseName }) {
     const [loading, setLoading] = useState(false);
