@@ -1,0 +1,25 @@
+# robots.txt for Ryuha Alliance
+# https://ryuhaalliance.devsandbox.me
+
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /moderator
+Disallow: /feed
+Disallow: /login
+Disallow: /signup
+Disallow: /profile
+
+# Allow public pages
+Allow: /events
+Allow: /announcements
+Allow: /leaderboard
+Allow: /codex
+Allow: /houses/
+
+# Sitemap location
+Sitemap: https://ryuhaalliance.devsandbox.me/sitemap.xml
+
+# Crawl-delay (optional, adjust as needed)
+Crawl-delay: 1
+
