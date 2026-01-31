@@ -1,10 +1,11 @@
 // Rank system based on points
-// Only 4 ranks: Novice, Regular, Elite, Supreme Elite
+// 5 ranks: Novice, Regular, Elite, Supreme Elite, Mythical
 export const RANK_THRESHOLDS = {
   'Novice': 0,
   'Regular': 50,
   'Elite': 250,
   'Supreme Elite': 1000,
+  'Mythical': 2500,
 };
 
 // Calculate rank based on points
@@ -20,9 +21,10 @@ export function calculateRank(points) {
 
 // Get rank image path (frontend will handle the actual image display)
 export function getRankImagePath(rank) {
-  // Rank images are stored in frontend/assets/ as .jpeg files
+  // Rank images are stored in frontend/assets/ as .jpeg files (except mythical which is .jpg)
   const rankName = (rank || 'Novice').toLowerCase().replace(/\s+/g, '_');
-  return `/assets/${rankName}.jpeg`;
+  const extension = rankName === 'mythical' ? '.jpg' : '.jpeg';
+  return `/assets/${rankName}${extension}`;
 }
 
 export const RANKS = Object.keys(RANK_THRESHOLDS);

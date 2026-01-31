@@ -79,13 +79,20 @@ export async function signup(req, res) {
 }
 
 export const validateLogin = [
-  body('email').isEmail(),
-  body('password').isString(),
+  body('email').isEmail().withMessage('Please provide a valid email address'),
+  body('password').isString().withMessage('Password is required'),
 ];
 
 export async function login(req, res) {
   const errors = validationResult(req);
-  if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+  if (!errors.isEmpty()) {
+    const errorMessages = errors.array().map(err => {
+      const field = err.path || err.param;
+      const msg = err.msg;
+      return `${field}: ${msg}`;
+    }).join(', ');
+    return res.status(400).json({ error: errorMessages, errors: errors.array() });
+  }
 
   const { email, password } = req.body;
   const user = await User.findOne({ email });

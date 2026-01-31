@@ -1,14 +1,16 @@
 // Rank system - matches backend rank thresholds
-// Only 4 ranks: Novice, Regular, Elite, Supreme Elite
+// 5 ranks: Novice, Regular, Elite, Supreme Elite, Mythical
 export const RANKS = [
   'Novice',
   'Regular',
   'Elite',
   'Supreme Elite',
+  'Mythical',
 ];
 
 // Calculate rank based on points (matches backend)
 export function calculateRank(points) {
+  if (points >= 2500) return 'Mythical';
   if (points >= 1000) return 'Supreme Elite';
   if (points >= 250) return 'Elite';
   if (points >= 50) return 'Regular';
@@ -16,12 +18,13 @@ export function calculateRank(points) {
 }
 
 // Rank image component helper - returns image src
-// Images are stored in /assets/ as .jpeg files
+// Images are stored in /assets/ as .jpeg files (except mythical which is .jpg)
 export function getRankImageSrc(rank) {
   if (!rank) return '/assets/novice.jpeg';
-  
+
   // Convert rank name to match file names (lowercase, spaces to underscores)
   const rankName = rank.toLowerCase().replace(/\s+/g, '_');
-  return `/assets/${rankName}.jpeg`;
+  const extension = rankName === 'mythical' ? '.jpg' : '.jpeg';
+  return `/assets/${rankName}${extension}`;
 }
 
