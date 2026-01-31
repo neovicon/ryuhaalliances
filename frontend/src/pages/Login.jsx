@@ -153,7 +153,7 @@ export default function Login() {
         </div>
       )}
       <div className="grid">
-        <input className="input" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} />
+        <input className="input" placeholder="Email or Username" value={email} onChange={e => setEmail(e.target.value)} />
 
         <div style={{ position: 'relative' }}>
           <input

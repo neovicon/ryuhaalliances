@@ -79,8 +79,8 @@ export async function signup(req, res) {
 }
 
 export const validateLogin = [
-  body('email').isEmail(),
-  body('password').isString(),
+  body('email').isString().withMessage('Email or Username is required'),
+  body('password').isString().withMessage('Password is required'),
 ];
 
 export async function login(req, res) {
@@ -88,7 +88,12 @@ export async function login(req, res) {
   if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
   const { email, password } = req.body;
-  const user = await User.findOne({ email });
+  const user = await User.findOne({
+    $or: [
+      { email: email.toLowerCase() },
+      { username: email } // username is case-sensitive in some DBs, or you might want to normalize it
+    ]
+  });
   if (!user) return res.status(400).json({ error: 'Invalid credentials' });
   const ok = await bcrypt.compare(password, user.passwordHash);
   if (!ok) return res.status(400).json({ error: 'Invalid credentials' });

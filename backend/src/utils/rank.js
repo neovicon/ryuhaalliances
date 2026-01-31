@@ -5,6 +5,7 @@ export const RANK_THRESHOLDS = {
   'Regular': 50,
   'Elite': 250,
   'Supreme Elite': 1000,
+  'Mythical': 2500,
 };
 
 // Calculate rank based on points
@@ -22,7 +23,8 @@ export function calculateRank(points) {
 export function getRankImagePath(rank) {
   // Rank images are stored in frontend/assets/ as .jpeg files
   const rankName = (rank || 'Novice').toLowerCase().replace(/\s+/g, '_');
-  return `/assets/${rankName}.jpeg`;
+  const ext = rankName === 'mythical' ? 'jpg' : 'jpeg';
+  return `/assets/${rankName}.${ext}`;
 }
 
 export const RANKS = Object.keys(RANK_THRESHOLDS);
