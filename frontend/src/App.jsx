@@ -33,6 +33,7 @@ import Music from './pages/Music.jsx'
 import Beastlord from './pages/Beastlord.jsx'
 import RyuhaApps from './pages/RyuhaApps.jsx'
 import Coinflip from './pages/Coinflip.jsx'
+import TicTacToe from './pages/TicTacToe.jsx'
 import MusicPlayer from './components/MusicPlayer.jsx'
 import SearchBar from './components/SearchBar.jsx'
 import Messenger from './pages/Messenger.jsx'
@@ -91,6 +92,7 @@ export default function App() {
           <Route path="/beastlord" element={<Beastlord />} />
           <Route path="/ryuha-apps" element={<RyuhaApps />} />
           <Route path="/ryuha-apps/coinflip" element={<Coinflip />} />
+          <Route path="/ryuha-apps/tictactoe" element={<TicTacToe />} />
         </Routes>
         {useLocation().pathname !== '/messenger' && <Footer />}
       </NotificationProvider>
