@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import client from '../api/client';
+import { getErrorMessage } from '../utils/error';
 import { useAuth } from '../store/auth';
 
 export default function Stories() {
@@ -69,7 +70,7 @@ export default function Stories() {
       await loadItems();
     } catch (err) {
       console.error('Error creating story:', err);
-      alert(err?.response?.data?.error || 'Failed to create story');
+      alert(getErrorMessage(err, 'Failed to create story'));
     } finally { setUploading(false); }
   };
 
@@ -92,7 +93,7 @@ export default function Stories() {
       await loadItems();
     } catch (err) {
       console.error('Error updating story:', err);
-      alert(err?.response?.data?.error || 'Failed to update story');
+      alert(getErrorMessage(err, 'Failed to update story'));
     } finally { setUploading(false); }
   };
 
@@ -103,7 +104,7 @@ export default function Stories() {
       await loadItems();
     } catch (err) {
       console.error('Error deleting story:', err);
-      alert(err?.response?.data?.error || 'Failed to delete story');
+      alert(getErrorMessage(err, 'Failed to delete story'));
     }
   };
 

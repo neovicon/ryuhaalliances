@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import client from '../api/client';
+import { getErrorMessage } from '../utils/error';
 import { useAuth } from '../store/auth';
 
 export default function EventDetail() {
@@ -27,7 +28,7 @@ export default function EventDetail() {
       setEvent(data.event);
     } catch (error) {
       console.error('Error loading event:', error);
-      setError(error?.response?.data?.error || 'Failed to load event');
+      setError(getErrorMessage(error, 'Failed to load event'));
     } finally {
       setLoading(false);
     }
@@ -43,7 +44,7 @@ export default function EventDetail() {
       await loadEvent();
     } catch (error) {
       console.error('Error adding comment:', error);
-      alert(error?.response?.data?.error || 'Failed to add comment');
+      alert(getErrorMessage(error, 'Failed to add comment'));
     } finally {
       setSubmittingComment(false);
     }

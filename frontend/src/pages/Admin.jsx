@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import client from '../api/client';
 import { getRankImageSrc, calculateRank, RANKS } from '../utils/rank';
+import { getErrorMessage } from '../utils/error';
 import { useAuth } from '../store/auth';
 
 const HOUSES = ['Pendragon', 'Phantomhive', 'Tempest', 'Zoldyck', 'Fritz', 'Elric', 'Dragneel', 'Hellsing', 'Obsidian Order', 'Council of IV', 'Abyssal IV', 'Von Einzbern'];
@@ -132,7 +133,7 @@ export default function Admin() {
       setEditingUser({ userId: null, field: null });
     } catch (error) {
       console.error('Error updating points:', error);
-      alert(error?.response?.data?.error || 'Failed to update points');
+      alert(getErrorMessage(error, 'Failed to update points'));
     } finally {
       setLoadingAction(null);
     }
@@ -146,7 +147,7 @@ export default function Admin() {
       setEditingUser({ userId: null, field: null });
     } catch (error) {
       console.error('Error updating rank:', error);
-      alert(error?.response?.data?.error || 'Failed to update rank');
+      alert(getErrorMessage(error, 'Failed to update rank'));
     } finally {
       setLoadingAction(null);
     }
@@ -161,7 +162,7 @@ export default function Admin() {
       alert('House updated successfully');
     } catch (error) {
       console.error('Error updating house:', error);
-      alert(error?.response?.data?.error || 'Failed to update house');
+      alert(getErrorMessage(error, 'Failed to update house'));
     } finally {
       setLoadingAction(null);
     }
@@ -176,7 +177,7 @@ export default function Admin() {
       alert('Member status updated successfully');
     } catch (error) {
       console.error('Error updating member status:', error);
-      alert(error?.response?.data?.error || 'Failed to update member status');
+      alert(getErrorMessage(error, 'Failed to update member status'));
     } finally {
       setLoadingAction(null);
     }
@@ -191,7 +192,7 @@ export default function Admin() {
       alert('Username updated successfully');
     } catch (error) {
       console.error('Error updating username:', error);
-      alert(error?.response?.data?.error || 'Failed to update username');
+      alert(getErrorMessage(error, 'Failed to update username'));
     } finally {
       setLoadingAction(null);
     }
@@ -206,7 +207,7 @@ export default function Admin() {
       alert('Display name updated successfully');
     } catch (error) {
       console.error('Error updating display name:', error);
-      alert(error?.response?.data?.error || 'Failed to update display name');
+      alert(getErrorMessage(error, 'Failed to update display name'));
     } finally {
       setLoadingAction(null);
     }
@@ -222,7 +223,7 @@ export default function Admin() {
       alert('User promoted to moderator successfully');
     } catch (error) {
       console.error('Error adding moderator:', error);
-      alert(error?.response?.data?.error || 'Failed to add moderator');
+      alert(getErrorMessage(error, 'Failed to add moderator'));
     } finally {
       setLoadingAction(null);
     }
@@ -239,7 +240,7 @@ export default function Admin() {
       alert('Moderator role removed successfully');
     } catch (error) {
       console.error('Error removing moderator:', error);
-      alert(error?.response?.data?.error || 'Failed to remove moderator');
+      alert(getErrorMessage(error, 'Failed to remove moderator'));
     } finally {
       setLoadingAction(null);
     }
@@ -261,7 +262,7 @@ export default function Admin() {
       alert('User removed successfully');
     } catch (error) {
       console.error('Error removing user:', error);
-      alert(error?.response?.data?.error || 'Failed to remove user');
+      alert(getErrorMessage(error, 'Failed to remove user'));
     } finally {
       setLoadingAction(null);
     }
@@ -292,7 +293,7 @@ export default function Admin() {
       alert('User approved successfully');
     } catch (error) {
       console.error('Error approving user:', error);
-      alert(error?.response?.data?.error || 'Failed to approve user');
+      alert(getErrorMessage(error, 'Failed to approve user'));
     } finally {
       setLoadingAction(null);
     }
@@ -311,7 +312,7 @@ export default function Admin() {
       alert('User declined successfully');
     } catch (error) {
       console.error('Error declining user:', error);
-      alert(error?.response?.data?.error || 'Failed to decline user');
+      alert(getErrorMessage(error, 'Failed to decline user'));
     } finally {
       setLoadingAction(null);
     }
@@ -329,7 +330,7 @@ export default function Admin() {
       alert('Message sent successfully');
     } catch (error) {
       console.error('Error sending message:', error);
-      alert(error?.response?.data?.error || 'Failed to send message');
+      alert(getErrorMessage(error, 'Failed to send message'));
     } finally {
       setLoadingAction(null);
     }
@@ -352,7 +353,7 @@ export default function Admin() {
       });
     } catch (error) {
       console.error('Error loading house:', error);
-      alert(error?.response?.data?.error || 'Failed to load house');
+      alert(getErrorMessage(error, 'Failed to load house'));
     } finally {
       setLoadingSelectedHouse(false);
     }
@@ -381,7 +382,7 @@ export default function Admin() {
       alert('House details updated successfully');
     } catch (error) {
       console.error('Error updating house details:', error);
-      alert(error?.response?.data?.error || 'Failed to update house details');
+      alert(getErrorMessage(error, 'Failed to update house details'));
     } finally {
       setLoadingAction(null);
     }

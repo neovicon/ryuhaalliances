@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import client from '../api/client';
+import { getErrorMessage } from '../utils/error';
 import { useAuth } from '../store/auth';
 import Reactions from '../components/Reactions';
 import ShareButton from '../components/ShareButton';
@@ -41,7 +42,7 @@ export default function PostDetail() {
             setPost(data.post);
         } catch (err) {
             console.error('Failed to load post:', err);
-            setError('Failed to load post');
+            setError(getErrorMessage(err, 'Failed to load post'));
         } finally {
             setLoading(false);
         }
@@ -58,7 +59,7 @@ export default function PostDetail() {
             await loadPost(); // Reload to see new comment
         } catch (err) {
             console.error('Failed to post comment:', err);
-            alert('Failed to post comment');
+            alert(getErrorMessage(err, 'Failed to post comment'));
         } finally {
             setSubmitting(false);
         }
@@ -71,7 +72,7 @@ export default function PostDetail() {
             navigate('/feed');
         } catch (err) {
             console.error('Failed to delete post:', err);
-            alert('Failed to delete post');
+            alert(getErrorMessage(err, 'Failed to delete post'));
         }
     }
 
@@ -82,7 +83,7 @@ export default function PostDetail() {
             await loadPost();
         } catch (err) {
             console.error('Failed to delete comment:', err);
-            alert('Failed to delete comment');
+            alert(getErrorMessage(err, 'Failed to delete comment'));
         }
     }
 

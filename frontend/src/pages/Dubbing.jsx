@@ -4,6 +4,7 @@ import client from '../api/client';
 import { useAuth } from '../store/auth';
 import { Upload, Play, Eye } from 'lucide-react';
 import { compressImage, shouldCompress } from '../utils/compression';
+import { getErrorMessage } from '../utils/error';
 
 export default function Dubbing() {
     const { user } = useAuth();
@@ -205,14 +206,7 @@ function UploadModal({ onClose, onSuccess }) {
             onSuccess();
         } catch (error) {
             console.error('Error uploading video:', error);
-            console.error('Error response:', error?.response?.data);
-            // Better error handling for validation errors
-            if (error?.response?.data?.errors) {
-                const errorMessages = error.response.data.errors.map(err => `${err.param}: ${err.msg}`).join(', ');
-                alert(`Validation error: ${errorMessages}`);
-            } else {
-                alert(error?.response?.data?.error || 'Failed to upload video');
-            }
+            alert(getErrorMessage(error, 'Failed to upload video'));
         } finally {
             setUploading(false);
             setUploadProgress(0);

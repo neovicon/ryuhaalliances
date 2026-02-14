@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import client from '../api/client';
 import { useAuth } from '../store/auth';
 import { getRankImageSrc, calculateRank } from '../utils/rank';
+import { getErrorMessage } from '../utils/error';
 
 function getHouseImageSrc(houseName) {
   if (!houseName) return '/assets/pendragon.jpeg';
@@ -129,7 +130,7 @@ export default function Profile() {
       console.error('Failed to load profile:', error);
       setProfile(null);
       setPosts([]);
-      setProfileError(error?.response?.data?.error || 'Failed to load profile');
+      setProfileError(getErrorMessage(error, 'Failed to load profile'));
     } finally {
       setLoadingProfile(false);
     }
@@ -155,7 +156,7 @@ export default function Profile() {
       console.error('Failed to load public profile:', error);
       setProfile(null);
       setPosts([]);
-      setProfileError(error?.response?.data?.error || 'Profile not found');
+      setProfileError(getErrorMessage(error, 'Profile not found'));
     } finally {
       setLoadingProfile(false);
     }
@@ -186,7 +187,7 @@ export default function Profile() {
       if (isSelf) await loadSelfProfile(); else await loadPublicProfile(profile.username || profile.sigil || profile.id);
     } catch (error) {
       console.error('Failed to remove warning:', error);
-      alert(error?.response?.data?.error || 'Failed to remove warning');
+      alert(getErrorMessage(error, 'Failed to remove warning'));
     }
   };
 
@@ -220,7 +221,7 @@ export default function Profile() {
       }
     } catch (error) {
       console.error('Failed to create post:', error);
-      alert(error?.response?.data?.error || 'Failed to create post');
+      alert(getErrorMessage(error, 'Failed to create post'));
     } finally {
       setCreatingPost(false);
     }
@@ -249,7 +250,7 @@ export default function Profile() {
           await loadSelfProfile();
         } catch (error) {
           console.error('Failed to upload hero card:', error);
-          alert(error?.response?.data?.error || 'Failed to upload hero card');
+          alert(getErrorMessage(error, 'Failed to upload hero card'));
         } finally {
           setUploadingHero(false);
         }
@@ -281,7 +282,7 @@ export default function Profile() {
           await loadSelfProfile();
         } catch (error) {
           console.error('Failed to upload profile picture:', error);
-          alert(error?.response?.data?.error || 'Failed to upload profile picture');
+          alert(getErrorMessage(error, 'Failed to upload profile picture'));
         } finally {
           setUploadingAvatar(false);
         }
@@ -301,7 +302,7 @@ export default function Profile() {
       await loadSelfProfile();
     } catch (error) {
       console.error('Failed to upload hero card:', error);
-      alert(error?.response?.data?.error || 'Failed to upload hero card');
+      alert(getErrorMessage(error, 'Failed to upload hero card'));
     } finally {
       setUploadingHero(false);
     }
@@ -318,7 +319,7 @@ export default function Profile() {
       await loadSelfProfile();
     } catch (error) {
       console.error('Failed to upload profile picture:', error);
-      alert(error?.response?.data?.error || 'Failed to upload profile picture');
+      alert(getErrorMessage(error, 'Failed to upload profile picture'));
     } finally {
       setUploadingAvatar(false);
     }
@@ -335,7 +336,7 @@ export default function Profile() {
       await loadSelfProfile();
     } catch (error) {
       console.error('Failed to delete hero license:', error);
-      alert(error?.response?.data?.error || 'Failed to delete hero license');
+      alert(getErrorMessage(error, 'Failed to delete hero license'));
     } finally {
       setDeletingHero(false);
     }
@@ -740,7 +741,7 @@ export default function Profile() {
                             if (isSelf) await loadSelfProfile(); else await loadPublicProfile(profile.username || profile.sigil || profile.id);
                           } catch (error) {
                             console.error('Failed to delete certificate:', error);
-                            alert(error?.response?.data?.error || 'Failed to delete certificate');
+                            alert(getErrorMessage(error, 'Failed to delete certificate'));
                           }
                         }}
                         style={{

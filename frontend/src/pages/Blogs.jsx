@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import client from '../api/client';
+import { getErrorMessage } from '../utils/error';
 import { useAuth } from '../store/auth';
 
 export default function Blogs() {
@@ -75,7 +76,7 @@ export default function Blogs() {
       await loadBlogs();
     } catch (error) {
       console.error('Error creating blog:', error);
-      alert(error?.response?.data?.error || 'Failed to create blog');
+      alert(getErrorMessage(error, 'Failed to create blog'));
     } finally {
       setUploading(false);
     }
@@ -106,7 +107,7 @@ export default function Blogs() {
       await loadBlogs();
     } catch (error) {
       console.error('Error updating blog:', error);
-      alert(error?.response?.data?.error || 'Failed to update blog');
+      alert(getErrorMessage(error, 'Failed to update blog'));
     } finally {
       setUploading(false);
     }
@@ -120,7 +121,7 @@ export default function Blogs() {
       await loadBlogs();
     } catch (error) {
       console.error('Error deleting blog:', error);
-      alert(error?.response?.data?.error || 'Failed to delete blog');
+      alert(getErrorMessage(error, 'Failed to delete blog'));
     }
   };
 

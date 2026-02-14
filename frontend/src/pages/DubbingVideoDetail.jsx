@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import client from '../api/client';
+import { getErrorMessage } from '../utils/error';
 import { useAuth } from '../store/auth';
 import { Heart, Flame, Hand, Laugh, ThumbsUp, Share2, MessageCircle, Trash2, Send } from 'lucide-react';
 
@@ -57,7 +58,7 @@ export default function DubbingVideoDetail() {
             await loadVideo();
         } catch (error) {
             console.error('Error handling reaction:', error);
-            alert(error?.response?.data?.error || 'Failed to update reaction');
+            alert(getErrorMessage(error, 'Failed to update reaction'));
         }
     }
 
@@ -76,7 +77,7 @@ export default function DubbingVideoDetail() {
             await loadVideo();
         } catch (error) {
             console.error('Error adding comment:', error);
-            alert(error?.response?.data?.error || 'Failed to add comment');
+            alert(getErrorMessage(error, 'Failed to add comment'));
         } finally {
             setSubmittingComment(false);
         }
@@ -90,7 +91,7 @@ export default function DubbingVideoDetail() {
             await loadVideo();
         } catch (error) {
             console.error('Error deleting comment:', error);
-            alert(error?.response?.data?.error || 'Failed to delete comment');
+            alert(getErrorMessage(error, 'Failed to delete comment'));
         }
     }
 
@@ -121,7 +122,7 @@ export default function DubbingVideoDetail() {
             navigate('/dubbing');
         } catch (error) {
             console.error('Error deleting video:', error);
-            alert(error?.response?.data?.error || 'Failed to delete video');
+            alert(getErrorMessage(error, 'Failed to delete video'));
         }
     }
 

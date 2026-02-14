@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import client from '../api/client';
 import Reactions from '../components/Reactions';
 import ShareButton from '../components/ShareButton';
-
+import { getErrorMessage } from '../utils/error';
 import { useAuth } from '../store/auth';
 
 export default function Feed() {
@@ -78,7 +78,7 @@ export default function Feed() {
       loadPosts(true); // Refresh feed
     } catch (error) {
       console.error('Failed to create post:', error);
-      alert('Failed to create post');
+      alert(getErrorMessage(error, 'Failed to create post'));
     } finally {
       setPosting(false);
     }
@@ -92,7 +92,7 @@ export default function Feed() {
       setPosts(prev => prev.filter(p => (p._id || p.id) !== postId));
     } catch (error) {
       console.error('Failed to delete post:', error);
-      alert('Failed to delete post');
+      alert(getErrorMessage(error, 'Failed to delete post'));
     }
   };
 

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import client from '../api/client';
+import { getErrorMessage } from '../utils/error';
 import { useAuth } from '../store/auth';
 
 export default function Moderator() {
@@ -54,7 +55,7 @@ export default function Moderator() {
       setPendingUsers(data.users || []);
     } catch (error) {
       console.error('Error loading pending users:', error);
-      alert(error?.response?.data?.error || 'Failed to load pending users');
+      alert(getErrorMessage(error, 'Failed to load pending users'));
     } finally {
       setLoadingPending(false);
     }
@@ -72,7 +73,7 @@ export default function Moderator() {
       setSearchResults(data.users || []);
     } catch (error) {
       console.error('Error searching users:', error);
-      alert(error?.response?.data?.error || 'Failed to search users');
+      alert(getErrorMessage(error, 'Failed to search users'));
     } finally {
       setLoadingSearch(false);
     }
@@ -118,7 +119,7 @@ export default function Moderator() {
       alert('User approved successfully');
     } catch (error) {
       console.error('Error approving user:', error);
-      alert(error?.response?.data?.error || 'Failed to approve user');
+      alert(getErrorMessage(error, 'Failed to approve user'));
     }
   };
 
@@ -132,7 +133,7 @@ export default function Moderator() {
       alert('User removed successfully');
     } catch (error) {
       console.error('Error removing user:', error);
-      alert(error?.response?.data?.error || 'Failed to remove user');
+      alert(getErrorMessage(error, 'Failed to remove user'));
     }
   };
 
@@ -154,7 +155,7 @@ export default function Moderator() {
       }
     } catch (error) {
       console.error('Error uploading hero card:', error);
-      alert(error?.response?.data?.error || 'Failed to upload hero license');
+      alert(getErrorMessage(error, 'Failed to upload hero license'));
     } finally {
       setUploadingHeroCard(false);
     }
@@ -178,7 +179,7 @@ export default function Moderator() {
       }
     } catch (error) {
       console.error('Error uploading certificate:', error);
-      alert(error?.response?.data?.error || 'Failed to upload certificate');
+      alert(getErrorMessage(error, 'Failed to upload certificate'));
     } finally {
       setUploadingCertificate(false);
     }
@@ -212,7 +213,7 @@ export default function Moderator() {
       }
     } catch (error) {
       console.error('Error uploading warning notice:', error);
-      alert(error?.response?.data?.error || 'Failed to upload warning notice');
+      alert(getErrorMessage(error, 'Failed to upload warning notice'));
     } finally {
       setUploadingWarning(false);
     }

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import client from '../api/client';
+import { getErrorMessage } from '../utils/error';
 import { useAuth } from '../store/auth';
 
 export default function Home() {
@@ -142,7 +143,7 @@ export default function Home() {
       loadLeadership();
     } catch (error) {
       console.error('Error saving leadership member:', error);
-      alert('Failed to save leadership member');
+      alert(getErrorMessage(error, 'Failed to save leadership member'));
     } finally {
       setSubmittingLeadership(false);
     }
@@ -156,7 +157,7 @@ export default function Home() {
       loadLeadership();
     } catch (error) {
       console.error('Error deleting leadership member:', error);
-      alert('Failed to delete leadership member');
+      alert(getErrorMessage(error, 'Failed to delete leadership member'));
     }
   }
 

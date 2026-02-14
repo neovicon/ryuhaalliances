@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import client from '../api/client';
+import { getErrorMessage } from '../utils/error';
 import { useAuth } from '../store/auth';
 
 export default function Events() {
@@ -79,7 +80,7 @@ export default function Events() {
       await loadEvents();
     } catch (error) {
       console.error('Error creating event:', error);
-      alert(error?.response?.data?.error || 'Failed to create event');
+      alert(getErrorMessage(error, 'Failed to create event'));
     } finally {
       setUploading(false);
     }
@@ -111,7 +112,7 @@ export default function Events() {
       await loadEvents();
     } catch (error) {
       console.error('Error updating event:', error);
-      alert(error?.response?.data?.error || 'Failed to update event');
+      alert(getErrorMessage(error, 'Failed to update event'));
     } finally {
       setUploading(false);
     }
@@ -125,7 +126,7 @@ export default function Events() {
       await loadEvents();
     } catch (error) {
       console.error('Error deleting event:', error);
-      alert(error?.response?.data?.error || 'Failed to delete event');
+      alert(getErrorMessage(error, 'Failed to delete event'));
     }
   };
 

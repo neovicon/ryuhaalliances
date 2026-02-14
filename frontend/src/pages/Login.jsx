@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../store/auth';
 import client from '../api/client';
+import { getErrorMessage } from '../utils/error';
 
 export default function Login() {
   const login = useAuth(state => state.login);
@@ -40,7 +41,7 @@ export default function Login() {
 
           navigate('/profile');
         } catch (e) {
-          setError(e?.response?.data?.error || 'Invalid or expired login link');
+          setError(getErrorMessage(e, 'Invalid or expired login link'));
         } finally {
           setLoading(false);
         }
@@ -72,7 +73,7 @@ export default function Login() {
       navigate('/profile');
     } catch (e) {
       const errorData = e?.response?.data;
-      setError(errorData?.error || 'Login failed');
+      setError(getErrorMessage(e, 'Login failed'));
       if (errorData?.adminMessage) {
         setAdminMessage(errorData.adminMessage);
       }
@@ -90,7 +91,7 @@ export default function Login() {
       setSuccess('Verification code sent to your email.');
       setView('reset-password');
     } catch (e) {
-      setError(e?.response?.data?.error || 'Failed to send code');
+      setError(getErrorMessage(e, 'Failed to send code'));
     } finally {
       setLoading(false);
     }
@@ -106,7 +107,7 @@ export default function Login() {
       setView('login');
       setPassword('');
     } catch (e) {
-      setError(e?.response?.data?.error || 'Failed to reset password');
+      setError(getErrorMessage(e, 'Failed to reset password'));
     } finally {
       setLoading(false);
     }
@@ -120,7 +121,7 @@ export default function Login() {
       await client.post('/auth/send-login-link', { email });
       setSuccess('Login link sent! Check your email.');
     } catch (e) {
-      setError(e?.response?.data?.error || 'Failed to send login link');
+      setError(getErrorMessage(e, 'Failed to send login link'));
     } finally {
       setLoading(false);
     }

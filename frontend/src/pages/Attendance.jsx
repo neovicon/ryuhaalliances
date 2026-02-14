@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { apiCall } from "../utils/requests.js";
+import { getErrorMessage } from '../utils/error';
 
 
 // --- UTILS ---
@@ -180,7 +181,7 @@ const Attendance = () => {
       setIsEditing(false);
     } catch (err) {
       console.error("Failed to save", err);
-      alert("Failed to save attendance.");
+      alert(getErrorMessage(err, "Failed to save attendance."));
     } finally {
       setLoading(false);
     }

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import client from '../api/client';
+import { getErrorMessage } from '../utils/error';
 import { useAuth } from '../store/auth';
 import RichContent from '../components/RichContent';
 import Reactions from '../components/Reactions';
@@ -22,13 +23,13 @@ export default function BlogDetail() {
   useEffect(() => { loadBlog(); }, [id]);
 
   async function loadBlog() {
-    try { setLoading(true); setError(null); const { data } = await client.get(`/blogs/${id}`); setBlog(data.blog); } catch (error) { console.error('Error loading blog:', error); setError(error?.response?.data?.error || 'Failed to load blog'); } finally { setLoading(false); }
+    try { setLoading(true); setError(null); const { data } = await client.get(`/blogs/${id}`); setBlog(data.blog); } catch (error) { console.error('Error loading blog:', error); setError(getErrorMessage(error, 'Failed to load blog')); } finally { setLoading(false); }
   }
 
   const handleAddComment = async () => {
     if (!commentContent.trim() || !user) return;
     setSubmittingComment(true);
-    try { await client.post(`/blogs/${id}/comments`, { content: commentContent.trim() }); setCommentContent(''); await loadBlog(); } catch (error) { console.error('Error adding comment:', error); alert(error?.response?.data?.error || 'Failed to add comment'); } finally { setSubmittingComment(false); }
+    try { await client.post(`/blogs/${id}/comments`, { content: commentContent.trim() }); setCommentContent(''); await loadBlog(); } catch (error) { console.error('Error adding comment:', error); alert(getErrorMessage(error, 'Failed to add comment')); } finally { setSubmittingComment(false); }
   };
 
   if (loading) return <div className="container" style={{ padding: '2rem 1rem' }}><div style={{ textAlign: 'center', color: 'var(--muted)' }}>Loading blog...</div></div>;

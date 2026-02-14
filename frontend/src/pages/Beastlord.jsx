@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import client from '../api/client';
 import CreatureStats from '../components/beastlord/CreatureStats';
 import Store from '../components/beastlord/Store';
+import { getErrorMessage } from '../utils/error';
 import '../components/beastlord/Beastlord.css';
 
 export default function Beastlord() {
@@ -78,7 +79,7 @@ export default function Beastlord() {
             setDonation('');
             fetchData(selectedHouse);
         } catch (err) {
-            alert(err.response?.data?.error || 'Transfer failed');
+            alert(getErrorMessage(err, 'Transfer failed'));
         }
     };
 
@@ -89,7 +90,7 @@ export default function Beastlord() {
             alert('Purchase undone!');
             fetchData(selectedHouse);
         } catch (err) {
-            alert(err.response?.data?.error || 'Undo failed');
+            alert(getErrorMessage(err, 'Undo failed'));
         }
     };
 
@@ -132,7 +133,11 @@ export default function Beastlord() {
             alert('Attributes updated!');
             fetchData(selectedHouse);
         } catch (err) {
+<<<<<<< HEAD
             alert(err.response?.data?.error || 'Update failed');
+=======
+            alert(getErrorMessage(err, 'Update failed'));
+>>>>>>> 82ef53dfdbe59300618071b01792a3debded4356
         }
     };
 
@@ -147,7 +152,7 @@ export default function Beastlord() {
             fetchData(selectedHouse);
         } catch (error) {
             console.error('Error updating skills:', error);
-            alert('Failed to update skills');
+            alert(getErrorMessage(error, 'Failed to update skills'));
         }
     };
 
@@ -174,7 +179,7 @@ export default function Beastlord() {
             setNewItem({ name: '', cost: 0, rarity: 'Normal', desc: '', statsText: '', stats: {} });
             fetchItems();
         } catch (err) {
-            alert(err.response?.data?.error || 'Item save failed');
+            alert(getErrorMessage(err, 'Item save failed'));
         }
     };
 
@@ -185,7 +190,7 @@ export default function Beastlord() {
             alert('Item deleted!');
             fetchItems();
         } catch (err) {
-            alert(err.response?.data?.error || 'Delete failed');
+            alert(getErrorMessage(err, 'Delete failed'));
         }
     };
 
@@ -210,7 +215,7 @@ export default function Beastlord() {
             handleSingleSkillChange(idx, 'image', url);
         } catch (error) {
             console.error('Error uploading image:', error);
-            alert('Failed to upload image. Please try again.');
+            alert(getErrorMessage(error, 'Failed to upload image. Please try again.'));
         }
     };
 
@@ -239,7 +244,11 @@ export default function Beastlord() {
             alert('House funds updated!');
             fetchData(selectedHouse);
         } catch (err) {
+<<<<<<< HEAD
             alert(err.response?.data?.error || 'Update failed');
+=======
+            alert(getErrorMessage(err, 'Update failed'));
+>>>>>>> 82ef53dfdbe59300618071b01792a3debded4356
         }
     };
 
@@ -410,7 +419,7 @@ export default function Beastlord() {
                 <main className="beastlord-main">
                     {tab === 'stats' && (
                         <div>
-                            <CreatureStats creature={data.creature} />
+                            <CreatureStats creature={data.creature} houseName={data.house.name} />
                         </div>
                     )}
 

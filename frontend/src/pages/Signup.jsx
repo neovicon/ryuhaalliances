@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../store/auth';
+import { getErrorMessage } from '../utils/error';
 
 const houses = ['Pendragon', 'Phantomhive', 'Tempest', 'Zoldyck', 'Fritz', 'Elric', 'Dragneel', 'Hellsing', 'Obsidian Order', 'Council of IV', 'Abyssal IV', 'Von Einzbern'];
 
@@ -39,13 +40,7 @@ export default function Signup() {
       setIsPending(true);
       // Don't navigate, show pending message instead
     } catch (e) {
-      let errorMsg = e?.response?.data?.error || 'Signup failed';
-      if (!errorMsg && e?.response?.data?.errors) {
-        errorMsg = e.response.data.errors.map(err =>
-          `${err.param || err.path}: ${err.msg}`
-        ).join(', ');
-      }
-      setError(errorMsg);
+      setError(getErrorMessage(e, 'Signup failed'));
     }
   };
 

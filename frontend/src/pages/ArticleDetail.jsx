@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import client from '../api/client';
+import { getErrorMessage } from '../utils/error';
 import { useAuth } from '../store/auth';
 import RichContent from '../components/RichContent';
 import Reactions from '../components/Reactions';
@@ -20,13 +21,13 @@ export default function ArticleDetail() {
   useEffect(() => { loadArticle() }, [id]);
 
   async function loadArticle() {
-    try { setLoading(true); setError(null); const { data } = await client.get(`/articles/${id}`); setArticle(data.article); } catch (err) { console.error('Error loading article:', err); setError(err?.response?.data?.error || 'Failed to load article'); } finally { setLoading(false); }
+    try { setLoading(true); setError(null); const { data } = await client.get(`/articles/${id}`); setArticle(data.article); } catch (err) { console.error('Error loading article:', err); setError(getErrorMessage(err, 'Failed to load article')); } finally { setLoading(false); }
   }
 
   const handleAddComment = async () => {
     if (!commentContent.trim() || !user) return;
     setSubmittingComment(true);
-    try { await client.post(`/articles/${id}/comments`, { content: commentContent.trim() }); setCommentContent(''); await loadArticle(); } catch (err) { console.error('Error adding comment:', err); alert(err?.response?.data?.error || 'Failed to add comment'); } finally { setSubmittingComment(false); }
+    try { await client.post(`/articles/${id}/comments`, { content: commentContent.trim() }); setCommentContent(''); await loadArticle(); } catch (err) { console.error('Error adding comment:', err); alert(getErrorMessage(err, 'Failed to add comment')); } finally { setSubmittingComment(false); }
   };
 
   if (loading) return <div className="container" style={{ padding: '2rem 1rem' }}><div style={{ textAlign: 'center', color: 'var(--muted)' }}>Loading article...</div></div>;

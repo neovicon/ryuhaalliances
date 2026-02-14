@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import client from '../api/client';
+import { getErrorMessage } from '../utils/error';
 import { useAuth } from '../store/auth';
 
 export default function Articles() {
@@ -70,7 +71,7 @@ export default function Articles() {
       await loadItems();
     } catch (err) {
       console.error('Error creating article:', err);
-      alert(err?.response?.data?.error || 'Failed to create article');
+      alert(getErrorMessage(err, 'Failed to create article'));
     } finally { setUploading(false); }
   };
 
@@ -93,7 +94,7 @@ export default function Articles() {
       await loadItems();
     } catch (err) {
       console.error('Error updating article:', err);
-      alert(err?.response?.data?.error || 'Failed to update article');
+      alert(getErrorMessage(err, 'Failed to update article'));
     } finally { setUploading(false); }
   };
 
@@ -104,7 +105,7 @@ export default function Articles() {
       await loadItems();
     } catch (err) {
       console.error('Error deleting article:', err);
-      alert(err?.response?.data?.error || 'Failed to delete article');
+      alert(getErrorMessage(err, 'Failed to delete article'));
     }
   };
 

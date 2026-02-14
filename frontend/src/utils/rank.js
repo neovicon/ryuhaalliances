@@ -21,7 +21,6 @@ export function calculateRank(points) {
 // Images are stored in /assets/ as .jpeg files
 export function getRankImageSrc(rank) {
   if (!rank) return '/assets/novice.jpeg';
-
   // Convert rank name to match file names (lowercase, spaces to underscores)
   const rankName = rank.toLowerCase().replace(/\s+/g, '_');
   const ext = rankName === 'mythical' ? 'jpg' : 'jpeg';

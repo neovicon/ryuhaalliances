@@ -1,7 +1,7 @@
 import React from 'react';
 import './Beastlord.css';
 
-export default function CreatureStats({ creature }) {
+export default function CreatureStats({ creature, houseName }) {
     if (!creature) return <div className="loading">Initializing Core Matrix...</div>;
 
     const StatBar = ({ label, value, color }) => (
@@ -24,7 +24,13 @@ export default function CreatureStats({ creature }) {
     );
 
     const getCreatureImage = (name) => {
-        if (!name) return null;
+        if (!name) {
+            if (houseName) {
+                const filename = houseName.toLowerCase().replace(/ /g, '_') + '.jpeg';
+                return `/assets/beasts/${filename}`;
+            }
+            return null;
+        }
         // Map names to filenames
         const map = {
             'Catton Ying': 'catton_ying.jpeg',
