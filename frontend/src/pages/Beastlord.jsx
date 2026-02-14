@@ -133,11 +133,7 @@ export default function Beastlord() {
             alert('Attributes updated!');
             fetchData(selectedHouse);
         } catch (err) {
-<<<<<<< HEAD
             alert(err.response?.data?.error || 'Update failed');
-=======
-            alert(getErrorMessage(err, 'Update failed'));
->>>>>>> 82ef53dfdbe59300618071b01792a3debded4356
         }
     };
 
@@ -244,11 +240,7 @@ export default function Beastlord() {
             alert('House funds updated!');
             fetchData(selectedHouse);
         } catch (err) {
-<<<<<<< HEAD
             alert(err.response?.data?.error || 'Update failed');
-=======
-            alert(getErrorMessage(err, 'Update failed'));
->>>>>>> 82ef53dfdbe59300618071b01792a3debded4356
         }
     };
 
