@@ -8,6 +8,12 @@ const RyuhaApps = () => {
             description: "Test your luck with a flip of a coin. Heads or Tails?",
             thumbnail: "/assets/coinflip.png",
             path: "/ryuha-apps/coinflip"
+        },
+        {
+            name: "Tic Tac Toe",
+            description: "Challenge the AI in a futuristic Cyber Clash.",
+            thumbnail: "/assets/tictactoe.png",
+            path: "/ryuha-apps/tictactoe"
         }
     ];
 

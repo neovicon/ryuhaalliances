@@ -1,5 +1,5 @@
 // Rank system - matches backend rank thresholds
-// Only 4 ranks: Novice, Regular, Elite, Supreme Elite
+// 5 ranks: Novice, Regular, Elite, Supreme Elite, Mythical
 export const RANKS = [
   'Novice',
   'Regular',
@@ -18,7 +18,7 @@ export function calculateRank(points) {
 }
 
 // Rank image component helper - returns image src
-// Images are stored in /assets/ as .jpeg files
+// Images are stored in /assets/ as .jpeg files (except mythical which is .jpg)
 export function getRankImageSrc(rank) {
   if (!rank) return '/assets/novice.jpeg';
   // Convert rank name to match file names (lowercase, spaces to underscores)
