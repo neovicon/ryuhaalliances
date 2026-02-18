@@ -44,9 +44,14 @@ const io = new Server(httpServer, {
       process.env.CLIENT_ORIGIN || 'https://ryuhaalliance.online',
       'http://localhost:5173'
     ],
-    credentials: true
+    credentials: true,
+    methods: ["GET", "POST"]
   }
 });
+
+
+// --- Labyrinth Game Logic ---
+const games = new Map();
 
 io.on('connection', (socket) => {
   console.log('New client connected:', socket.id);
@@ -88,7 +93,143 @@ io.on('connection', (socket) => {
     }
   });
 
+  socket.on('create_game', ({ name, password, board, start, end, username }) => {
+    if (games.has(name)) {
+      socket.emit('error', 'Game name already exists');
+      return;
+    }
+    games.set(name, {
+      password,
+      host: { id: socket.id, username, board, start, end, currentPos: start },
+      joiner: null,
+      turn: socket.id, // Host starts first
+      status: 'waiting'
+    });
+    socket.join(name);
+    console.log(`Game created: ${name} by ${username}`);
+    socket.emit('game_created', { name });
+  });
+
+  socket.on('join_game', ({ name, password, board, start, end, username }) => {
+    const game = games.get(name);
+    if (!game) {
+      socket.emit('error', 'Game not found');
+      return;
+    }
+    if (game.password !== password) {
+      socket.emit('error', 'Incorrect password');
+      return;
+    }
+    if (game.joiner) {
+      socket.emit('error', 'Game is full');
+      return;
+    }
+
+    game.joiner = { id: socket.id, username, board, start, end, currentPos: start };
+    game.status = 'playing';
+
+    socket.join(name);
+    console.log(`User ${username} joined game ${name}`);
+
+    // Notify both players
+    io.to(name).emit('game_started', {
+      host: game.host.username,
+      joiner: game.joiner.username,
+      turn: game.host.id
+    });
+
+    // Send initial opponent data (masked)
+    io.to(game.host.id).emit('opponent_data', { start: game.joiner.start, end: game.joiner.end });
+    io.to(game.joiner.id).emit('opponent_data', { start: game.host.start, end: game.host.end });
+  });
+
+  socket.on('make_move', ({ gameName, targetCell }) => {
+    const game = games.get(gameName);
+    if (!game || game.status !== 'playing') return;
+
+    if (game.turn !== socket.id) {
+      socket.emit('error', 'Not your turn');
+      return;
+    }
+
+    const isHost = socket.id === game.host.id;
+    const player = isHost ? game.host : game.joiner;
+    const opponent = isHost ? game.joiner : game.host;
+
+    const fromPos = player.currentPos; // Store previous position
+
+    // Validate Move (Adjacency & Range)
+    const [currR, currC] = fromPos.split('-').map(Number);
+    const [targetR, targetC] = targetCell.split('-').map(Number);
+
+    // Coordinate Helper: 0-0 -> A1
+    const formatCoord = (r, c) => `${String.fromCharCode(65 + c)}${r + 1}`;
+    const fromStr = formatCoord(currR, currC);
+    const toStr = formatCoord(targetR, targetC);
+    const moveStr = `${fromStr}-${toStr}`;
+
+    // Check range (must be adjacent, no diagonals)
+    const dist = Math.abs(currR - targetR) + Math.abs(currC - targetC);
+    if (dist !== 1) {
+      socket.emit('move_result', { success: false, message: 'Invalid move: must be adjacent' });
+      // Turn passes to opponent as penalty
+      game.turn = opponent.id;
+      io.to(gameName).emit('turn_update', { turn: game.turn });
+      return;
+    }
+
+    // Check Wall (Against OPPONENT'S board)
+    // Wall key format: v-r-c or h-r-c
+    let wallKey = null;
+    if (currR === targetR) {
+      // Horizontal move
+      if (targetC > currC) wallKey = `v-${currR}-${targetC}`;
+      else wallKey = `v-${currR}-${currC}`;
+    } else {
+      // Vertical move
+      if (targetR > currR) wallKey = `h-${targetR}-${currC}`;
+      else wallKey = `h-${currR}-${currC}`;
+    }
+
+    // Opponent board is Set-like array
+    if (opponent.board.includes(wallKey)) {
+      // Hit a wall!
+      socket.emit('move_result', { success: false, message: `You hit a wall at ${moveStr}!` });
+      game.turn = opponent.id;
+      io.to(gameName).emit('turn_update', {
+        turn: game.turn,
+        log: `${player.username} hit a wall at ${moveStr}`
+      });
+    } else {
+      // Valid move
+      player.currentPos = targetCell;
+
+      // Check Win
+      if (player.currentPos === opponent.end) {
+        // Send game over with BOTH boards so players can see the hidden walls
+        io.to(gameName).emit('game_over', {
+          winner: player.username,
+          hostBoard: game.host.board,
+          joinerBoard: game.joiner.board
+        });
+        games.delete(gameName);
+      } else {
+        socket.emit('move_result', { success: true, position: targetCell });
+        // Send 'from' and 'to' so opponent can see the move animation/log
+        io.to(gameName).emit('game_update', {
+          player: player.username,
+          from: fromPos,
+          to: targetCell,
+          moveStr: moveStr
+        });
+      }
+    }
+  });
+  // --- End Labyrinth Logic ---
+
   socket.on('disconnect', () => {
+    // Clean up games if host disconnects?
+    // For now, simple log
     console.log('Client disconnected:', socket.id);
   });
 });

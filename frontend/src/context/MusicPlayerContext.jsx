@@ -83,6 +83,7 @@ export const MusicPlayerProvider = ({ children }) => {
                 fs: 0,
                 modestbranding: 1,
                 playsinline: 1,
+                origin: window.location.origin,
             },
             events: {
                 onReady: onPlayerReady,

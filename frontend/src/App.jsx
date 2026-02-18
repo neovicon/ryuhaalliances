@@ -34,11 +34,13 @@ import Beastlord from './pages/Beastlord.jsx'
 import RyuhaApps from './pages/RyuhaApps.jsx'
 import Coinflip from './pages/Coinflip.jsx'
 import TicTacToe from './pages/TicTacToe.jsx'
+import Labyrinth from './pages/Labyrinth.jsx'
 import MusicPlayer from './components/MusicPlayer.jsx'
 import SearchBar from './components/SearchBar.jsx'
 import Messenger from './pages/Messenger.jsx'
 import { MusicPlayerProvider } from './context/MusicPlayerContext.jsx'
 import { NotificationProvider } from './context/NotificationContext.jsx'
+import { SocketProvider } from './context/SocketContext.jsx'
 
 
 export default function App() {
@@ -57,45 +59,48 @@ export default function App() {
 
   return (
     <MusicPlayerProvider>
-      <NotificationProvider>
-        {!isMessenger && <Nav />}
-        {!isMessenger && <MusicPlayer />}
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/feed" element={<Feed />} />
-          <Route path="/post/:id" element={<PostDetail />} />
-          <Route path="/leaderboard" element={<Leaderboard />} />
-          <Route path="/messenger" element={<Messenger />} />
-          <Route path="/admin" element={<Admin />} />
-          <Route path="/moderator" element={<Moderator />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
-          <Route path='/attendance' element={<Attendance />} />
-          <Route path="/codex" element={<Codex />} />
-          <Route path="/events" element={<Events />} />
-          <Route path="/events/:id" element={<EventDetail />} />
-          <Route path="/event-entries" element={<EventEntries />} />
-          <Route path="/blogs" element={<Blogs />} />
-          <Route path="/blogs/:id" element={<BlogDetail />} />
-          <Route path="/articles" element={<Articles />} />
-          <Route path="/articles/:id" element={<ArticleDetail />} />
-          <Route path="/stories" element={<Stories />} />
-          <Route path="/stories/:id" element={<StoryDetail />} />
-          <Route path="/houses/:slug" element={<HouseDetail />} />
-          <Route path="/announcements" element={<Announcements />} />
-          <Route path="/announcements/:id" element={<AnnouncementDetail />} />
-          <Route path="/dubbing" element={<Dubbing />} />
-          <Route path="/dubbing/:id" element={<DubbingVideoDetail />} />
-          <Route path="/download" element={<Download />} />
-          <Route path="/music" element={<Music />} />
-          <Route path="/beastlord" element={<Beastlord />} />
-          <Route path="/ryuha-apps" element={<RyuhaApps />} />
-          <Route path="/ryuha-apps/coinflip" element={<Coinflip />} />
-          <Route path="/ryuha-apps/tictactoe" element={<TicTacToe />} />
-        </Routes>
-        {useLocation().pathname !== '/messenger' && <Footer />}
-      </NotificationProvider>
+      <SocketProvider>
+        <NotificationProvider>
+          {!isMessenger && <Nav />}
+          {!isMessenger && <MusicPlayer />}
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/feed" element={<Feed />} />
+            <Route path="/post/:id" element={<PostDetail />} />
+            <Route path="/leaderboard" element={<Leaderboard />} />
+            <Route path="/messenger" element={<Messenger />} />
+            <Route path="/admin" element={<Admin />} />
+            <Route path="/moderator" element={<Moderator />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
+            <Route path='/attendance' element={<Attendance />} />
+            <Route path="/codex" element={<Codex />} />
+            <Route path="/events" element={<Events />} />
+            <Route path="/events/:id" element={<EventDetail />} />
+            <Route path="/event-entries" element={<EventEntries />} />
+            <Route path="/blogs" element={<Blogs />} />
+            <Route path="/blogs/:id" element={<BlogDetail />} />
+            <Route path="/articles" element={<Articles />} />
+            <Route path="/articles/:id" element={<ArticleDetail />} />
+            <Route path="/stories" element={<Stories />} />
+            <Route path="/stories/:id" element={<StoryDetail />} />
+            <Route path="/houses/:slug" element={<HouseDetail />} />
+            <Route path="/announcements" element={<Announcements />} />
+            <Route path="/announcements/:id" element={<AnnouncementDetail />} />
+            <Route path="/dubbing" element={<Dubbing />} />
+            <Route path="/dubbing/:id" element={<DubbingVideoDetail />} />
+            <Route path="/download" element={<Download />} />
+            <Route path="/music" element={<Music />} />
+            <Route path="/beastlord" element={<Beastlord />} />
+            <Route path="/ryuha-apps" element={<RyuhaApps />} />
+            <Route path="/ryuha-apps/coinflip" element={<Coinflip />} />
+            <Route path="/ryuha-apps/tictactoe" element={<TicTacToe />} />
+            <Route path="/ryuha-apps/labyrinth" element={<Labyrinth />} />
+          </Routes>
+          {useLocation().pathname !== '/messenger' && <Footer />}
+        </NotificationProvider>
+      </SocketProvider>
     </MusicPlayerProvider>
   )
 }

@@ -14,6 +14,12 @@ const RyuhaApps = () => {
             description: "Challenge the AI in a futuristic Cyber Clash.",
             thumbnail: "/assets/tictactoe.png",
             path: "/ryuha-apps/tictactoe"
+        },
+        {
+            name: "Labyrinth",
+            description: "Navigate the digital maze. Strategy is key.",
+            thumbnail: "/assets/labyrinth.png",
+            path: "/ryuha-apps/labyrinth"
         }
     ];
 
