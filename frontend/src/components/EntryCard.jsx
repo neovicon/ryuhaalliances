@@ -10,43 +10,39 @@ export default function EntryCard({ entry, onUpdate, onEdit, onDelete }) {
 
     const [reacting, setReacting] = useState(false);
 
-    // Optimistic local reaction state for logged-in users
-    const [localActiveReaction, setLocalActiveReaction] = useState(() => {
-        if (!user) return null;
-        const found = (entry.reactions || []).find(
-            r => String(r.user) === String(user._id || user.id)
-        );
-        return found ? found.type : null;
-    });
-
-    // Count reactions by emoji type
-    const reactionCounts = (entry.reactions || []).reduce((acc, r) => {
-        acc[r.type] = (acc[r.type] || 0) + 1;
-        return acc;
-    }, {});
-
-    const isVisitor = !user;
+    // Reaction state from backend
+    const [localActiveReaction, setLocalActiveReaction] = useState(entry.userActiveReaction || null);
+    const [localReactionCounts, setLocalReactionCounts] = useState(entry.reactionCounts || {});
 
     async function handleReaction(type) {
         if (reacting) return;
-        if (isVisitor && visitorReacted[type]) return;
         try {
             setReacting(true);
-            // Optimistic update: toggle or set
-            if (localActiveReaction === type) {
-                setLocalActiveReaction(null); // toggle off
-            } else {
-                setLocalActiveReaction(type); // switch to new
+
+            // Optimistic update
+            const oldReaction = localActiveReaction;
+            const newReaction = oldReaction === type ? null : type;
+            setLocalActiveReaction(newReaction);
+
+            // Update local counts optimistically
+            const newCounts = { ...localReactionCounts };
+            if (oldReaction) newCounts[oldReaction] = Math.max(0, (newCounts[oldReaction] || 1) - 1);
+            if (newReaction) newCounts[newReaction] = (newCounts[newReaction] || 0) + 1;
+            setLocalReactionCounts(newCounts);
+
+            const response = await client.post(`/event-entries/${entry._id}/react`, { type }, { withCredentials: true });
+
+            // If the backend returns the updated entry, use its state
+            if (response.data) {
+                setLocalActiveReaction(response.data.userActiveReaction);
+                setLocalReactionCounts(response.data.reactionCounts || {});
+                onUpdate(); // Trigger parent refresh if needed, but local state is already updated
             }
-            await client.post(`/event-entries/${entry._id}/react`, { type, isVisitor: false });
-            onUpdate();
         } catch (error) {
             console.error('Reaction failed:', error);
-            // Revert optimistic update on failure
-            const found = (entry.reactions || []).find(
-                r => String(r.user) === String(user._id || user.id)
-            );
-            setLocalActiveReaction(found ? found.type : null);
+            // Revert optimistic update
+            setLocalActiveReaction(entry.userActiveReaction || null);
+            setLocalReactionCounts(entry.reactionCounts || {});
             const msg = error.response?.data?.message || error.message || 'Unknown error';
             alert(`Reaction failed: ${msg}`);
         } finally {
@@ -141,49 +137,43 @@ export default function EntryCard({ entry, onUpdate, onEdit, onDelete }) {
                     alignItems: 'center',
                     flexWrap: 'wrap'
                 }}>
-                    {isVisitor ? (
-                        <span style={{ color: 'var(--muted)', fontSize: '0.85rem', fontStyle: 'italic' }}>
-                            🔒 <a href="/login" style={{ color: 'var(--primary)', textDecoration: 'none' }}>Login</a> to react
-                        </span>
-                    ) : (
-                        <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center', flexWrap: 'wrap' }}>
-                            <span style={{ color: 'var(--muted)', fontSize: '0.9rem', marginRight: '0.25rem' }}>React:</span>
-                            {['🔥', '❤️', '👏', '😂', '😮'].map(emoji => {
-                                const isActive = localActiveReaction === emoji;
-                                const count = reactionCounts[emoji] || 0;
-                                return (
-                                    <button
-                                        key={emoji}
-                                        onClick={() => handleReaction(emoji)}
-                                        disabled={reacting}
-                                        title={count > 0 ? `${count} reaction${count !== 1 ? 's' : ''}` : ''}
-                                        style={{
-                                            background: isActive ? 'rgba(177,15,46,0.2)' : 'rgba(255,255,255,0.05)',
-                                            border: isActive ? '1px solid var(--primary)' : '1px solid rgba(255,255,255,0.1)',
-                                            borderRadius: '20px',
-                                            padding: '0.3rem 0.6rem',
-                                            cursor: reacting ? 'not-allowed' : 'pointer',
-                                            fontSize: '1rem',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            gap: '4px',
-                                            transition: 'all 0.15s',
-                                            opacity: reacting ? 0.6 : 1,
-                                            color: '#fff',
-                                            transform: isActive ? 'scale(1.1)' : 'scale(1)',
-                                        }}
-                                    >
-                                        {emoji}
-                                        {count > 0 && (
-                                            <span style={{ fontSize: '0.8rem', color: isActive ? 'var(--primary)' : 'var(--muted)' }}>
-                                                {count}
-                                            </span>
-                                        )}
-                                    </button>
-                                );
-                            })}
-                        </div>
-                    )}
+                    <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                        <span style={{ color: 'var(--muted)', fontSize: '0.9rem', marginRight: '0.25rem' }}>React:</span>
+                        {['🔥', '❤️', '👏', '😂', '😮'].map(emoji => {
+                            const isActive = localActiveReaction === emoji;
+                            const count = localReactionCounts[emoji] || 0;
+                            return (
+                                <button
+                                    key={emoji}
+                                    onClick={() => handleReaction(emoji)}
+                                    disabled={reacting}
+                                    title={count > 0 ? `${count} reaction${count !== 1 ? 's' : ''}` : ''}
+                                    style={{
+                                        background: isActive ? 'rgba(177,15,46,0.2)' : 'rgba(255,255,255,0.05)',
+                                        border: isActive ? '1px solid var(--primary)' : '1px solid rgba(255,255,255,0.1)',
+                                        borderRadius: '20px',
+                                        padding: '0.3rem 0.6rem',
+                                        cursor: reacting ? 'not-allowed' : 'pointer',
+                                        fontSize: '1rem',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '4px',
+                                        transition: 'all 0.15s',
+                                        opacity: reacting ? 0.6 : 1,
+                                        color: '#fff',
+                                        transform: isActive ? 'scale(1.1)' : 'scale(1)',
+                                    }}
+                                >
+                                    {emoji}
+                                    {count > 0 && (
+                                        <span style={{ fontSize: '0.8rem', color: isActive ? 'var(--primary)' : 'var(--muted)' }}>
+                                            {count}
+                                        </span>
+                                    )}
+                                </button>
+                            );
+                        })}
+                    </div>
                 </div>
 
                 {/* Comments Section */}

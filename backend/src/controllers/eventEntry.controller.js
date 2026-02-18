@@ -1,4 +1,6 @@
 import EventEntry from '../models/EventEntry.js';
+import Reaction from '../models/Reaction.js';
+import { nanoid } from 'nanoid';
 import { getUploadPath } from '../utils/storageHelper.js';
 import blobServiceClient from '../config/azure.js';
 
@@ -68,15 +70,55 @@ export const getEntries = async (req, res) => {
 
         const entries = await EventEntry.find(filter)
             .populate('uploader', 'username')
-            .populate('event', 'inactive') // Populate event to check if it's inactive
+            .populate('event', 'inactive')
             .populate('comments.user', 'username photoUrl')
             .sort({ createdAt: -1 });
 
-        // All users can now see entries from both active and inactive events
-        const filteredEntries = entries;
+        // Get guestId/userId for the current user
+        const userId = req.user?.id;
+        const guestId = req.cookies['guest-id'];
+        const ip = req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress;
 
-        res.status(200).json(filteredEntries);
+        // Fetch user's reactions for these entries
+        let userReactions = [];
+        const entryIds = entries.map(e => e._id);
+
+        if (userId || guestId) {
+            let query = { itemId: { $in: entryIds }, itemModel: 'EventEntry' };
+            if (userId) query.userId = userId;
+            else query.guestId = guestId;
+            userReactions = await Reaction.find(query);
+        } else {
+            // Fallback to IP if no identifiers
+            userReactions = await Reaction.find({ itemId: { $in: entryIds }, itemModel: 'EventEntry', ip });
+        }
+
+        // Fetch total counts for these entries
+        const allCounts = await Reaction.aggregate([
+            { $match: { itemId: { $in: entryIds }, itemModel: 'EventEntry' } },
+            { $group: { _id: { itemId: '$itemId', type: '$type' }, count: { $sum: 1 } } }
+        ]);
+
+        const reactionCountsMap = allCounts.reduce((acc, curr) => {
+            const { itemId, type } = curr._id;
+            const idStr = itemId.toString();
+            if (!acc[idStr]) acc[idStr] = {};
+            acc[idStr][type] = curr.count;
+            return acc;
+        }, {});
+
+        const entriesWithUserReaction = entries.map(entry => {
+            const reaction = userReactions.find(r => r.itemId.toString() === entry._id.toString());
+            return {
+                ...entry.toObject(),
+                userActiveReaction: reaction ? reaction.type : null,
+                reactionCounts: reactionCountsMap[entry._id.toString()] || {}
+            };
+        });
+
+        res.status(200).json(entriesWithUserReaction);
     } catch (error) {
+        console.error('getEntries error:', error);
         res.status(500).json({ message: "Failed to fetch entries", error: error.message });
     }
 };
@@ -84,47 +126,86 @@ export const getEntries = async (req, res) => {
 export const addReaction = async (req, res) => {
     try {
         const { id } = req.params;
-        const { type, isVisitor } = req.body;
+        const { type } = req.body;
+        const ip = req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress;
 
-        if (isVisitor) {
-            // Visitor reaction - increment counter atomically
-            if (!['heart', 'laugh', 'thumbsUp'].includes(type)) {
-                return res.status(400).json({ message: "Invalid visitor reaction type" });
-            }
-            const entry = await EventEntry.findByIdAndUpdate(
-                id,
-                { $inc: { [`visitorReactions.${type}`]: 1 } },
-                { new: true }
-            );
-            if (!entry) return res.status(404).json({ message: "Entry not found" });
-            return res.status(200).json(entry);
+        let userId = req.user?.id;
+        let guestId = req.cookies['guest-id'];
+
+        // If not logged in and no guest cookie, create one
+        if (!userId && !guestId) {
+            guestId = nanoid();
+            res.cookie('guest-id', guestId, {
+                maxAge: 365 * 24 * 60 * 60 * 1000, // 1 year
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'lax'
+            });
+        }
+
+        const entry = await EventEntry.findById(id);
+        if (!entry) return res.status(404).json({ message: "Entry not found" });
+
+        // Criteria for finding existing reaction
+        let query = { itemId: id, itemModel: 'EventEntry' };
+        if (userId) {
+            query.userId = userId;
+        } else if (guestId) {
+            query.guestId = guestId;
         } else {
-            // Registered user reaction
-            if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+            query.ip = ip;
+        }
 
-            const entry = await EventEntry.findById(id);
-            if (!entry) return res.status(404).json({ message: "Entry not found" });
+        const existingReaction = await Reaction.findOne(query);
 
-            const existingIndex = entry.reactions.findIndex(
-                r => r.user.toString() === req.user.id.toString()
-            );
+        if (existingReaction) {
+            if (existingReaction.type === type) {
+                // Same emoji — toggle off
+                await Reaction.deleteOne({ _id: existingReaction._id });
 
-            if (existingIndex > -1) {
-                if (entry.reactions[existingIndex].type === type) {
-                    // Same emoji — toggle off
-                    entry.reactions.splice(existingIndex, 1);
-                } else {
-                    // Different emoji — update
-                    entry.reactions[existingIndex].type = type;
+                // Decrement counter if it exists in visitorReactions
+                if (['heart', 'laugh', 'thumbsUp'].includes(type)) {
+                    await EventEntry.findByIdAndUpdate(id, { $inc: { [`visitorReactions.${type}`]: -1 } });
                 }
             } else {
-                entry.reactions.push({ user: req.user.id, type });
-            }
+                // Different emoji — update
+                const oldType = existingReaction.type;
+                existingReaction.type = type;
+                await existingReaction.save();
 
-            entry.markModified('reactions');
-            await entry.save();
-            return res.status(200).json(entry);
+                // Update counters if applicable
+                const updates = {};
+                if (['heart', 'laugh', 'thumbsUp'].includes(oldType)) updates[`visitorReactions.${oldType}`] = -1;
+                if (['heart', 'laugh', 'thumbsUp'].includes(type)) updates[`visitorReactions.${type}`] = 1;
+
+                if (Object.keys(updates).length > 0) {
+                    await EventEntry.findByIdAndUpdate(id, { $inc: updates });
+                }
+            }
+        } else {
+            // New reaction
+            await Reaction.create({
+                itemId: id,
+                itemModel: 'EventEntry',
+                userId,
+                guestId,
+                ip,
+                type
+            });
+
+            // Increment counter if applicable
+            if (['heart', 'laugh', 'thumbsUp'].includes(type)) {
+                await EventEntry.findByIdAndUpdate(id, { $inc: { [`visitorReactions.${type}`]: 1 } });
+            }
         }
+
+        // Return updated entry (including populated fields if needed, or just the entry)
+        // For simplicity, re-fetch and populate
+        const updatedEntry = await EventEntry.findById(id)
+            .populate('uploader', 'username')
+            .populate('comments.user', 'username photoUrl');
+
+        res.status(200).json(updatedEntry);
     } catch (error) {
         console.error('addReaction error:', error);
         res.status(500).json({ message: "Failed to add reaction", error: error.message });

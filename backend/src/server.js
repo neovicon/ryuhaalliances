@@ -37,6 +37,7 @@ import Message from './models/Message.js';
 import { getPhotoUrl } from './utils/photoUrl.js';
 
 const app = express();
+app.set('trust proxy', 1);
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
   cors: {

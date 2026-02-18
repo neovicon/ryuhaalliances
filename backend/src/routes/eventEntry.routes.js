@@ -9,14 +9,8 @@ const upload = multer({ storage: multer.memoryStorage() });
 // Public routes
 router.get('/', optionalAuth, getEntries);
 
-// Reaction route with conditional auth
-router.post('/:id/react', (req, res, next) => {
-    if (req.body.isVisitor) {
-        next();
-    } else {
-        requireAuth(req, res, next);
-    }
-}, addReaction);
+// Reaction route
+router.post('/:id/react', optionalAuth, addReaction);
 
 // Protected routes
 router.post('/:id/comment', requireAuth, addComment);
