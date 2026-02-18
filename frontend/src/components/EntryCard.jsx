@@ -10,10 +10,22 @@ export default function EntryCard({ entry, onUpdate, onEdit, onDelete }) {
     const [visitorReacted, setVisitorReacted] = useState({ heart: false, laugh: false, thumbsUp: false });
     const [reacting, setReacting] = useState(false);
 
-    const isVisitor = !user;
+    // Optimistic local reaction state for logged-in users
+    const [localActiveReaction, setLocalActiveReaction] = useState(() => {
+        if (!user) return null;
+        const found = (entry.reactions || []).find(
+            r => String(r.user) === String(user._id || user.id)
+        );
+        return found ? found.type : null;
+    });
 
-    // Registered user reaction logic
-    const userReaction = user ? (entry.reactions || []).find(r => r.user === user._id) : null;
+    // Count reactions by emoji type
+    const reactionCounts = (entry.reactions || []).reduce((acc, r) => {
+        acc[r.type] = (acc[r.type] || 0) + 1;
+        return acc;
+    }, {});
+
+    const isVisitor = !user;
 
     async function handleReaction(type) {
         if (reacting) return;
@@ -25,11 +37,24 @@ export default function EntryCard({ entry, onUpdate, onEdit, onDelete }) {
                 setVisitorReacted(prev => ({ ...prev, [type]: true }));
                 onUpdate();
             } else {
+                // Optimistic update: toggle or set
+                if (localActiveReaction === type) {
+                    setLocalActiveReaction(null); // toggle off
+                } else {
+                    setLocalActiveReaction(type); // switch to new
+                }
                 await client.post(`/event-entries/${entry._id}/react`, { type, isVisitor: false });
                 onUpdate();
             }
         } catch (error) {
             console.error('Reaction failed:', error);
+            // Revert optimistic update on failure
+            if (!isVisitor) {
+                const found = (entry.reactions || []).find(
+                    r => String(r.user) === String(user._id || user.id)
+                );
+                setLocalActiveReaction(found ? found.type : null);
+            }
             const msg = error.response?.data?.message || error.message || 'Unknown error';
             alert(`Reaction failed: ${msg}`);
         } finally {
@@ -116,7 +141,7 @@ export default function EntryCard({ entry, onUpdate, onEdit, onDelete }) {
                 {/* Reactions Bar */}
                 <div style={{
                     display: 'flex',
-                    gap: '1rem',
+                    gap: '0.5rem',
                     padding: '1rem 0',
                     borderTop: '1px solid rgba(148,163,184,0.1)',
                     borderBottom: '1px solid rgba(148,163,184,0.1)',
@@ -152,31 +177,42 @@ export default function EntryCard({ entry, onUpdate, onEdit, onDelete }) {
                             </button>
                         </>
                     ) : (
-                        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                            <span style={{ color: 'var(--muted)', fontSize: '0.9rem', marginRight: '0.5rem' }}>React:</span>
-                            {['🔥', '❤️', '👏', '😂', '😮'].map(emoji => (
-                                <button
-                                    key={emoji}
-                                    onClick={() => handleReaction(emoji)}
-                                    disabled={reacting}
-                                    style={{
-                                        background: userReaction?.type === emoji ? 'rgba(255,255,255,0.1)' : 'transparent',
-                                        border: userReaction?.type === emoji ? '1px solid var(--primary)' : '1px solid transparent',
-                                        borderRadius: '50%',
-                                        width: '36px',
-                                        height: '36px',
-                                        cursor: reacting ? 'not-allowed' : 'pointer',
-                                        fontSize: '1.2rem',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        transition: 'all 0.2s',
-                                        opacity: reacting ? 0.5 : 1
-                                    }}
-                                >
-                                    {emoji}
-                                </button>
-                            ))}
+                        <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                            <span style={{ color: 'var(--muted)', fontSize: '0.9rem', marginRight: '0.25rem' }}>React:</span>
+                            {['🔥', '❤️', '👏', '😂', '😮'].map(emoji => {
+                                const isActive = localActiveReaction === emoji;
+                                const count = reactionCounts[emoji] || 0;
+                                return (
+                                    <button
+                                        key={emoji}
+                                        onClick={() => handleReaction(emoji)}
+                                        disabled={reacting}
+                                        title={count > 0 ? `${count} reaction${count !== 1 ? 's' : ''}` : ''}
+                                        style={{
+                                            background: isActive ? 'rgba(177,15,46,0.2)' : 'rgba(255,255,255,0.05)',
+                                            border: isActive ? '1px solid var(--primary)' : '1px solid rgba(255,255,255,0.1)',
+                                            borderRadius: '20px',
+                                            padding: '0.3rem 0.6rem',
+                                            cursor: reacting ? 'not-allowed' : 'pointer',
+                                            fontSize: '1rem',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '4px',
+                                            transition: 'all 0.15s',
+                                            opacity: reacting ? 0.6 : 1,
+                                            color: '#fff',
+                                            transform: isActive ? 'scale(1.1)' : 'scale(1)',
+                                        }}
+                                    >
+                                        {emoji}
+                                        {count > 0 && (
+                                            <span style={{ fontSize: '0.8rem', color: isActive ? 'var(--primary)' : 'var(--muted)' }}>
+                                                {count}
+                                            </span>
+                                        )}
+                                    </button>
+                                );
+                            })}
                         </div>
                     )}
                 </div>
