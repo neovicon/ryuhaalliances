@@ -7,7 +7,7 @@ export default function EntryCard({ entry, onUpdate, onEdit, onDelete }) {
     const [comment, setComment] = useState('');
     const [submittingComment, setSubmittingComment] = useState(false);
     const [showComments, setShowComments] = useState(false);
-    const [visitorReacted, setVisitorReacted] = useState({ heart: false, laugh: false, thumbsUp: false });
+
     const [reacting, setReacting] = useState(false);
 
     // Optimistic local reaction state for logged-in users
@@ -32,29 +32,21 @@ export default function EntryCard({ entry, onUpdate, onEdit, onDelete }) {
         if (isVisitor && visitorReacted[type]) return;
         try {
             setReacting(true);
-            if (isVisitor) {
-                await client.post(`/event-entries/${entry._id}/react`, { type, isVisitor: true });
-                setVisitorReacted(prev => ({ ...prev, [type]: true }));
-                onUpdate();
+            // Optimistic update: toggle or set
+            if (localActiveReaction === type) {
+                setLocalActiveReaction(null); // toggle off
             } else {
-                // Optimistic update: toggle or set
-                if (localActiveReaction === type) {
-                    setLocalActiveReaction(null); // toggle off
-                } else {
-                    setLocalActiveReaction(type); // switch to new
-                }
-                await client.post(`/event-entries/${entry._id}/react`, { type, isVisitor: false });
-                onUpdate();
+                setLocalActiveReaction(type); // switch to new
             }
+            await client.post(`/event-entries/${entry._id}/react`, { type, isVisitor: false });
+            onUpdate();
         } catch (error) {
             console.error('Reaction failed:', error);
             // Revert optimistic update on failure
-            if (!isVisitor) {
-                const found = (entry.reactions || []).find(
-                    r => String(r.user) === String(user._id || user.id)
-                );
-                setLocalActiveReaction(found ? found.type : null);
-            }
+            const found = (entry.reactions || []).find(
+                r => String(r.user) === String(user._id || user.id)
+            );
+            setLocalActiveReaction(found ? found.type : null);
             const msg = error.response?.data?.message || error.message || 'Unknown error';
             alert(`Reaction failed: ${msg}`);
         } finally {
@@ -150,32 +142,9 @@ export default function EntryCard({ entry, onUpdate, onEdit, onDelete }) {
                     flexWrap: 'wrap'
                 }}>
                     {isVisitor ? (
-                        <>
-                            <button
-                                onClick={() => handleReaction('heart')}
-                                disabled={visitorReacted.heart || reacting}
-                                className="btn-reaction"
-                                style={{ opacity: visitorReacted.heart || reacting ? 0.5 : 1 }}
-                            >
-                                ❤️ <span style={{ marginLeft: 4 }}>{entry.visitorReactions?.heart || 0}</span>
-                            </button>
-                            <button
-                                onClick={() => handleReaction('laugh')}
-                                disabled={visitorReacted.laugh || reacting}
-                                className="btn-reaction"
-                                style={{ opacity: visitorReacted.laugh || reacting ? 0.5 : 1 }}
-                            >
-                                😂 <span style={{ marginLeft: 4 }}>{entry.visitorReactions?.laugh || 0}</span>
-                            </button>
-                            <button
-                                onClick={() => handleReaction('thumbsUp')}
-                                disabled={visitorReacted.thumbsUp || reacting}
-                                className="btn-reaction"
-                                style={{ opacity: visitorReacted.thumbsUp || reacting ? 0.5 : 1 }}
-                            >
-                                👍 <span style={{ marginLeft: 4 }}>{entry.visitorReactions?.thumbsUp || 0}</span>
-                            </button>
-                        </>
+                        <span style={{ color: 'var(--muted)', fontSize: '0.85rem', fontStyle: 'italic' }}>
+                            🔒 <a href="/login" style={{ color: 'var(--primary)', textDecoration: 'none' }}>Login</a> to react
+                        </span>
                     ) : (
                         <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center', flexWrap: 'wrap' }}>
                             <span style={{ color: 'var(--muted)', fontSize: '0.9rem', marginRight: '0.25rem' }}>React:</span>
