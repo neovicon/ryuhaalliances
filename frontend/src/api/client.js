@@ -8,17 +8,20 @@ client.interceptors.request.use((config) => {
   return config;
 });
 
-// Handle 401 errors globally - clear token and redirect to login
+// Handle 401 errors globally - only redirect to login for auth endpoints
 client.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error?.response?.status === 401) {
-      // Clear invalid token
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      // Redirect to login if we're not already there
-      if (window.location.pathname !== '/login' || window.location.pathname !== '/signup') {
-        window.location.href = '/login';
+      const url = error.config?.url || '';
+      // Only auto-redirect for auth-related endpoints, not reactions/comments/etc.
+      const isAuthEndpoint = url.includes('/auth/') || url.includes('/users/me');
+      if (isAuthEndpoint) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        if (window.location.pathname !== '/login' && window.location.pathname !== '/signup') {
+          window.location.href = '/login';
+        }
       }
     }
     return Promise.reject(error);
@@ -26,5 +29,3 @@ client.interceptors.response.use(
 );
 
 export default client;
-
-

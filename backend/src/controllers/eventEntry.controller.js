@@ -86,40 +86,51 @@ export const addReaction = async (req, res) => {
         const { id } = req.params;
         const { type, isVisitor } = req.body;
 
-        const entry = await EventEntry.findById(id);
-        if (!entry) return res.status(404).json({ message: "Entry not found" });
-
         if (isVisitor) {
-            // Visitor reaction
+            // Visitor reaction - increment counter atomically
             if (!['heart', 'laugh', 'thumbsUp'].includes(type)) {
                 return res.status(400).json({ message: "Invalid visitor reaction type" });
             }
-            entry.visitorReactions[type] = (entry.visitorReactions[type] || 0) + 1;
+            const entry = await EventEntry.findByIdAndUpdate(
+                id,
+                { $inc: { [`visitorReactions.${type}`]: 1 } },
+                { new: true }
+            );
+            if (!entry) return res.status(404).json({ message: "Entry not found" });
+            return res.status(200).json(entry);
         } else {
             // Registered user reaction
             if (!req.user) return res.status(401).json({ message: "Unauthorized" });
 
-            const existingReactionIndex = entry.reactions.findIndex(r => r.user.toString() === req.user.id.toString());
+            const entry = await EventEntry.findById(id);
+            if (!entry) return res.status(404).json({ message: "Entry not found" });
 
-            if (existingReactionIndex > -1) {
-                // Update or remove if same? Let's just update or toggle.
-                // If same type, remove it (toggle off). If different, update it.
-                if (entry.reactions[existingReactionIndex].type === type) {
-                    entry.reactions.splice(existingReactionIndex, 1);
+            const existingIndex = entry.reactions.findIndex(
+                r => r.user.toString() === req.user.id.toString()
+            );
+
+            if (existingIndex > -1) {
+                if (entry.reactions[existingIndex].type === type) {
+                    // Same emoji — toggle off
+                    entry.reactions.splice(existingIndex, 1);
                 } else {
-                    entry.reactions[existingReactionIndex].type = type;
+                    // Different emoji — update
+                    entry.reactions[existingIndex].type = type;
                 }
             } else {
                 entry.reactions.push({ user: req.user.id, type });
             }
-        }
 
-        await entry.save();
-        res.status(200).json(entry);
+            entry.markModified('reactions');
+            await entry.save();
+            return res.status(200).json(entry);
+        }
     } catch (error) {
+        console.error('addReaction error:', error);
         res.status(500).json({ message: "Failed to add reaction", error: error.message });
     }
 };
+
 
 export const addComment = async (req, res) => {
     try {

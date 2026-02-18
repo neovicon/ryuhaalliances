@@ -8,26 +8,32 @@ export default function EntryCard({ entry, onUpdate, onEdit, onDelete }) {
     const [submittingComment, setSubmittingComment] = useState(false);
     const [showComments, setShowComments] = useState(false);
     const [visitorReacted, setVisitorReacted] = useState({ heart: false, laugh: false, thumbsUp: false });
+    const [reacting, setReacting] = useState(false);
 
     const isVisitor = !user;
 
     // Registered user reaction logic
-    const userReaction = user ? entry.reactions.find(r => r.user === user._id) : null;
+    const userReaction = user ? (entry.reactions || []).find(r => r.user === user._id) : null;
 
     async function handleReaction(type) {
+        if (reacting) return;
+        if (isVisitor && visitorReacted[type]) return;
         try {
+            setReacting(true);
             if (isVisitor) {
-                if (visitorReacted[type]) return; // Prevent spamming locally
-
                 await client.post(`/event-entries/${entry._id}/react`, { type, isVisitor: true });
                 setVisitorReacted(prev => ({ ...prev, [type]: true }));
-                onUpdate(); // Refresh parent
+                onUpdate();
             } else {
                 await client.post(`/event-entries/${entry._id}/react`, { type, isVisitor: false });
                 onUpdate();
             }
         } catch (error) {
             console.error('Reaction failed:', error);
+            const msg = error.response?.data?.message || error.message || 'Unknown error';
+            alert(`Reaction failed: ${msg}`);
+        } finally {
+            setReacting(false);
         }
     }
 
@@ -122,25 +128,25 @@ export default function EntryCard({ entry, onUpdate, onEdit, onDelete }) {
                         <>
                             <button
                                 onClick={() => handleReaction('heart')}
-                                disabled={visitorReacted.heart}
+                                disabled={visitorReacted.heart || reacting}
                                 className="btn-reaction"
-                                style={{ opacity: visitorReacted.heart ? 0.5 : 1 }}
+                                style={{ opacity: visitorReacted.heart || reacting ? 0.5 : 1 }}
                             >
                                 ❤️ <span style={{ marginLeft: 4 }}>{entry.visitorReactions?.heart || 0}</span>
                             </button>
                             <button
                                 onClick={() => handleReaction('laugh')}
-                                disabled={visitorReacted.laugh}
+                                disabled={visitorReacted.laugh || reacting}
                                 className="btn-reaction"
-                                style={{ opacity: visitorReacted.laugh ? 0.5 : 1 }}
+                                style={{ opacity: visitorReacted.laugh || reacting ? 0.5 : 1 }}
                             >
                                 😂 <span style={{ marginLeft: 4 }}>{entry.visitorReactions?.laugh || 0}</span>
                             </button>
                             <button
                                 onClick={() => handleReaction('thumbsUp')}
-                                disabled={visitorReacted.thumbsUp}
+                                disabled={visitorReacted.thumbsUp || reacting}
                                 className="btn-reaction"
-                                style={{ opacity: visitorReacted.thumbsUp ? 0.5 : 1 }}
+                                style={{ opacity: visitorReacted.thumbsUp || reacting ? 0.5 : 1 }}
                             >
                                 👍 <span style={{ marginLeft: 4 }}>{entry.visitorReactions?.thumbsUp || 0}</span>
                             </button>
@@ -152,24 +158,25 @@ export default function EntryCard({ entry, onUpdate, onEdit, onDelete }) {
                                 <button
                                     key={emoji}
                                     onClick={() => handleReaction(emoji)}
+                                    disabled={reacting}
                                     style={{
                                         background: userReaction?.type === emoji ? 'rgba(255,255,255,0.1)' : 'transparent',
                                         border: userReaction?.type === emoji ? '1px solid var(--primary)' : '1px solid transparent',
                                         borderRadius: '50%',
                                         width: '36px',
                                         height: '36px',
-                                        cursor: 'pointer',
+                                        cursor: reacting ? 'not-allowed' : 'pointer',
                                         fontSize: '1.2rem',
                                         display: 'flex',
                                         alignItems: 'center',
                                         justifyContent: 'center',
-                                        transition: 'all 0.2s'
+                                        transition: 'all 0.2s',
+                                        opacity: reacting ? 0.5 : 1
                                     }}
                                 >
                                     {emoji}
                                 </button>
                             ))}
-                            {/* Show total count of reactions from registered users if needed, or just show active state */}
                         </div>
                     )}
                 </div>
