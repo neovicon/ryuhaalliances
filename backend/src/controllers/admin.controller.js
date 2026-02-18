@@ -588,3 +588,43 @@ export async function removeModerator(req, res) {
   }
 }
 
+
+export const validateUpdateEmail = [
+  body('userId').notEmpty().withMessage('User ID is required'),
+  body('email').isEmail().withMessage('Valid email is required'),
+];
+
+export async function updateEmail(req, res) {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+
+  try {
+    const { userId, email } = req.body;
+    const cleanEmail = email.trim().toLowerCase();
+
+    // Check if email is already taken by another user
+    const existingUser = await User.findOne({ email: cleanEmail, _id: { $ne: userId } });
+    if (existingUser) {
+      return res.status(409).json({ error: 'Email already in use' });
+    }
+
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { email: cleanEmail },
+      { new: true }
+    ).select('-passwordHash');
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const userObj = user.toObject();
+    userObj.photoUrl = await getPhotoUrl(userObj.photoUrl, req);
+    const { _id, ...rest } = userObj;
+
+    res.json({ user: { id: _id, ...rest }, message: 'Email updated successfully' });
+  } catch (error) {
+    console.error('Error updating email:', error);
+    res.status(500).json({ error: 'Failed to update email' });
+  }
+}

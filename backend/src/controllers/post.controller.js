@@ -167,8 +167,8 @@ export async function react(req, res) {
   const { key } = req.body;
   let reaction = post.reactions.find(r => r.key === key);
   if (!reaction) {
-    reaction = { key, userIds: [] };
-    post.reactions.push(reaction);
+    post.reactions.push({ key, userIds: [] });
+    reaction = post.reactions[post.reactions.length - 1];
   }
   const idx = reaction.userIds.findIndex(u => String(u) === req.user.id);
   if (idx >= 0) reaction.userIds.splice(idx, 1); else reaction.userIds.push(req.user.id);

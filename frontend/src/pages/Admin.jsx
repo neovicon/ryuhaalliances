@@ -213,6 +213,21 @@ export default function Admin() {
     }
   };
 
+  const handleUpdateEmail = async (userId, newEmail) => {
+    try {
+      setLoadingAction(`update-email-${userId}`);
+      await client.post('/admin/update-email', { userId, email: newEmail });
+      await loadAllUsers();
+      setEditingUser({ userId: null, field: null });
+      alert('Email updated successfully');
+    } catch (error) {
+      console.error('Error updating email:', error);
+      alert(getErrorMessage(error, 'Failed to update email'));
+    } finally {
+      setLoadingAction(null);
+    }
+  };
+
   const handleAddModerator = async () => {
     if (!moderatorModal.userId || !moderatorModal.moderatorType) return;
     try {
@@ -276,13 +291,16 @@ export default function Admin() {
       house: currentValue?.house || '',
       memberStatus: currentValue?.memberStatus || '',
       username: currentValue?.username || '',
-      displayName: currentValue?.displayName || ''
+      memberStatus: currentValue?.memberStatus || '',
+      username: currentValue?.username || '',
+      displayName: currentValue?.displayName || '',
+      email: currentValue?.email || ''
     });
   };
 
   const cancelEdit = () => {
     setEditingUser({ userId: null, field: null });
-    setEditValues({ points: '', rank: '', house: '', memberStatus: '', username: '', displayName: '' });
+    setEditValues({ points: '', rank: '', house: '', memberStatus: '', username: '', displayName: '', email: '' });
   };
 
   const handleApprove = async (userId) => {
@@ -677,6 +695,7 @@ export default function Admin() {
               const isEditingMemberStatus = editingUser.userId === userId && editingUser.field === 'memberStatus';
               const isEditingUsername = editingUser.userId === userId && editingUser.field === 'username';
               const isEditingDisplayName = editingUser.userId === userId && editingUser.field === 'displayName';
+              const isEditingEmail = editingUser.userId === userId && editingUser.field === 'email';
               const userRank = u.rank || calculateRank(u.points || 0);
               const statusBadge = (
                 <span
@@ -747,7 +766,44 @@ export default function Admin() {
                     <div>
                       <div style={{ fontWeight: 600, fontSize: '1.05rem' }}>{u.displayName || u.username}</div>
                       <div style={{ color: 'var(--muted)', fontSize: '0.85rem' }}>@{u.username}</div>
-                      <div style={{ color: 'var(--muted)', fontSize: '0.8rem' }}>{u.email}</div>
+                      {isEditingEmail ? (
+                        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center', marginTop: '0.2rem', marginBottom: '0.2rem' }}>
+                          <input
+                            type="email"
+                            className="input"
+                            value={editValues.email}
+                            onChange={(e) => setEditValues({ ...editValues, email: e.target.value })}
+                            style={{ padding: '0.2rem 0.4rem', fontSize: '0.8rem', width: 200 }}
+                            placeholder="Enter email"
+                          />
+                          <button
+                            className="btn"
+                            onClick={() => handleUpdateEmail(userId, editValues.email)}
+                            style={{ padding: '0.2rem 0.4rem', fontSize: '0.8rem' }}
+                            disabled={loadingAction === `update-email-${userId}`}
+                          >
+                            {loadingAction === `update-email-${userId}` ? <div className="spinner" style={{ width: '0.8rem', height: '0.8rem' }} /> : '✓'}
+                          </button>
+                          <button
+                            className="btn"
+                            onClick={cancelEdit}
+                            style={{ padding: '0.2rem 0.4rem', fontSize: '0.8rem', background: 'transparent', border: '1px solid #1f2937' }}
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ) : (
+                        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                          <div style={{ color: 'var(--muted)', fontSize: '0.8rem' }}>{u.email}</div>
+                          <button
+                            className="btn"
+                            onClick={() => startEdit(userId, 'email', { email: u.email })}
+                            style={{ padding: '0.1rem 0.3rem', fontSize: '0.7rem', background: 'transparent', border: '1px solid #1f2937', marginLeft: '0.5rem' }}
+                          >
+                            Edit
+                          </button>
+                        </div>
+                      )}
                       <div style={{ color: 'var(--muted)', fontSize: '0.8rem' }}>Sigil: {u.sigil}</div>
                     </div>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', alignItems: 'center' }}>
