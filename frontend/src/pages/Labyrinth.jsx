@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useSocket } from '../context/SocketContext';
+import { useLabyrinthSocket } from '../context/LabyrinthSocketContext';
 import { useAuth } from '../store/auth';
 
 const Labyrinth = () => {
-    const socket = useSocket();
+    const socket = useLabyrinthSocket();
     const { user } = useAuth();
 
     // Game Setup State

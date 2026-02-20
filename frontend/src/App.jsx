@@ -43,6 +43,7 @@ import LabyrinthSpectator from './pages/LabyrinthSpectator.jsx'
 import { MusicPlayerProvider } from './context/MusicPlayerContext.jsx'
 import { NotificationProvider } from './context/NotificationContext.jsx'
 import { SocketProvider } from './context/SocketContext.jsx'
+import { LabyrinthSocketProvider } from './context/LabyrinthSocketContext.jsx'
 
 
 export default function App() {
@@ -101,8 +102,8 @@ export default function App() {
             <Route path="/ryuha-apps" element={<RyuhaApps />} />
             <Route path="/ryuha-apps/coinflip" element={<Coinflip />} />
             <Route path="/ryuha-apps/tictactoe" element={<TicTacToe />} />
-            <Route path="/ryuha-apps/labyrinth" element={<Labyrinth />} />
-            <Route path="/labyrinth/spectate/:gameName" element={<LabyrinthSpectator />} />
+            <Route path="/ryuha-apps/labyrinth" element={<LabyrinthSocketProvider><Labyrinth /></LabyrinthSocketProvider>} />
+            <Route path="/labyrinth/spectate/:gameName" element={<LabyrinthSocketProvider><LabyrinthSpectator /></LabyrinthSocketProvider>} />
           </Routes>
           {useLocation().pathname !== '/messenger' && <Footer />}
         </NotificationProvider>

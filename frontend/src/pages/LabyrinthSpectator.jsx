@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { useSocket } from '../context/SocketContext';
+import { useLabyrinthSocket } from '../context/LabyrinthSocketContext';
 import { useAuth } from '../store/auth';
 
 /**
@@ -9,7 +9,7 @@ import { useAuth } from '../store/auth';
  */
 const LabyrinthSpectator = () => {
     const { gameName } = useParams();
-    const socket = useSocket();
+    const socket = useLabyrinthSocket();
     const { user } = useAuth();
 
     const [status, setStatus] = useState('waiting');
