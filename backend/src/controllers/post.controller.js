@@ -206,6 +206,10 @@ export async function removePost(req, res) {
   }
 
   await post.deleteOne();
+
+  // Delete associated notifications
+  notificationService.deleteByLink(`/posts/${req.params.id}`);
+
   res.json({ ok: true });
 }
 
@@ -227,6 +231,11 @@ export async function removeComment(req, res) {
 
   post.comments.pull(commentId);
   await post.save();
+
+  // Delete associated notifications
+  // Note: Currently comments link to the post detail page
+  notificationService.deleteByLink(`/posts/${id}`);
+
   res.json({ ok: true });
 }
 

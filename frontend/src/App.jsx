@@ -38,6 +38,7 @@ import Labyrinth from './pages/Labyrinth.jsx'
 import MusicPlayer from './components/MusicPlayer.jsx'
 import SearchBar from './components/SearchBar.jsx'
 import Messenger from './pages/Messenger.jsx'
+import EventSpecificEntries from './pages/EventSpecificEntries.jsx'
 import { MusicPlayerProvider } from './context/MusicPlayerContext.jsx'
 import { NotificationProvider } from './context/NotificationContext.jsx'
 import { SocketProvider } from './context/SocketContext.jsx'
@@ -66,7 +67,9 @@ export default function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/feed" element={<Feed />} />
+            {/* Standardized post routes - both singular and plural pointing to details to handle legacy data */}
             <Route path="/post/:id" element={<PostDetail />} />
+            <Route path="/posts/:id" element={<PostDetail />} />
             <Route path="/leaderboard" element={<Leaderboard />} />
             <Route path="/messenger" element={<Messenger />} />
             <Route path="/admin" element={<Admin />} />
@@ -78,6 +81,7 @@ export default function App() {
             <Route path="/codex" element={<Codex />} />
             <Route path="/events" element={<Events />} />
             <Route path="/events/:id" element={<EventDetail />} />
+            <Route path="/events/:id/entries" element={<EventSpecificEntries />} />
             <Route path="/event-entries" element={<EventEntries />} />
             <Route path="/blogs" element={<Blogs />} />
             <Route path="/blogs/:id" element={<BlogDetail />} />

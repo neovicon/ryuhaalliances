@@ -330,6 +330,9 @@ export async function deleteAnnouncement(req, res) {
       return res.status(404).json({ error: 'Announcement not found' });
     }
 
+    // Delete associated notifications
+    notificationService.deleteByLink(`/announcements/${id}`);
+
     res.json({ message: 'Announcement deleted successfully' });
   } catch (error) {
     console.error('Error deleting announcement:', error);

@@ -909,7 +909,7 @@ export default function Profile() {
                         background: 'rgba(15,23,42,0.4)',
                         cursor: 'pointer'
                       }}
-                      onClick={() => navigate(`/post/${postId}`)}
+                      onClick={() => navigate(`/posts/${postId}`)}
                     >
                       <div style={{ marginBottom: '0.35rem', fontWeight: 600 }}>
                         {post.author?.displayName || post.author?.username || profile.username}

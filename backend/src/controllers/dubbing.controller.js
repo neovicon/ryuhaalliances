@@ -291,6 +291,9 @@ export async function deleteComment(req, res) {
         video.comments.pull(commentId);
         await video.save();
 
+        // Delete associated notifications
+        notificationService.deleteByLink(`/dubbing/${id}`);
+
         res.json({ message: 'Comment deleted successfully' });
     } catch (error) {
         console.error('Error deleting comment:', error);
@@ -335,6 +338,10 @@ export async function deleteDubbingVideo(req, res) {
         }
 
         await video.deleteOne();
+
+        // Delete associated notifications
+        notificationService.deleteByLink(`/dubbing/${id}`);
+
         res.json({ message: 'Video deleted successfully' });
     } catch (error) {
         console.error('Error deleting dubbing video:', error);

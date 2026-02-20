@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNotifications } from '../context/NotificationContext';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Bell, MessageSquare, UserPlus, Info, FileText, BookOpen, Megaphone, AtSign } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -21,6 +21,7 @@ const NotificationIcon = ({ type }) => {
 
 const NotificationList = ({ onClose }) => {
     const { notifications, markAsRead, markAllAsRead, loading } = useNotifications();
+    const navigate = useNavigate();
 
     if (loading && notifications.length === 0) {
         return <div className="p-4 text-center">Loading notifications...</div>;
@@ -48,6 +49,7 @@ const NotificationList = ({ onClose }) => {
                         className={`notification-item ${notification.isRead ? 'read' : 'unread'}`}
                         onClick={() => {
                             markAsRead(notification._id);
+                            if (notification.link) navigate(notification.link);
                             if (onClose) onClose();
                         }}
                     >
@@ -55,9 +57,9 @@ const NotificationList = ({ onClose }) => {
                             <NotificationIcon type={notification.type} />
                         </div>
                         <div className="notification-content">
-                            <Link to={notification.link || '#'} className="notification-title">
+                            <div className="notification-title">
                                 {notification.title}
-                            </Link>
+                            </div>
                             <p className="notification-message">{notification.message}</p>
                             <span className="notification-time">
                                 {formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true })}

@@ -185,7 +185,7 @@ export default function Feed() {
               key={p._id || p.id}
               ref={isLast ? lastPostElementRef : null}
               style={{ cursor: 'pointer' }}
-              onClick={() => navigate(`/post/${p._id || p.id}`)}
+              onClick={() => navigate(`/posts/${p._id || p.id}`)}
             >
               <div style={{ display: 'flex', gap: '.5rem', alignItems: 'center', marginBottom: '0.5rem' }}>
                 <div
@@ -250,7 +250,7 @@ export default function Feed() {
                     onReactionUpdate={() => loadPosts(true)}
                   />
                   <ShareButton
-                    url={`${window.location.origin}/post/${p._id || p.id}`}
+                    url={`${window.location.origin}/posts/${p._id || p.id}`}
                     title={p.content?.substring(0, 100) || 'Check out this post'}
                   />
                 </div>

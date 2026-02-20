@@ -127,6 +127,9 @@ export async function deleteBlog(req, res) {
       return res.status(404).json({ error: 'Blog not found' });
     }
 
+    // Delete associated notifications
+    notificationService.deleteByLink(`/blogs/${id}`);
+
     res.json({ message: 'Blog deleted successfully' });
   } catch (error) {
     console.error('Error deleting blog:', error);

@@ -163,6 +163,9 @@ export async function deleteStory(req, res) {
     const { id } = req.params;
     const story = await Story.findByIdAndDelete(id);
     if (!story) return res.status(404).json({ error: 'Story not found' });
+    // Delete associated notifications
+    notificationService.deleteByLink(`/stories/${id}`);
+
     res.json({ message: 'Story deleted successfully' });
   } catch (err) {
     console.error('Error deleting story:', err);

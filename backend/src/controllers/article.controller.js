@@ -173,6 +173,9 @@ export async function deleteArticle(req, res) {
     const { id } = req.params;
     const article = await Article.findByIdAndDelete(id);
     if (!article) return res.status(404).json({ error: 'Article not found' });
+    // Delete associated notifications
+    notificationService.deleteByLink(`/articles/${id}`);
+
     res.json({ message: 'Article deleted successfully' });
   } catch (err) {
     console.error('Error deleting article:', err);

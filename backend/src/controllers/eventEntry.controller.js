@@ -65,14 +65,19 @@ export const createEntry = async (req, res) => {
 
 export const getEntries = async (req, res) => {
     try {
-        const { eventId } = req.query;
+        const { eventId, trending } = req.query;
         const filter = eventId ? { event: eventId } : {};
 
-        const entries = await EventEntry.find(filter)
+        let query = EventEntry.find(filter)
             .populate('uploader', 'username')
-            .populate('event', 'inactive')
-            .populate('comments.user', 'username photoUrl')
-            .sort({ createdAt: -1 });
+            .populate('event', 'title inactive') // Populating title
+            .populate('comments.user', 'username photoUrl');
+
+        if (!trending) {
+            query = query.sort({ createdAt: -1 });
+        }
+
+        const entries = await query;
 
         // Get guestId/userId for the current user
         const userId = req.user?.id;
@@ -84,10 +89,10 @@ export const getEntries = async (req, res) => {
         const entryIds = entries.map(e => e._id);
 
         if (userId || guestId) {
-            let query = { itemId: { $in: entryIds }, itemModel: 'EventEntry' };
-            if (userId) query.userId = userId;
-            else query.guestId = guestId;
-            userReactions = await Reaction.find(query);
+            let reactionQuery = { itemId: { $in: entryIds }, itemModel: 'EventEntry' };
+            if (userId) reactionQuery.userId = userId;
+            else reactionQuery.guestId = guestId;
+            userReactions = await Reaction.find(reactionQuery);
         } else {
             // Fallback to IP if no identifiers
             userReactions = await Reaction.find({ itemId: { $in: entryIds }, itemModel: 'EventEntry', ip });
@@ -107,14 +112,26 @@ export const getEntries = async (req, res) => {
             return acc;
         }, {});
 
-        const entriesWithUserReaction = entries.map(entry => {
+        let entriesWithUserReaction = entries.map(entry => {
             const reaction = userReactions.find(r => r.itemId.toString() === entry._id.toString());
+            const counts = reactionCountsMap[entry._id.toString()] || {};
+            const totalReactions = Object.values(counts).reduce((a, b) => a + b, 0);
+            const totalComments = entry.comments?.length || 0;
+
             return {
                 ...entry.toObject(),
                 userActiveReaction: reaction ? reaction.type : null,
-                reactionCounts: reactionCountsMap[entry._id.toString()] || {}
+                reactionCounts: counts,
+                engagementScore: totalReactions + totalComments // Simple score for sorting
             };
         });
+
+        if (trending) {
+            entriesWithUserReaction.sort((a, b) => b.engagementScore - a.engagementScore);
+            if (req.query.limit) {
+                entriesWithUserReaction = entriesWithUserReaction.slice(0, parseInt(req.query.limit));
+            }
+        }
 
         res.status(200).json(entriesWithUserReaction);
     } catch (error) {

@@ -26,3 +26,11 @@ export const createNotification = async ({
         return null;
     }
 };
+
+export const deleteByLink = async (link) => {
+    try {
+        await Notification.deleteMany({ link });
+    } catch (error) {
+        console.error('Error deleting notifications by link:', error);
+    }
+};

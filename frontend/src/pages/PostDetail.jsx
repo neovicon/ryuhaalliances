@@ -96,7 +96,7 @@ export default function PostDetail() {
                 title={post.content?.substring(0, 100) || 'Post'}
                 description={post.content?.substring(0, 200) || 'View this post on Ryuha Alliance'}
                 image={post.image}
-                url={`/post/${id}`}
+                url={`/posts/${id}`}
                 type="article"
             />
             <button onClick={() => navigate(-1)} className="btn" style={{ marginBottom: '1rem', background: 'transparent', border: '1px solid var(--muted)', color: 'var(--muted)' }}>

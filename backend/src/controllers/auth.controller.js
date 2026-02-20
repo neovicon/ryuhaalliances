@@ -72,7 +72,7 @@ export async function signup(req, res) {
     type: 'signup',
     title: 'New User Signup',
     message: `A new user ${user.username} has signed up and is pending approval.`,
-    link: `/admin/users` // Assuming there's an admin users page
+    link: `/admin` // Navigating to the admin dashboard for approval
   });
 
   return res.status(201).json({ token, user: await sanitizeUser(user, req) });
