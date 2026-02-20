@@ -209,8 +209,12 @@ export async function getAnnouncementById(req, res) {
 }
 
 export const validateAddComment = [
-  param('id').isMongoId(),
-  body('content').isString().isLength({ min: 1, max: 1000 }).withMessage('Comment must be between 1 and 1000 characters'),
+  param('id').isMongoId().withMessage('Invalid announcement ID'),
+  body('content')
+    .isString()
+    .withMessage('Comment must be text')
+    .isLength({ min: 1, max: 1000 })
+    .withMessage('Comment must be between 1 and 1000 characters'),
 ];
 
 export async function addComment(req, res) {
@@ -333,7 +337,14 @@ export async function deleteAnnouncement(req, res) {
   }
 }
 
-export const validateReact = [param('id').isMongoId(), body('key').isString().isLength({ min: 1, max: 32 })];
+export const validateReact = [
+  param('id').isMongoId().withMessage('Invalid announcement ID'),
+  body('key')
+    .isString()
+    .withMessage('Reaction key must be text')
+    .isLength({ min: 1, max: 32 })
+    .withMessage('Reaction key must be between 1 and 32 characters')
+];
 
 export async function react(req, res) {
   const errors = validationResult(req);

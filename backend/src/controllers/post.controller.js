@@ -6,7 +6,12 @@ import mongoose from 'mongoose';
 import * as notificationService from '../services/notification.service.js';
 
 export const validateCreatePost = [
-  body('content').optional().isString().isLength({ max: 2000 }),
+  body('content')
+    .optional()
+    .isString()
+    .withMessage('Post content must be text')
+    .isLength({ max: 10000 })
+    .withMessage('Post too long (max 10,000 characters)'),
   body('isPrivate').optional()
 ];
 export async function createPost(req, res) {
@@ -122,7 +127,14 @@ export async function listPosts(req, res) {
   res.json({ posts: postsWithFullUrl, nextCursor });
 }
 
-export const validateComment = [param('id').isMongoId(), body('content').isString().isLength({ min: 1, max: 1000 })];
+export const validateComment = [
+  param('id').isMongoId().withMessage('Invalid post ID'),
+  body('content')
+    .isString()
+    .withMessage('Comment must be text')
+    .isLength({ min: 1, max: 1000 })
+    .withMessage('Comment must be between 1 and 1000 characters')
+];
 export async function addComment(req, res) {
   const errors = validationResult(req);
   if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
@@ -158,7 +170,14 @@ export async function addComment(req, res) {
   res.status(201).json({ post: postObj });
 }
 
-export const validateReact = [param('id').isMongoId(), body('key').isString().isLength({ min: 1, max: 32 })];
+export const validateReact = [
+  param('id').isMongoId().withMessage('Invalid post ID'),
+  body('key')
+    .isString()
+    .withMessage('Reaction key must be text')
+    .isLength({ min: 1, max: 32 })
+    .withMessage('Reaction key must be between 1 and 32 characters')
+];
 export async function react(req, res) {
   const errors = validationResult(req);
   if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });

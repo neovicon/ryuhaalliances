@@ -175,8 +175,12 @@ export async function getEventById(req, res) {
 }
 
 export const validateAddComment = [
-  param('id').isMongoId(),
-  body('content').isString().isLength({ min: 1, max: 1000 }).withMessage('Comment must be between 1 and 1000 characters'),
+  param('id').isMongoId().withMessage('Invalid event ID'),
+  body('content')
+    .isString()
+    .withMessage('Comment must be text')
+    .isLength({ min: 1, max: 1000 })
+    .withMessage('Comment must be between 1 and 1000 characters'),
 ];
 
 export async function addComment(req, res) {
