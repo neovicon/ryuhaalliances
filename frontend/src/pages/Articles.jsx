@@ -64,7 +64,7 @@ export default function Articles() {
       form.append('content', formData.content);
       form.append('isActive', formData.isActive);
       if (formData.image) form.append('image', formData.image);
-      await client.post('/articles', form, { headers: { 'Content-Type': 'multipart/form-data' } });
+      await client.post('/articles', form);
       setFormData({ title: '', content: '', image: null, isActive: true });
       setImagePreview(null);
       setShowCreateModal(false);
@@ -87,7 +87,7 @@ export default function Articles() {
       form.append('content', formData.content);
       form.append('isActive', formData.isActive);
       if (formData.image) form.append('image', formData.image);
-      await client.put(`/articles/${editingItem.id}`, form, { headers: { 'Content-Type': 'multipart/form-data' } });
+      await client.put(`/articles/${editingItem.id}`, form);
       setFormData({ title: '', content: '', image: null, isActive: true });
       setImagePreview(null);
       setEditingItem(null);

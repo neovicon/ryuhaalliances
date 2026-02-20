@@ -144,9 +144,7 @@ export default function Moderator() {
     try {
       const form = new FormData();
       form.append('heroCard', heroCardFile);
-      await client.post(`/users/${selectedUser.id || selectedUser._id}/hero-card`, form, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
+      await client.post(`/users/${selectedUser.id || selectedUser._id}/hero-card`, form);
       alert('Hero License updated successfully');
       setHeroCardFile(null);
       await searchUsers(); // Refresh search results
@@ -168,9 +166,7 @@ export default function Moderator() {
     try {
       const form = new FormData();
       form.append('certificate', certificateFile);
-      await client.post(`/users/${selectedUser.id || selectedUser._id}/certificate`, form, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
+      await client.post(`/users/${selectedUser.id || selectedUser._id}/certificate`, form);
       alert('Certificate uploaded successfully');
       setCertificateFile(null);
       await searchUsers(); // Refresh search results
@@ -201,9 +197,7 @@ export default function Moderator() {
       if (warningText.trim()) {
         form.append('warningText', warningText.trim());
       }
-      await client.post(`/users/${selectedUser.id || selectedUser._id}/warning-notice`, form, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
+      await client.post(`/users/${selectedUser.id || selectedUser._id}/warning-notice`, form);
       alert('Warning notice updated successfully');
       setWarningFile(null);
       setWarningText('');

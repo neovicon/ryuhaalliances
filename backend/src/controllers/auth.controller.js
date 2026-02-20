@@ -101,9 +101,9 @@ export async function login(req, res) {
       { username: email } // username is case-sensitive in some DBs, or you might want to normalize it
     ]
   });
-  if (!user) return res.status(400).json({ error: 'Invalid credentials' });
+  if (!user) return res.status(404).json({ error: 'Account not found. Please check your email/username.' });
   const ok = await bcrypt.compare(password, user.passwordHash);
-  if (!ok) return res.status(400).json({ error: 'Invalid credentials' });
+  if (!ok) return res.status(401).json({ error: 'Incorrect password. Please try again.' });
 
   // Check if user account is approved
   if (user.status === 'pending') {

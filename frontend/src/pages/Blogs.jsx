@@ -66,9 +66,7 @@ export default function Blogs() {
         form.append('image', formData.image);
       }
 
-      await client.post('/blogs', form, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
+      await client.post('/blogs', form);
 
       setFormData({ title: '', content: '', image: null });
       setImagePreview(null);
@@ -97,9 +95,7 @@ export default function Blogs() {
         form.append('image', formData.image);
       }
 
-      await client.put(`/blogs/${editingBlog.id}`, form, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
+      await client.put(`/blogs/${editingBlog.id}`, form);
 
       setFormData({ title: '', content: '', image: null });
       setImagePreview(null);

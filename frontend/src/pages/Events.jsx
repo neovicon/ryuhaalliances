@@ -70,9 +70,7 @@ export default function Events() {
         form.append('image', formData.image);
       }
 
-      await client.post('/events', form, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
+      await client.post('/events', form);
 
       setFormData({ title: '', description: '', image: null, inactive: false });
       setImagePreview(null);
@@ -102,9 +100,7 @@ export default function Events() {
         form.append('image', formData.image);
       }
 
-      await client.put(`/events/${editingEvent.id}`, form, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
+      await client.put(`/events/${editingEvent.id}`, form);
 
       setFormData({ title: '', description: '', image: null, inactive: false });
       setImagePreview(null);

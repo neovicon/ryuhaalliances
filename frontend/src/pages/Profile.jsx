@@ -246,7 +246,7 @@ export default function Profile() {
         try {
           const form = new FormData();
           form.append('heroCard', selected);
-          await client.post('/users/me/hero-card', form, { headers: { 'Content-Type': 'multipart/form-data' } });
+          await client.post('/users/me/hero-card', form);
           await loadSelfProfile();
         } catch (error) {
           console.error('Failed to upload hero card:', error);
@@ -278,7 +278,7 @@ export default function Profile() {
         try {
           const form = new FormData();
           form.append('photo', selected);
-          await client.post('/users/me/photo', form, { headers: { 'Content-Type': 'multipart/form-data' } });
+          await client.post('/users/me/photo', form);
           await loadSelfProfile();
         } catch (error) {
           console.error('Failed to upload profile picture:', error);
@@ -297,7 +297,7 @@ export default function Profile() {
     try {
       const form = new FormData();
       form.append('heroCard', heroFile);
-      await client.post('/users/me/hero-card', form, { headers: { 'Content-Type': 'multipart/form-data' } });
+      await client.post('/users/me/hero-card', form);
       setHeroFile(null);
       await loadSelfProfile();
     } catch (error) {
@@ -314,7 +314,7 @@ export default function Profile() {
     try {
       const form = new FormData();
       form.append('photo', avatarFile);
-      await client.post('/users/me/photo', form, { headers: { 'Content-Type': 'multipart/form-data' } });
+      await client.post('/users/me/photo', form);
       setAvatarFile(null);
       await loadSelfProfile();
     } catch (error) {

@@ -15,5 +15,5 @@ export const apiCall = async (path, options = {}) => {
     throw new Error(error || res.statusText);
   }
 
-  return await res.json();
+  return await res.json()
 };

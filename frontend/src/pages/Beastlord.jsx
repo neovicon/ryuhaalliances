@@ -198,9 +198,7 @@ export default function Beastlord() {
 
         try {
             // 1. Upload the file
-            const uploadRes = await client.post('/upload', formData, {
-                headers: { 'Content-Type': 'multipart/form-data' }
-            });
+            const uploadRes = await client.post('/upload', formData);
 
             const { key } = uploadRes.data;
 

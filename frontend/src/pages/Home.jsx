@@ -127,13 +127,9 @@ export default function Home() {
       }
 
       if (editingMember) {
-        await client.put(`/leadership/${editingMember._id}`, formData, {
-          headers: { 'Content-Type': 'multipart/form-data' }
-        });
+        await client.put(`/leadership/${editingMember._id}`, formData);
       } else {
-        await client.post('/leadership', formData, {
-          headers: { 'Content-Type': 'multipart/form-data' }
-        });
+        await client.post('/leadership', formData);
       }
 
       setShowLeadershipModal(false);

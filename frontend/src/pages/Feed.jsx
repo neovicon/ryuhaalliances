@@ -69,7 +69,7 @@ export default function Feed() {
       if (isPrivate) form.append('isPrivate', 'true');
       if (mentionEveryone) form.append('mentionEveryone', 'true');
 
-      await client.post('/posts', form, { headers: { 'Content-Type': 'multipart/form-data' } });
+      await client.post('/posts', form);
       setContent('');
       setImageFile(null);
       setVideoFile(null);

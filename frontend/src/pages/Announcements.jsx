@@ -77,9 +77,7 @@ export default function Announcements() {
         form.append('image', formData.image);
       }
 
-      await client.post('/announcements', form, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
+      await client.post('/announcements', form);
 
       setFormData({ title: '', content: '', image: null, isActive: true });
       setImagePreview(null);
@@ -109,9 +107,7 @@ export default function Announcements() {
         form.append('image', formData.image);
       }
 
-      await client.put(`/announcements/${editingAnnouncement.id}`, form, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
+      await client.put(`/announcements/${editingAnnouncement.id}`, form);
 
       setFormData({ title: '', content: '', image: null, isActive: true });
       setImagePreview(null);

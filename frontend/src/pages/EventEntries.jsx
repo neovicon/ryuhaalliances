@@ -90,9 +90,7 @@ export default function EventEntries() {
                 formData.append('media', mediaFile);
 
                 console.log('Posting new entry...');
-                const response = await client.post('/event-entries', formData, {
-                    headers: { 'Content-Type': 'multipart/form-data' }
-                });
+                const response = await client.post('/event-entries', formData);
                 console.log('Upload successful:', response.data);
             }
 
