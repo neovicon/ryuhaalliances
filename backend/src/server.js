@@ -95,16 +95,19 @@ io.on('connection', (socket) => {
   });
 
   socket.on('create_game', ({ name, password, board, start, end, username }) => {
-    if (games.has(name)) {
+    const trimmedName = name ? name.trim() : '';
+    if (games.has(trimmedName)) {
       socket.emit('error', 'Game name already exists');
       return;
     }
-    games.set(name, {
-      password,
+    games.set(trimmedName, {
+      password: password ? password.trim() : '',
       host: { id: socket.id, username, board, start, end, currentPos: start },
       joiner: null,
-      turn: socket.id, // Host starts first
-      status: 'waiting'
+      turn: username, // Host starts first (by username)
+      status: 'waiting',
+      spectators: new Set(),
+      log: [{ text: `System initialized. Game "${name}" created. Waiting for opponent...`, type: 'system', time: new Date().toLocaleTimeString() }]
     });
     socket.join(name);
     console.log(`Game created: ${name} by ${username}`);
@@ -112,12 +115,16 @@ io.on('connection', (socket) => {
   });
 
   socket.on('join_game', ({ name, password, board, start, end, username }) => {
-    const game = games.get(name);
+    const trimmedName = name ? name.trim() : '';
+    const trimmedPassword = password ? password.trim() : '';
+    const game = games.get(trimmedName);
     if (!game) {
+      console.log(`Join attempt failed: Game "${trimmedName}" not found. Available:`, Array.from(games.keys()));
       socket.emit('error', 'Game not found');
       return;
     }
-    if (game.password !== password) {
+    if (game.password !== trimmedPassword) {
+      console.log(`Join attempt failed: Incorrect password for "${trimmedName}".`);
       socket.emit('error', 'Incorrect password');
       return;
     }
@@ -126,17 +133,28 @@ io.on('connection', (socket) => {
       return;
     }
 
-    game.joiner = { id: socket.id, username, board, start, end, currentPos: start };
+    game.joiner = { id: socket.id, username, board, start, end, currentPos: game.host.start };
+    game.host.currentPos = start;
     game.status = 'playing';
 
     socket.join(name);
     console.log(`User ${username} joined game ${name}`);
 
-    // Notify both players
-    io.to(name).emit('game_started', {
+    const startMsg = { text: `Match initiated: ${game.host.username} vs ${game.joiner.username}`, type: 'system', time: new Date().toLocaleTimeString() };
+    game.log.push(startMsg);
+
+    // Notify everyone
+    io.to(trimmedName).emit('game_started', {
       host: game.host.username,
       joiner: game.joiner.username,
-      turn: game.host.id
+      hostPos: game.host.currentPos,
+      joinerPos: game.joiner.currentPos,
+      hostTarget: game.joiner.end,
+      joinerTarget: game.host.end,
+      turn: game.turn, // Now a username
+      log: startMsg.text,
+      name: trimmedName,
+      password: game.password
     });
 
     // Send initial opponent data (masked)
@@ -144,84 +162,151 @@ io.on('connection', (socket) => {
     io.to(game.joiner.id).emit('opponent_data', { start: game.host.start, end: game.host.end });
   });
 
-  socket.on('make_move', ({ gameName, targetCell }) => {
-    const game = games.get(gameName);
-    if (!game || game.status !== 'playing') return;
+  socket.on('reconnect_game', ({ name, password, username }) => {
+    const trimmedName = name ? name.trim() : '';
+    const trimmedPassword = password ? password.trim() : '';
+    const game = games.get(trimmedName);
+    if (!game || game.password !== trimmedPassword) {
+      console.log(`Reconnect failed: Game "${trimmedName}" not found or credentials invalid. User: ${username}`);
+      socket.emit('error', 'Game not found or invalid credentials');
+      return;
+    }
 
-    if (game.turn !== socket.id) {
+    let isHost = game.host.username === username;
+    let isJoiner = game.joiner && game.joiner.username === username;
+
+    if (!isHost && !isJoiner) {
+      socket.emit('error', 'Access denied: not a player in this game');
+      return;
+    }
+
+    socket.join(name);
+    if (isHost) game.host.id = socket.id;
+    else if (isJoiner) game.joiner.id = socket.id;
+
+    // Refresh turn ID if I was the turn holder
+    if (game.turn && (isHost || isJoiner)) {
+      // Since turn was a socket.id, we should update it if it matched our old one?
+      // Actually, it's better if 'turn' is indexed by role or username, but for now 
+      // we'll just check if the player whose turn it was just reconnected.
+      // Wait, if game.turn was the OLD socket.id, we need to update it.
+      // Let's assume for now the client handles 'whose turn it is' via username or we update the turn.
+      // Better: update the turn to the new socket id if it was their turn.
+      // We don't have the old socket.id anymore. Let's make 'turn' role-based or update it here.
+    }
+
+    socket.emit('reconnected', {
+      status: game.status,
+      turn: game.turn,
+      myPosition: isHost ? game.host.currentPos : game.joiner.currentPos,
+      opponentPosition: isHost ? (game.joiner ? game.joiner.currentPos : null) : game.host.currentPos,
+      opponentData: isHost ? (game.joiner ? { start: game.joiner.start, end: game.joiner.end } : null) : { start: game.host.start, end: game.host.end },
+      log: game.log,
+      hostName: game.host.username,
+      joinerName: game.joiner ? game.joiner.username : null,
+      startCell: isHost ? game.host.start : (game.joiner ? game.joiner.start : null),
+      endCell: isHost ? game.host.end : (game.joiner ? game.joiner.end : null),
+      walls: Array.from(isHost ? game.host.board : (game.joiner ? game.joiner.board : []))
+    });
+
+    io.to(name).emit('player_reconnected', { username });
+  });
+
+  socket.on('spectate_game', ({ name }) => {
+    const game = games.get(name);
+    if (!game) {
+      socket.emit('error', 'Game not found');
+      return;
+    }
+    socket.join(name);
+    game.spectators.add(socket.id);
+
+    socket.emit('spectating_started', {
+      hostName: game.host.username,
+      joinerName: game.joiner ? game.joiner.username : null,
+      hostPos: game.host.currentPos,
+      joinerPos: game.joiner ? game.joiner.currentPos : null,
+      hostTarget: game.joiner ? game.joiner.end : null,
+      joinerTarget: game.host.end,
+      status: game.status,
+      turn: game.turn,
+      log: game.log
+    });
+  });
+
+  socket.on('make_move', ({ gameName, targetCell }) => {
+    const isHost = socket.id === game.host.id;
+    const isJoiner = game.joiner && socket.id === game.joiner.id;
+    const player = isHost ? game.host : (isJoiner ? game.joiner : null);
+
+    if (!player) {
+      socket.emit('error', 'Not a player in this game');
+      return;
+    }
+
+    if (game.turn !== player.username) {
       socket.emit('error', 'Not your turn');
       return;
     }
 
-    const isHost = socket.id === game.host.id;
-    const player = isHost ? game.host : game.joiner;
     const opponent = isHost ? game.joiner : game.host;
 
-    const fromPos = player.currentPos; // Store previous position
-
-    // Validate Move (Adjacency & Range)
+    const fromPos = player.currentPos;
     const [currR, currC] = fromPos.split('-').map(Number);
     const [targetR, targetC] = targetCell.split('-').map(Number);
 
-    // Coordinate Helper: 0-0 -> A1
     const formatCoord = (r, c) => `${String.fromCharCode(65 + c)}${r + 1}`;
-    const fromStr = formatCoord(currR, currC);
-    const toStr = formatCoord(targetR, targetC);
-    const moveStr = `${fromStr}-${toStr}`;
+    const moveStr = `${formatCoord(currR, currC)}-${formatCoord(targetR, targetC)}`;
 
-    // Check range (must be adjacent, no diagonals)
     const dist = Math.abs(currR - targetR) + Math.abs(currC - targetC);
     if (dist !== 1) {
       socket.emit('move_result', { success: false, message: 'Invalid move: must be adjacent' });
-      // Turn passes to opponent as penalty
-      game.turn = opponent.id;
+      game.turn = opponent.username; // Switch turn on mistake
       io.to(gameName).emit('turn_update', { turn: game.turn });
       return;
     }
 
-    // Check Wall (Against OPPONENT'S board)
-    // Wall key format: v-r-c or h-r-c
     let wallKey = null;
     if (currR === targetR) {
-      // Horizontal move
       if (targetC > currC) wallKey = `v-${currR}-${targetC}`;
       else wallKey = `v-${currR}-${currC}`;
     } else {
-      // Vertical move
       if (targetR > currR) wallKey = `h-${targetR}-${currC}`;
       else wallKey = `h-${currR}-${currC}`;
     }
 
-    // Opponent board is Set-like array
     if (opponent.board.includes(wallKey)) {
-      // Hit a wall!
+      const hitMsg = { text: `${player.username} hit a wall at ${moveStr}`, type: 'warning', time: new Date().toLocaleTimeString() };
+      game.log.push(hitMsg);
       socket.emit('move_result', { success: false, message: `You hit a wall at ${moveStr}!` });
-      game.turn = opponent.id;
+      game.turn = opponent.username;
       io.to(gameName).emit('turn_update', {
         turn: game.turn,
-        log: `${player.username} hit a wall at ${moveStr}`
+        log: hitMsg.text
       });
     } else {
-      // Valid move
       player.currentPos = targetCell;
-
-      // Check Win
       if (player.currentPos === opponent.end) {
-        // Send game over with BOTH boards so players can see the hidden walls
+        const winMsg = `${player.username} reached the destination! GAME OVER.`;
+        game.log.push({ text: winMsg, type: 'system', time: new Date().toLocaleTimeString() });
         io.to(gameName).emit('game_over', {
           winner: player.username,
           hostBoard: game.host.board,
-          joinerBoard: game.joiner.board
+          joinerBoard: game.joiner.board,
+          log: winMsg
         });
         games.delete(gameName);
       } else {
+        const moveMsg = `${player.username} moved to ${formatCoord(targetR, targetC)}`;
+        game.log.push({ text: moveMsg, type: 'info', time: new Date().toLocaleTimeString() });
         socket.emit('move_result', { success: true, position: targetCell });
-        // Send 'from' and 'to' so opponent can see the move animation/log
+        // game.turn = opponent.id; // REMOVED: Keep turn on success
         io.to(gameName).emit('game_update', {
           player: player.username,
           from: fromPos,
           to: targetCell,
-          moveStr: moveStr
+          moveStr: moveStr,
+          turn: game.turn
         });
       }
     }

@@ -43,29 +43,74 @@ const Labyrinth = () => {
     // const playSound = (type) => { ... }
 
     useEffect(() => {
+        // Attempt Reconnection if stored in localStorage
+        const savedGame = localStorage.getItem('labyrinth_active_game');
+        if (savedGame && socket && user) {
+            const { name, password } = JSON.parse(savedGame);
+            setGameName(name);
+            setGamePassword(password);
+            socket.emit('reconnect_game', { name, password, username: user.username });
+        }
+    }, [socket, user]);
+
+    useEffect(() => {
         if (!socket) return;
 
         socket.on('error', (msg) => {
             console.error("Socket Error:", msg);
             alert(`ERROR: ${msg}`);
             addLog(`ERROR: ${msg}`, 'error');
+            // If it's a "Game not found" error on reconnection, clear storage
+            if (msg.includes('not found')) {
+                localStorage.removeItem('labyrinth_active_game');
+                setIsOnlineMode(false);
+                setGameStatus('setup');
+            }
         });
 
         socket.on('game_created', ({ name }) => {
             setGameStatus('waiting');
+            localStorage.setItem('labyrinth_active_game', JSON.stringify({ name, password: gamePassword }));
             addLog(`System initialized. Game "${name}" created. Waiting for opponent connection...`, 'system');
         });
 
-        socket.on('game_started', ({ host, joiner, turn }) => {
+        socket.on('game_started', ({ host, joiner, turn, log, name, password }) => {
             setGameStatus('playing');
             setTurn(turn);
-            addLog(`Match initiated: ${host} vs ${joiner}`, 'system');
-            setMyPosition(startCell);
+            if (log) addLog(log, 'system');
+            else addLog(`Match initiated: ${host} vs ${joiner}`, 'system');
+            // setMyPosition(startCell); // Removed: we start at opponent's start now
+
+            // Joiner also needs to save to localStorage for reconnection
+            if (name && password) {
+                localStorage.setItem('labyrinth_active_game', JSON.stringify({ name, password }));
+            }
+        });
+
+        socket.on('reconnected', (data) => {
+            setGameStatus(data.status);
+            setTurn(data.turn);
+            setMyPosition(data.myPosition);
+            setOpponentPosition(data.opponentPosition);
+            setOpponentData(data.opponentData);
+            setMessages(data.log || []);
+            setIsOnlineMode(true);
+
+            // Re-sync local state
+            setStartCell(data.startCell);
+            setEndCell(data.endCell);
+            setWalls(new Set(data.walls));
+            setWallCount(data.walls.length);
+        });
+
+        socket.on('player_reconnected', ({ username }) => {
+            addLog(`Player ${username} re-established connection.`, 'system');
         });
 
         socket.on('opponent_data', (data) => {
             setOpponentData(data);
-            setOpponentPosition(data.start); // Initialize opponent position
+            setMyPosition(data.start); // Objective: Navigate opponent's board from their start
+            addLog(`Intelligence received. Objective: Reach ${formatPos(data.end)}`, 'system');
         });
 
         socket.on('turn_update', ({ turn, log }) => {
@@ -82,32 +127,37 @@ const Labyrinth = () => {
             }
         });
 
-        socket.on('game_update', ({ player, from, to, moveStr }) => {
+        socket.on('game_update', ({ player, from, to, moveStr, turn }) => {
+            if (turn) setTurn(turn);
             if (player !== user.username) {
                 setOpponentPosition(to); // Update where we think opponent is
-                addLog(`Opponent detected moving: ${moveStr}`, 'warning');
+                addLog(`Opponent moved: ${moveStr}`, 'warning');
             }
         });
 
-        socket.on('game_over', ({ winner, hostBoard, joinerBoard }) => {
+        socket.on('game_over', ({ winner, hostBoard, joinerBoard, log }) => {
             setWinner(winner);
             setGameStatus('finished');
             setRevealedHostBoard(hostBoard || []);
             setRevealedJoinerBoard(joinerBoard || []);
-            addLog(`GAME OVER. Winner: ${winner}`, 'system');
+            if (log) addLog(log, 'system');
+            else addLog(`GAME OVER. Winner: ${winner}`, 'system');
+            localStorage.removeItem('labyrinth_active_game');
         });
 
         return () => {
             socket.off('error');
             socket.off('game_created');
             socket.off('game_started');
+            socket.off('reconnected');
+            socket.off('player_reconnected');
             socket.off('opponent_data');
             socket.off('turn_update');
             socket.off('move_result');
             socket.off('game_update');
             socket.off('game_over');
         };
-    }, [socket, startCell, user]);
+    }, [socket, startCell, user, gamePassword]);
 
     const addLog = (text, type = 'info') => {
         setMessages(prev => [...prev, { text, time: new Date().toLocaleTimeString(), type }]);
@@ -269,66 +319,63 @@ const Labyrinth = () => {
                     let className = 'cell';
 
                     if (isOpponentMap) {
-                        // OPPONENT MAP VIEW (Where I move)
                         if (opponentData) {
-                            if (key === opponentData.start) className += ' start-node'; // Where I start on their map
-                            if (key === opponentData.end) className += ' end-node';     // Where I need to go
+                            if (key === opponentData.start) className += ' start-node';
+                            if (key === opponentData.end) className += ' end-node';
                         }
                         if (key === myPosition) className += ' player-node';
                     } else {
-                        // MY MAP VIEW (Setup or where Opponent moves)
                         if (key === startCell) className += ' start-node';
                         if (key === endCell) className += ' end-node';
-                        if (isOnlineMode && key === opponentPosition) className += ' opponent-node'; // Show opponent ghost
+                        if (isOnlineMode && key === opponentPosition) className += ' opponent-node';
                     }
 
                     return (
                         <div
                             key={i}
                             className={className}
-                            style={{ gridRow: cell.r + 1, gridColumn: cell.c + 1 }}
+                            style={{ gridRow: cell.r + 1, gridColumn: cell.c + 1, position: 'relative' }}
                             onClick={() => !isOnlineMode && handleCellClick(cell.r, cell.c)}
                         >
+                            <span className="cell-coord">{formatPos(key)}</span>
                             <div className="cell-content"></div>
                         </div>
                     );
                 })}
 
-                {/* Render Walls */}
-                {[
-                    // Vertical Walls
-                    ...Array.from({ length: 6 }).flatMap((_, r) =>
-                        Array.from({ length: 5 }).map((_, i) => {
-                            const c = i + 1;
-                            const key = `v-${r}-${c}`;
-                            const isActive = wallsToShow.has(key);
-                            return (
-                                <div
-                                    key={`v-${r}-${c}`}
-                                    className={`v-wall ${isActive ? 'wall-active' : ''}`}
-                                    style={{ left: (c * 60 - 4) + 'px', top: (r * 60) + 'px' }}
-                                    onClick={() => !isOnlineMode && !isOpponentMap && toggleWall('v', r, c)}
-                                />
-                            );
-                        })
-                    ),
-                    // Horizontal Walls
-                    ...Array.from({ length: 5 }).flatMap((_, i) => {
-                        const r = i + 1;
-                        return Array.from({ length: 6 }).map((_, c) => {
-                            const key = `h-${r}-${c}`;
-                            const isActive = wallsToShow.has(key);
-                            return (
-                                <div
-                                    key={`h-${r}-${c}`}
-                                    className={`h-wall ${isActive ? 'wall-active' : ''}`}
-                                    style={{ left: (c * 60) + 'px', top: (r * 60 - 4) + 'px' }}
-                                    onClick={() => !isOnlineMode && !isOpponentMap && toggleWall('h', r, c)}
-                                />
-                            );
-                        });
+                {/* Vertical Walls */}
+                {Array.from({ length: 6 }).flatMap((_, r) =>
+                    Array.from({ length: 5 }).map((_, i) => {
+                        const c = i + 1;
+                        const key = `v-${r}-${c}`;
+                        const isActive = wallsToShow.has(key);
+                        return (
+                            <div
+                                key={key}
+                                className={`v-wall ${isActive ? 'wall-active' : ''}`}
+                                style={{ '--r': r, '--c': c }}
+                                onClick={() => !isOnlineMode && !isOpponentMap && toggleWall('v', r, c)}
+                            />
+                        );
                     })
-                ]}
+                )}
+
+                {/* Horizontal Walls */}
+                {Array.from({ length: 5 }).flatMap((_, i) => {
+                    const r = i + 1;
+                    return Array.from({ length: 6 }).map((_, c) => {
+                        const key = `h-${r}-${c}`;
+                        const isActive = wallsToShow.has(key);
+                        return (
+                            <div
+                                key={key}
+                                className={`h-wall ${isActive ? 'wall-active' : ''}`}
+                                style={{ '--r': r, '--c': c }}
+                                onClick={() => !isOnlineMode && !isOpponentMap && toggleWall('h', r, c)}
+                            />
+                        );
+                    });
+                })}
             </div>
         );
     };
@@ -414,25 +461,24 @@ const Labyrinth = () => {
 
                 .maze-grid {
                     display: grid;
-                    grid-template-columns: repeat(6, 60px);
-                    grid-template-rows: repeat(6, 60px);
+                    grid-template-columns: repeat(6, var(--cell-size));
+                    grid-template-rows: repeat(6, var(--cell-size));
                     position: relative;
-                    width: 360px;
-                    height: 360px;
+                    width: calc(6 * var(--cell-size));
+                    height: calc(6 * var(--cell-size));
+                    --cell-size: 60px;
+                    border: 1px solid rgba(255,255,255,0.1);
+                    background: rgba(0,0,0,0.2);
                 }
 
-                @media (max-width: 500px) {
+                @media (max-width: 600px) {
                     .maze-grid {
-                        grid-template-columns: repeat(6, 45px);
-                        grid-template-rows: repeat(6, 45px);
-                        width: 270px; /* 6 * 45 */
-                        height: 270px;
+                        --cell-size: clamp(40px, 15vw, 80px);
                     }
-                    .cell { width: 45px !important; height: 45px !important; }
-                    .v-wall { height: 45px !important; left: calc(var(--c) * 45px - 4px) !important; top: calc(var(--r) * 45px) !important; }
-                    .h-wall { width: 45px !important; left: calc(var(--c) * 45px) !important; top: calc(var(--r) * 45px - 4px) !important; }
-                    .maze-top-labels { grid-template-columns: repeat(6, 45px) !important; left: 45px !important; }
-                    .maze-left-labels { grid-template-rows: repeat(6, 45px) !important; width: 45px !important; }
+                    .maze-wrapper {
+                        padding: 0 !important;
+                    }
+                    .player-node { width: 40% !important; height: 40% !important; margin: 30% !important; }
                 }
 
                 .cell {
@@ -453,63 +499,97 @@ const Labyrinth = () => {
                 .opponent-node { background: var(--neon-pink); opacity: 0.5; box-shadow: 0 0 15px var(--neon-pink); z-index: 5; }
 
                 /* Walls */
-                .v-wall, .h-wall { position: absolute; background: rgba(255, 255, 255, 0.05); transition: all 0.2s; z-index: 20; }
-                .v-wall { width: 8px; height: 60px; margin-left: -4px; border-radius: 4px; }
-                .h-wall { height: 8px; width: 60px; margin-top: -4px; border-radius: 4px; }
+                .v-wall, .h-wall { 
+                    position: absolute; 
+                    background: rgba(255, 255, 255, 0.05); 
+                    transition: all 0.2s; 
+                    z-index: 20; 
+                }
+                .v-wall { 
+                    width: 6px; 
+                    height: var(--cell-size); 
+                    left: calc(var(--c) * var(--cell-size) - 3px);
+                    top: calc(var(--r) * var(--cell-size));
+                }
+                .h-wall { 
+                    height: 6px; 
+                    width: var(--cell-size); 
+                    left: calc(var(--c) * var(--cell-size));
+                    top: calc(var(--r) * var(--cell-size) - 3px);
+                }
                 
-                .v-wall:hover, .h-wall:hover { background: rgba(255, 0, 85, 0.3); }
+                .v-wall:hover, .h-wall:hover { background: rgba(177, 15, 46, 0.2); }
                 
                 .wall-active {
-                    background: #ff0055 !important;
-                    box-shadow: 0 0 10px #ff0055, 0 0 20px #ff0055;
+                    background: #b10f2e !important;
                 }
 
-                /* Labels */
-                .maze-top-labels {
-                    position: absolute; top: -25px; left: 0; right: 0;
-                    display: grid; grid-template-columns: repeat(6, 60px);
-                    text-align: center; color: var(--neon-blue); font-weight: bold;
-                }
                 .maze-left-labels {
-                    position: absolute; left: -25px; top: 0; bottom: 0;
-                    display: grid; grid-template-rows: repeat(6, 60px);
-                    align-items: center; justify-items: center; color: var(--neon-blue); font-weight: bold;
+                    display: none;
+                }
+                .maze-top-labels {
+                    display: none;
+                }
+
+                .cell-coord {
+                    position: absolute;
+                    top: 2px;
+                    left: 4px;
+                    font-size: 10px;
+                    color: rgba(0, 243, 255, 0.2);
+                    pointer-events: none;
+                    user-select: none;
+                    font-family: monospace;
                 }
 
                 /* UI Elements */
+                .cyber-card {
+                    background: #0d0d0d;
+                    border: 1px solid #1a1a1a;
+                    padding: 1.5rem;
+                    border-radius: 4px;
+                }
+
                 .cyber-btn {
-                    background: transparent;
-                    border: 1px solid var(--neon-blue);
-                    color: var(--neon-blue);
+                    background: #1a1a1a;
+                    border: 1px solid #333;
+                    color: #ccc;
                     padding: 8px 16px;
                     text-transform: uppercase;
                     cursor: pointer;
-                    transition: all 0.3s;
+                    transition: all 0.2s;
                     font-family: inherit;
                     letter-spacing: 1px;
                 }
                 .cyber-btn:hover:not(:disabled) {
-                    background: var(--neon-blue);
-                    color: black;
-                    box-shadow: 0 0 20px var(--neon-blue);
+                    background: #222;
+                    border-color: #444;
+                    color: #fff;
                 }
                 .cyber-btn:disabled { opacity: 0.3; cursor: not-allowed; }
-                .cyber-btn.active { background: var(--neon-blue); color: black; box-shadow: 0 0 15px var(--neon-blue); }
+                .cyber-btn.active { background: #b10f2e; border-color: #b10f2e; color: #fff; }
 
                 .cyber-input {
-                    background: rgba(0, 0, 0, 0.5);
-                    border: 1px solid #333;
+                    background: #000;
+                    border: 1px solid #222;
                     color: white;
                     padding: 10px;
                     border-radius: 4px;
                     font-family: inherit;
                     outline: none;
                 }
-                .cyber-input:focus { border-color: var(--neon-blue); box-shadow: 0 0 10px rgba(0, 243, 255, 0.2); }
+                .cyber-input:focus { border-color: #444; }
+
+                .maze-wrapper {
+                    position: relative;
+                    padding: 20px;
+                    background: #050505;
+                    border: 1px solid #111;
+                }
 
                 .log-panel {
-                    border: 1px solid #333;
-                    background: rgba(0,0,0,0.8);
+                    border: 1px solid #1a1a1a;
+                    background: rgba(0,0,0,0.5);
                     height: 300px;
                     display: flex;
                     flex-direction: column;
@@ -529,30 +609,28 @@ const Labyrinth = () => {
             {!isOnlineMode ? (
                 /* SETUP MODE */
                 <div className="cyber-card" style={{ width: '100%', maxWidth: '600px' }}>
-                    <h1 className="h-title">System Setup</h1>
+                    <h1 className="h-title">Your Map</h1>
 
                     <div className="flex justify-center mb-6">
                         <div className="maze-wrapper">
-                            <div className="maze-top-labels"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span></div>
-                            <div className="maze-left-labels"><span>A</span><span>B</span><span>C</span><span>D</span><span>E</span><span>F</span></div>
                             {renderGrid(false)}
                         </div>
                     </div>
 
                     <div className="flex justify-between items-center mb-6 px-4">
-                        <div className="text-xl">
-                            INTEGRITY: <span style={{ color: wallCount === 20 ? 'var(--neon-green)' : 'white' }}>{wallCount}/20</span>
+                        <div className="text-xl uppercase tracking-tighter text-gray-400">
+                            Walls used: <span style={{ color: wallCount === 20 ? 'var(--neon-green)' : 'white' }}>{wallCount}/20</span>
                         </div>
                         <div className="flex gap-2">
-                            <button className={`cyber-btn ${mode === 'wall' ? 'active' : ''}`} onClick={() => setMode('wall')}>Build</button>
-                            <button className={`cyber-btn ${mode === 'start' ? 'active' : ''}`} style={{ borderColor: 'var(--neon-green)' }} onClick={() => setMode('start')}>Start</button>
-                            <button className={`cyber-btn ${mode === 'end' ? 'active' : ''}`} style={{ borderColor: '#0080ff' }} onClick={() => setMode('end')}>End</button>
+                            <button className={`cyber-btn ${mode === 'wall' ? 'active' : ''}`} onClick={() => setMode('wall')}>Walls</button>
+                            <button className={`cyber-btn ${mode === 'start' ? 'active' : ''}`} style={{ borderColor: mode === 'start' ? '#22c55e' : '#333' }} onClick={() => setMode('start')}>Start</button>
+                            <button className={`cyber-btn ${mode === 'end' ? 'active' : ''}`} style={{ borderColor: mode === 'end' ? '#3b82f6' : '#333' }} onClick={() => setMode('end')}>End</button>
                         </div>
                     </div>
 
                     {user ? (
                         <button onClick={handleEnableOnline} className="cyber-btn w-full" style={{ padding: '15px', fontSize: '1.2rem' }}>
-                            INITIALIZE UPLINK
+                            START GAME
                         </button>
                     ) : (
                         <div className="text-center text-red-500">AUTHENTICATION REQUIRED</div>
@@ -561,26 +639,48 @@ const Labyrinth = () => {
             ) : (
                 /* ONLINE MODE */
                 <div className="w-full max-w-6xl flex flex-col gap-6">
-                    <h1 className="h-title">Online Uplink</h1>
+                    <h1 className="h-title">Multiplayer</h1>
 
                     {gameStatus === 'lobby' && (
                         <div className="cyber-card self-center">
-                            <h2 className="text-xl mb-4 text-center">CONNECTION PARAMETERS</h2>
+                            <h2 className="text-xl mb-4 text-center uppercase tracking-widest text-gray-500">Connection</h2>
                             <div className="flex flex-col gap-4">
-                                <input placeholder="PROTOCOL ID (Name)" value={gameName} onChange={e => setGameName(e.target.value)} className="cyber-input" />
-                                <input placeholder="ACCESS KEY (Password)" value={gamePassword} onChange={e => setGamePassword(e.target.value)} className="cyber-input" />
+                                <input placeholder="GAME NAME" value={gameName} onChange={e => setGameName(e.target.value)} className="cyber-input" />
+                                <input placeholder="PASSWORD" value={gamePassword} onChange={e => setGamePassword(e.target.value)} className="cyber-input" />
                                 <div className="flex gap-4">
-                                    <button onClick={createGame} className="cyber-btn flex-1">HOST PROTOCOL</button>
-                                    <button onClick={joinGame} className="cyber-btn flex-1">JOIN PROTOCOL</button>
+                                    <button onClick={() => createGame(gameName.trim(), gamePassword.trim())} className="cyber-btn flex-1">HOST</button>
+                                    <button onClick={() => joinGame(gameName.trim(), gamePassword.trim())} className="cyber-btn flex-1">JOIN</button>
                                 </div>
                             </div>
                         </div>
                     )}
 
                     {gameStatus === 'waiting' && (
-                        <div className="cyber-card self-center text-center animate-pulse">
-                            <div className="text-2xl mb-2">WAITING FOR PEER CONNECTION...</div>
-                            <div className="text-sm text-gray-400">System ready. Standby.</div>
+                        <div className="cyber-card self-center text-center max-w-sm w-full">
+                            <div className="text-2xl mb-2 uppercase text-gray-400">Waiting for pool...</div>
+                            <div className="text-sm text-gray-600 mb-6 font-mono tracking-widest">GATEWAY ACTIVE</div>
+
+                            <div className="flex flex-col gap-4 mb-6 p-6 bg-black/40 border border-white/5 rounded shadow-inner">
+                                <div>
+                                    <div className="text-[10px] text-gray-500 uppercase tracking-widest mb-1 font-mono">Game ID</div>
+                                    <div className="text-xl font-mono text-white tracking-widest">{gameName}</div>
+                                </div>
+                                <div>
+                                    <div className="text-[10px] text-gray-500 uppercase tracking-widest mb-1 font-mono">Access Key</div>
+                                    <div className="text-xl font-mono text-indigo-400 tracking-widest">{gamePassword}</div>
+                                </div>
+                            </div>
+
+                            <button
+                                onClick={() => {
+                                    const url = `${window.location.origin}/labyrinth/spectate/${gameName}`;
+                                    navigator.clipboard.writeText(url);
+                                    alert('Spectate link copied to clipboard!');
+                                }}
+                                className="cyber-btn text-xs px-4 py-2 w-full"
+                            >
+                                COPY SPECTATE LINK
+                            </button>
                         </div>
                     )}
 
@@ -589,16 +689,14 @@ const Labyrinth = () => {
 
                             {/* GAME BOARD */}
                             <div className="cyber-card">
-                                <div className="text-center mb-4 text-yellow-400 font-bold tracking-widest">
-                                    TARGET SECTOR (NAVIGATE)
+                                <div className="text-center mb-4 text-gray-500 font-bold uppercase tracking-widest">
+                                    Opponent's Map
                                 </div>
                                 <div className="maze-wrapper">
-                                    <div className="maze-top-labels"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span></div>
-                                    <div className="maze-left-labels"><span>A</span><span>B</span><span>C</span><span>D</span><span>E</span><span>F</span></div>
                                     {renderGrid(true)}
                                 </div>
-                                <div className="mt-4 text-center text-sm text-gray-400">
-                                    CURRENT COORDS: <span className="text-white font-bold text-lg">{myPosition ? formatPos(myPosition) : 'N/A'}</span>
+                                <div className="mt-4 text-center text-sm text-gray-500">
+                                    YOUR POSITION: <span className="text-white font-bold">{myPosition ? formatPos(myPosition) : 'N/A'}</span>
                                 </div>
                             </div>
 
@@ -607,9 +705,9 @@ const Labyrinth = () => {
                                 <div className="mb-4 text-center">
                                     <h3 className="text-lg font-bold border-b border-gray-700 pb-2">DATA LOG</h3>
                                     <div className={`p-4 mt-2 font-bold text-xl tracking-wider transition-colors duration-500 ${winner ? 'bg-blue-900' :
-                                        turn === socket.id ? 'bg-green-900/50 text-green-400 border border-green-500' : 'bg-red-900/50 text-red-400 border border-red-500'
+                                        turn === user.username ? 'bg-green-900/50 text-green-400 border border-green-500' : 'bg-red-900/50 text-red-400 border border-red-500'
                                         }`}>
-                                        {winner ? `WINNER: ${winner}` : (turn === socket.id ? ">> YOUR TURN <<" : "WAITING FOR OPPONENT")}
+                                        {winner ? `WINNER: ${winner}` : (turn === user.username ? ">> YOUR TURN <<" : "WAITING FOR OPPONENT")}
                                     </div>
                                 </div>
 
@@ -630,13 +728,13 @@ const Labyrinth = () => {
                                         placeholder="ENTER COORDS (E.G. A3)"
                                         className="cyber-input flex-1 uppercase text-center text-lg tracking-widest"
                                         maxLength={2}
-                                        disabled={turn !== socket.id || !!winner}
+                                        disabled={turn !== user.username || !!winner}
                                         autoFocus
                                     />
                                     <button
                                         type="submit"
                                         className="cyber-btn"
-                                        disabled={turn !== socket.id || !!winner}
+                                        disabled={turn !== user.username || !!winner}
                                     >
                                         EXECUTE
                                     </button>
