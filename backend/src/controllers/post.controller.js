@@ -7,7 +7,7 @@ import * as notificationService from '../services/notification.service.js';
 
 export const validateCreatePost = [
   body('content').optional().isString().isLength({ max: 2000 }),
-  body('isPrivate').optional().isBoolean()
+  body('isPrivate').optional()
 ];
 export async function createPost(req, res) {
   const errors = validationResult(req);

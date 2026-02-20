@@ -291,8 +291,6 @@ export default function Admin() {
       house: currentValue?.house || '',
       memberStatus: currentValue?.memberStatus || '',
       username: currentValue?.username || '',
-      memberStatus: currentValue?.memberStatus || '',
-      username: currentValue?.username || '',
       displayName: currentValue?.displayName || '',
       email: currentValue?.email || ''
     });
