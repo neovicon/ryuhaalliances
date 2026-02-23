@@ -4,6 +4,7 @@ const houseSchema = new mongoose.Schema({
   name: { type: String, required: true, unique: true, index: true },
   description: { type: String, default: '' },
   funds: { type: Number, default: 0 },
+  blessingPoints: { type: Number, default: 0 },
   status: { type: String, enum: ['Active', 'Inactive'], default: 'Active' },
 }, { timestamps: true });
 

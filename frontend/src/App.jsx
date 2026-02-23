@@ -40,6 +40,8 @@ import SearchBar from './components/SearchBar.jsx'
 import Messenger from './pages/Messenger.jsx'
 import EventSpecificEntries from './pages/EventSpecificEntries.jsx'
 import LabyrinthSpectator from './pages/LabyrinthSpectator.jsx'
+import GodDomainOverview from './pages/GodDomainOverview.jsx'
+import GodDomainHouse from './pages/GodDomainHouse.jsx'
 import { MusicPlayerProvider } from './context/MusicPlayerContext.jsx'
 import { NotificationProvider } from './context/NotificationContext.jsx'
 import { SocketProvider } from './context/SocketContext.jsx'
@@ -99,6 +101,8 @@ export default function App() {
             <Route path="/download" element={<Download />} />
             <Route path="/music" element={<Music />} />
             <Route path="/beastlord" element={<Beastlord />} />
+            <Route path="/god" element={<GodDomainOverview />} />
+            <Route path="/god/:houseSlug" element={<GodDomainHouse />} />
             <Route path="/ryuha-apps" element={<RyuhaApps />} />
             <Route path="/ryuha-apps/coinflip" element={<Coinflip />} />
             <Route path="/ryuha-apps/tictactoe" element={<TicTacToe />} />

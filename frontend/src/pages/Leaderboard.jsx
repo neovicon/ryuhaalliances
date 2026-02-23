@@ -15,9 +15,6 @@ function getHouseImageSrc(houseName) {
     'Elric': 'elric',
     'Dragneel': 'dragneel',
     'Hellsing': 'hellsing',
-    'Obsidian Order': 'obsidian_order',
-    'Council of IV': 'counsil_of_iv',
-    'Abyssal IV': 'abyssal_iv',
     'Von Einzbern': 'von_einzbern'
   };
   const fileName = houseMap[houseName] || houseName.toLowerCase().replace(' ', '_');

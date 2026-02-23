@@ -29,6 +29,8 @@ import leadershipRoutes from './routes/leadership.routes.js';
 import eventEntryRoutes from './routes/eventEntry.routes.js';
 import notificationRoutes from './routes/notification.routes.js';
 import beastlordRoutes from './routes/beastlord.routes.js';
+import godDomainRoutes from './routes/godDomain.routes.js';
+
 
 import { createServer } from 'http';
 import { Server } from 'socket.io';
@@ -152,6 +154,8 @@ app.use('/api/leadership', leadershipRoutes);
 app.use('/api/event-entries', eventEntryRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/messages', messageRoutes);
+app.use('/api/god-domain', godDomainRoutes);
+
 
 
 const PORT = process.env.PORT || 5000;

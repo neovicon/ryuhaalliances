@@ -59,6 +59,7 @@ export default function Nav() {
     { to: '/feed', label: 'Feed', Icon: Home, auth: true },
     { to: '/leaderboard', label: 'Leaderboard', Icon: Trophy, auth: true },
     { to: '/messenger', label: 'Messenger', Icon: MessageCircle, auth: true },
+    { to: '/god', label: 'God Domain', Icon: LayoutGrid },
     { to: '/event-entries', label: 'Event Entries', Icon: Calendar },
     { to: '/beastlord', label: 'Beastlord', Icon: Trophy },
     { to: '/announcements', label: 'Announcements', Icon: Bell },
