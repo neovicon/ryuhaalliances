@@ -915,3 +915,21 @@ button.mobile-link {
     width: auto;
   }
 }
+
+/* God Details Card */
+.god-details-card {
+  transition: all 0.3s ease;
+}
+
+@media (max-width: 650px) {
+  .god-details-card {
+    flex-direction: column !important;
+    text-align: center !important;
+    padding: 1.5rem !important;
+  }
+  
+  .god-details-card img {
+    width: 140px !important;
+    height: 190px !important;
+  }
+}

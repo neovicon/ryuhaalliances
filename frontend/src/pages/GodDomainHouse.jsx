@@ -21,6 +21,18 @@ function getHouseImageSrc(houseName) {
     return `/assets/${fileName}.jpeg`;
 }
 
+const houseGods = {
+    'Pendragon': { name: 'Asgorath', image: 'Asgorath_Pendragon.jpg' },
+    'Phantomhive': { name: 'Morgana', image: 'MORGANA_Phantomhive.jpg' },
+    'Tempest': { name: 'Kaelith', image: 'KAELITH_Tempest.jpg' },
+    'Zoldyck': { name: 'Lycan', image: '𝐋𝐲𝐜𝐚𝐧_Zoldyck.jpg' },
+    'Fritz': { name: 'Soro Von Lumintaria', image: 'Soro_Von_Lumintaria_Fritz.jpg' },
+    'Elric': { name: 'Thalessara Elyndra', image: '𝐓𝐡𝐚𝐥𝐞𝐬𝐬𝐚𝐫𝐚_𝐄𝐥𝐲𝐧𝐝𝐫𝐚_Elric.jpg' },
+    'Hellsing': { name: 'Aethernox', image: 'Aethernox_Hellsing.jpg' },
+    'Von Einzbern': { name: 'Morglyia Noctfrost', image: 'Morglyia_Noctfrost_VON_EINZBERN.jpg' },
+    'Dragneel': { name: 'Unknown Patron', image: null }
+};
+
 const slugToNameMap = {
     'pendragon': 'Pendragon',
     'phantomhive': 'Phantomhive',
@@ -213,6 +225,88 @@ export default function GodDomainHouse() {
                     </div>
                 )}
             </div>
+
+            {/* God Section */}
+            {houseGods[houseName] && (
+                <div className="card god-details-card" style={{
+                    marginBottom: '2rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '2rem',
+                    overflow: 'hidden',
+                    background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.9) 100%)',
+                    border: '1px solid rgba(255, 215, 0, 0.2)',
+                    boxShadow: '0 10px 30px -10px rgba(0,0,0,0.5)'
+                }}>
+                    {houseGods[houseName].image ? (
+                        <div style={{ position: 'relative', flexShrink: 0 }}>
+                            <img
+                                src={`/assets/gods/${houseGods[houseName].image}`}
+                                alt={houseGods[houseName].name}
+                                style={{
+                                    width: '180px',
+                                    height: '240px',
+                                    objectFit: 'cover',
+                                    borderRadius: '8px',
+                                    border: '2px solid rgba(255, 215, 0, 0.3)'
+                                }}
+                            />
+                            <div style={{
+                                position: 'absolute',
+                                inset: 0,
+                                boxShadow: 'inset 0 0 40px rgba(0,0,0,0.4)',
+                                pointerEvents: 'none'
+                            }}></div>
+                        </div>
+                    ) : (
+                        <div style={{
+                            width: '180px',
+                            height: '240px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            background: 'rgba(255,255,255,0.05)',
+                            borderRadius: '8px',
+                            color: 'var(--muted)'
+                        }}>
+                            No Image
+                        </div>
+                    )}
+                    <div className="god-details-content" style={{ flex: 1 }}>
+                        <div style={{
+                            color: 'var(--primary)',
+                            fontSize: '0.8rem',
+                            fontWeight: 700,
+                            textTransform: 'uppercase',
+                            letterSpacing: '3px',
+                            marginBottom: '0.5rem',
+                            opacity: 0.8
+                        }}>
+                            Patron God of {houseName}
+                        </div>
+                        <h2 className="hdr" style={{
+                            fontSize: '2.2rem',
+                            margin: '0 0 1rem 0',
+                            background: 'linear-gradient(to right, #fff, var(--primary))',
+                            WebkitBackgroundClip: 'text',
+                            WebkitTextFillColor: 'transparent',
+                            fontFamily: "'Cinzel', serif"
+                        }}>
+                            {houseGods[houseName].name}
+                        </h2>
+                        <p style={{
+                            color: 'var(--muted)',
+                            fontStyle: 'italic',
+                            lineHeight: 1.6,
+                            fontSize: '1rem',
+                            maxWidth: '400px'
+                        }}>
+                            The divine presence that oversees the sacred halls of {houseName}.
+                            Followers of {houseGods[houseName].name} are granted strength and wisdom within this domain.
+                        </p>
+                    </div>
+                </div>
+            )}
 
             {/* Post Form */}
             {isMember && (
