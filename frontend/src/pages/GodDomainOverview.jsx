@@ -76,7 +76,7 @@ export default function GodDomainOverview() {
                         <img
                             src={getHouseImageSrc(house.name)}
                             alt={house.name}
-                            style={{ width: 120, height: 120, objectFit: 'contain', marginBottom: '1.5rem', borderRadius: '12px' }}
+                            style={{ width: 120, height: 120, objectFit: 'cover', marginBottom: '1.5rem', borderRadius: '12px' }}
                             onError={(e) => { e.target.src = '/assets/pendragon.jpeg'; }}
                         />
                         <h3 className="hdr" style={{ margin: '0 0 0.5rem 0' }}>{house.name}</h3>
