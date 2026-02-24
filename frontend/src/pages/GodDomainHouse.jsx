@@ -17,7 +17,7 @@ function getHouseImageSrc(houseName) {
         'Hellsing': 'hellsing',
         'Von Einzbern': 'von_einzbern'
     };
-    const fileName = houseMap[houseName] || houseName.toLowerCase().replace(' ', '_');
+    const fileName = houseMap[houseName] || houseName.toLowerCase().replace(/\s+/g, '_');
     return `/assets/${fileName}.jpeg`;
 }
 
