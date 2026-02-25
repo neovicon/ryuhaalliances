@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import client from '../api/client';
 import { useAuth } from '../store/auth';
@@ -45,6 +45,8 @@ const slugToNameMap = {
     'von-einzbern': 'Von Einzbern'
 };
 
+const PAGE_LIMIT = 10;
+
 export default function GodDomainHouse() {
     const { houseSlug } = useParams();
     const navigate = useNavigate();
@@ -52,7 +54,9 @@ export default function GodDomainHouse() {
     const [house, setHouse] = useState(null);
     const [posts, setPosts] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [loadingMore, setLoadingMore] = useState(false);
     const [nextCursor, setNextCursor] = useState(null);
+    const [hasMore, setHasMore] = useState(true);
     const [isMember, setIsMember] = useState(false);
 
     // New Post Form
@@ -71,6 +75,10 @@ export default function GodDomainHouse() {
     const [editingCommentId, setEditingCommentId] = useState(null);
     const [editCommentContent, setEditCommentContent] = useState('');
 
+    // Infinite scroll sentinel
+    const sentinelRef = useRef(null);
+    const observerRef = useRef(null);
+
     const houseName = slugToNameMap[houseSlug] || houseSlug;
 
     useEffect(() => {
@@ -83,23 +91,78 @@ export default function GodDomainHouse() {
         }
     }, [user, houseName]);
 
+    // Set up IntersectionObserver for infinite scroll
+    useEffect(() => {
+        if (observerRef.current) observerRef.current.disconnect();
+
+        observerRef.current = new IntersectionObserver(
+            (entries) => {
+                if (entries[0].isIntersecting && hasMore && !loadingMore && !loading) {
+                    loadMorePosts();
+                }
+            },
+            { threshold: 0.1 }
+        );
+
+        if (sentinelRef.current) {
+            observerRef.current.observe(sentinelRef.current);
+        }
+
+        return () => {
+            if (observerRef.current) observerRef.current.disconnect();
+        };
+    }, [hasMore, loadingMore, loading, nextCursor]);
+
     async function loadHouseAndPosts() {
         try {
             setLoading(true);
+            setPosts([]);
+            setNextCursor(null);
+            setHasMore(true);
+
             const [houseRes, postsRes] = await Promise.all([
                 client.get('/god-domain/houses'),
-                client.get(`/god-domain/posts/${houseName}`)
+                client.get(`/god-domain/posts/${houseName}?limit=${PAGE_LIMIT}`)
             ]);
 
             const houseDoc = houseRes.data.houses.find(h => h.name === houseName);
             setHouse(houseDoc);
-            setPosts(postsRes.data.posts || []);
-            setNextCursor(postsRes.data.nextCursor);
+
+            const fetchedPosts = postsRes.data.posts || [];
+            setPosts(fetchedPosts);
+
+            const cursor = postsRes.data.nextCursor || null;
+            setNextCursor(cursor);
+            // If we got fewer posts than the limit, there's nothing more to load
+            setHasMore(fetchedPosts.length === PAGE_LIMIT && cursor !== null);
+
             setNewBlessingPoints(houseDoc?.blessingPoints || 0);
         } catch (error) {
             console.error('Error loading data:', error);
         } finally {
             setLoading(false);
+        }
+    }
+
+    async function loadMorePosts() {
+        if (!hasMore || loadingMore || !nextCursor) return;
+
+        try {
+            setLoadingMore(true);
+            const res = await client.get(
+                `/god-domain/posts/${houseName}?limit=${PAGE_LIMIT}&cursor=${nextCursor}`
+            );
+
+            const newPosts = res.data.posts || [];
+            setPosts(prev => [...prev, ...newPosts]);
+
+            const cursor = res.data.nextCursor || null;
+            setNextCursor(cursor);
+            setHasMore(newPosts.length === PAGE_LIMIT && cursor !== null);
+        } catch (error) {
+            console.error('Error loading more posts:', error);
+        } finally {
+            setLoadingMore(false);
         }
     }
 
@@ -475,9 +538,26 @@ export default function GodDomainHouse() {
                     </div>
                 ))}
 
-                {posts.length === 0 && (
+                {posts.length === 0 && !loading && (
                     <div style={{ textAlign: 'center', color: 'var(--muted)', padding: '2rem' }}>
                         The sacred halls are silent. Be the first to grace them with your presence.
+                    </div>
+                )}
+
+                {/* Infinite scroll sentinel */}
+                <div ref={sentinelRef} style={{ height: '1px' }} />
+
+                {/* Loading more indicator */}
+                {loadingMore && (
+                    <div style={{ textAlign: 'center', color: 'var(--muted)', padding: '1rem', fontSize: '0.9rem' }}>
+                        Loading more...
+                    </div>
+                )}
+
+                {/* End of feed message */}
+                {!hasMore && posts.length > 0 && (
+                    <div style={{ textAlign: 'center', color: 'var(--muted)', padding: '1rem', fontSize: '0.85rem', opacity: 0.6 }}>
+                        — You've reached the end of the domain —
                     </div>
                 )}
             </div>
