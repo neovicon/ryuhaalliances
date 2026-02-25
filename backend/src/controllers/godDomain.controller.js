@@ -82,6 +82,7 @@ export async function listPosts(req, res) {
 
     const posts = await GodDomainPost.find(query)
         .populate('author', 'username photoUrl house memberStatus')
+        .populate('comments.author', 'username photoUrl house memberStatus')
         .sort({ createdAt: -1 })
         .limit(parseInt(limit));
 
@@ -92,6 +93,14 @@ export async function listPosts(req, res) {
         }
         if (postObj.image) {
             postObj.image = await getPhotoUrl(postObj.image, req);
+        }
+        if (postObj.comments) {
+            postObj.comments = await Promise.all(postObj.comments.map(async comment => {
+                if (comment.author && comment.author.photoUrl) {
+                    comment.author.photoUrl = await getPhotoUrl(comment.author.photoUrl, req);
+                }
+                return comment;
+            }));
         }
         return postObj;
     }));
@@ -171,6 +180,7 @@ export async function updatePost(req, res) {
 
     await post.save();
     await post.populate('author', 'username photoUrl house memberStatus');
+    await post.populate('comments.author', 'username photoUrl house memberStatus');
 
     const postObj = post.toObject();
     if (postObj.author && postObj.author.photoUrl) {
@@ -178,6 +188,14 @@ export async function updatePost(req, res) {
     }
     if (postObj.image) {
         postObj.image = await getPhotoUrl(postObj.image, req);
+    }
+    if (postObj.comments) {
+        postObj.comments = await Promise.all(postObj.comments.map(async comment => {
+            if (comment.author && comment.author.photoUrl) {
+                comment.author.photoUrl = await getPhotoUrl(comment.author.photoUrl, req);
+            }
+            return comment;
+        }));
     }
 
     res.json({ post: postObj });

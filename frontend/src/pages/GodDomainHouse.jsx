@@ -87,9 +87,10 @@ export default function GodDomainHouse() {
 
     useEffect(() => {
         if (user && houseName) {
-            setIsMember(user.house === houseName || user.role === 'admin');
+            const hasSurname = user.username.toLowerCase().includes(houseSlug.toLowerCase().replace('-', ' '));
+            setIsMember(user.house === houseName || user.role === 'admin' || hasSurname);
         }
-    }, [user, houseName]);
+    }, [user, houseName, houseSlug]);
 
     // Set up IntersectionObserver for infinite scroll
     useEffect(() => {
@@ -261,7 +262,7 @@ export default function GodDomainHouse() {
                 <img
                     src={getHouseImageSrc(houseName)}
                     alt={houseName}
-                    style={{ width: 100, height: 100, objectFit: 'contain', marginBottom: '1rem', borderRadius: '12px' }}
+                    style={{ width: 100, height: 100, objectFit: 'cover', marginBottom: '1rem', borderRadius: '12px' }}
                 />
                 <h2 className="hdr" style={{ margin: '0 0 0.5rem 0', fontSize: '2rem' }}>{houseName} God Domain</h2>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
@@ -307,7 +308,7 @@ export default function GodDomainHouse() {
                                 src={`/assets/gods/${houseGods[houseName].image}`}
                                 alt={houseGods[houseName].name}
                                 style={{
-                                    width: '180px',
+                                    width: '240px',
                                     height: '240px',
                                     objectFit: 'cover',
                                     borderRadius: '8px',
@@ -415,7 +416,7 @@ export default function GodDomainHouse() {
                             <img
                                 src={post.author?.photoUrl || '/assets/default-avatar.png'}
                                 alt={post.author?.username}
-                                style={{ width: 40, height: 40, borderRadius: '50%', objectFit: 'cover' }}
+                                style={{ width: 40, height: 40, borderRadius: '8px', objectFit: 'cover' }}
                             />
                             <div style={{ flex: 1 }}>
                                 <div style={{ fontWeight: 600 }}>
@@ -482,7 +483,7 @@ export default function GodDomainHouse() {
                                         <img
                                             src={comment.author?.photoUrl || '/assets/default-avatar.png'}
                                             alt={comment.author?.username}
-                                            style={{ width: 24, height: 24, borderRadius: '50%', objectFit: 'cover' }}
+                                            style={{ width: 24, height: 24, borderRadius: '4px', objectFit: 'cover' }}
                                         />
                                         <div style={{ flex: 1, background: 'rgba(255,255,255,0.03)', padding: '0.5rem 0.75rem', borderRadius: '8px' }}>
                                             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
