@@ -122,16 +122,18 @@ export const getHouseDetails = async (req, res) => {
         if (!creature) {
             creature = new Creature({ house: targetHouseName, ...defaults });
         } else {
-            // Force sync if name is "Unnamed Creature" or if it doesn't match the config name for this house
-            // This ensures existing creatures with generic names get updated to their real species.
+            // Only sync if name/description are genuinely missing — preserve any admin-set values
             const needsSync = !creature.name ||
                 creature.name === 'Unnamed Creature' ||
-                (defaults.name !== 'Unnamed Creature' && creature.name !== defaults.name) ||
                 !creature.description;
 
             if (needsSync) {
-                creature.name = defaults.name;
-                creature.description = defaults.description;
+                if (!creature.name || creature.name === 'Unnamed Creature') {
+                    creature.name = defaults.name;
+                }
+                if (!creature.description) {
+                    creature.description = defaults.description;
+                }
 
                 // Only sync skills if none exist or if we want to ensure basic skills are present
                 if (creature.skills.length === 0 && defaults.skills) {
@@ -543,4 +545,35 @@ export const undoPurchase = async (req, res) => {
         session.endSession();
     }
 };
+
+export const updateCreatureIdentity = async (req, res) => {
+    try {
+        const { targetHouseName, name, description } = req.body;
+        const user = await User.findById(req.user.id);
+
+        if (user.role !== 'admin') {
+            return res.status(403).json({ error: 'Unauthorized: Only admins can update beast identity' });
+        }
+
+        if (!name || !name.trim()) {
+            return res.status(400).json({ error: 'Beast name cannot be empty' });
+        }
+
+        const creature = await Creature.findOne({ house: targetHouseName });
+        if (!creature) return res.status(404).json({ error: 'Creature not found' });
+
+        creature.name = name.trim();
+        if (description !== undefined) {
+            creature.description = description.trim();
+        }
+
+        await creature.save();
+
+        res.json({ message: 'Beast identity updated successfully', creature });
+    } catch (error) {
+        console.error('updateCreatureIdentity error:', error);
+        res.status(500).json({ error: 'Server error' });
+    }
+};
+
 

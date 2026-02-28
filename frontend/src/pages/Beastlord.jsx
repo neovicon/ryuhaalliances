@@ -102,6 +102,7 @@ export default function Beastlord() {
     const sanctuaryRef = React.useRef(null);
     const [editStats, setEditStats] = useState({ str: 0, dex: 0, spd: 0, dur: 0, int: 0, wis: 0, baseHp: 500, baseMp: 300, baseSp: 300, baseIq: 50, baseTurnOrder: -50 });
     const [editSkills, setEditSkills] = useState([]);
+    const [editIdentity, setEditIdentity] = useState({ name: '', description: '' });
 
     useEffect(() => {
         if (data?.creature) {
@@ -120,6 +121,10 @@ export default function Beastlord() {
             });
             setEditSkills(data.creature.skills || []);
             setEditFunds(data.house.funds);
+            setEditIdentity({
+                name: data.creature.name || '',
+                description: data.creature.description || '',
+            });
         }
     }, [data]);
 
@@ -149,6 +154,21 @@ export default function Beastlord() {
         } catch (error) {
             console.error('Error updating skills:', error);
             alert(getErrorMessage(error, 'Failed to update skills'));
+        }
+    };
+
+    const handleIdentityUpdate = async (e) => {
+        e.preventDefault();
+        try {
+            await client.post('/beastlord/update-identity', {
+                targetHouseName: selectedHouse,
+                name: editIdentity.name,
+                description: editIdentity.description,
+            });
+            alert('Beast identity updated!');
+            fetchData(selectedHouse);
+        } catch (err) {
+            alert(getErrorMessage(err, 'Identity update failed'));
         }
     };
 
@@ -610,9 +630,37 @@ export default function Beastlord() {
                                             </div>
                                         </section>
 
+                                        {/* Beast Identity Modulation */}
+                                        <section className="stat-editor-section bl-card" style={{ gridColumn: '1 / -1' }}>
+                                            <h3 className="section-title">Beast Identity Modulation</h3>
+                                            <form onSubmit={handleIdentityUpdate} className="donate-form">
+                                                <div className="input-group" style={{ marginBottom: '1rem' }}>
+                                                    <label>Beast Name</label>
+                                                    <input
+                                                        type="text"
+                                                        className="house-select"
+                                                        value={editIdentity.name}
+                                                        onChange={e => setEditIdentity({ ...editIdentity, name: e.target.value })}
+                                                        placeholder="e.g. Lucina Carneliel Valencius"
+                                                    />
+                                                </div>
+                                                <div className="input-group" style={{ marginBottom: '1rem' }}>
+                                                    <label>Beast Description</label>
+                                                    <textarea
+                                                        className="house-select"
+                                                        value={editIdentity.description}
+                                                        onChange={e => setEditIdentity({ ...editIdentity, description: e.target.value })}
+                                                        rows={5}
+                                                        placeholder="Describe the beast..."
+                                                    />
+                                                </div>
+                                                <button type="submit" className="buy-btn" style={{ width: '100%' }}>Update Beast Identity</button>
+                                            </form>
+                                        </section>
+
                                         <section className="skill-editor-section bl-card" style={{ gridColumn: '1 / -1' }}>
                                             <div className="section-header-flex">
-                                                <h3 className="section-title">Technique & Skill Matrix Modulation</h3>
+                                                <h3 className="section-title">Technique &amp; Skill Matrix Modulation</h3>
                                                 <button className="add-skill-btn" onClick={addSkill}>+ Add New Skill</button>
                                             </div>
                                             <form onSubmit={handleSkillUpdate} className="skills-edit-form">
@@ -649,6 +697,15 @@ export default function Beastlord() {
                                                                             </label>
                                                                         </div>
                                                                     </div>
+                                                                    {/* Image preview after upload */}
+                                                                    {skill.image && (
+                                                                        <img
+                                                                            src={skill.image}
+                                                                            alt="Skill preview"
+                                                                            style={{ width: 48, height: 48, objectFit: 'cover', borderRadius: 6, marginTop: 6, border: '1px solid rgba(255,255,255,0.15)' }}
+                                                                            onError={e => { e.target.style.display = 'none'; }}
+                                                                        />
+                                                                    )}
                                                                 </div>
 
                                                                 <div className="field-sub-grid">

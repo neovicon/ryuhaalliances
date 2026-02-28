@@ -74,7 +74,16 @@ export default function EntryCard({ entry, onUpdate, onEdit, onDelete }) {
                     <video
                         src={entry.mediaUrl}
                         controls
+                        playsInline
+                        crossOrigin="anonymous"
                         style={{ width: '100%', maxHeight: '500px', display: 'block' }}
+                        onError={(e) => {
+                            // Try without crossOrigin on error (some servers don't support CORS headers)
+                            if (e.target.crossOrigin) {
+                                e.target.crossOrigin = null;
+                                e.target.load();
+                            }
+                        }}
                     />
                 ) : entry.mediaType === 'audio' ? (
                     <div style={{ width: '100%', padding: '2rem', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#1a1a1a' }}>

@@ -31,19 +31,43 @@ export default function CreatureStats({ creature, houseName }) {
             }
             return null;
         }
-        // Map names to filenames
+        // Map creature names to beast image filenames
         const map = {
+            // Tempest
             'Catton Ying': 'catton_ying.jpeg',
-            'Voidkin Runt': 'voidkin_runt.jpeg',
-            'Lucina Carneliel Valencius': 'lucina_carneliel_valicius.jpeg',
-            'Magmascorpius': 'magmascorpius.jpeg',
+            // Dragneel
+            'Icarus, "Sun Stalker"': 'dragneel.jpeg',
+            // Von Einzbern
+            'Drakaroth': 'von_einzbern.jpeg',
+            // Pendragon
+            'Aetheria Vir Nyx': 'pendragon.jpeg',
+            // Fritz (fixed typo: valicius → valencius)
+            'Lucina Carneliel Valencius': 'lucina_carneliel_valencius.jpeg',
+            // Zoldyck
             'Vyperta Serpent': 'vyperta_serpent.jpeg',
+            // Elric
             'Kraeknor': 'kraeknor.jpeg',
+            // Phantomhive
             'Shadowstorm': 'shadowstorm.jpeg',
-            'Nagini': 'nagini.jpeg'
+            // Hellsing
+            'Nagini': 'nagini.jpeg',
+            // Legacy / misc
+            'Voidkin Runt': 'voidkin_runt.jpeg',
+            'Magmascorpius': 'magmascorpius.jpeg',
         };
-        const filename = map[name] || (name.toLowerCase().replace(/ /g, '_') + '.jpeg');
-        return `/assets/beasts/${filename}`;
+
+        if (map[name]) {
+            return `/assets/beasts/${map[name]}`;
+        }
+
+        // Secondary fallback: try house-named file (e.g. dragneel.jpeg)
+        if (houseName) {
+            const houseFile = houseName.toLowerCase().replace(/ /g, '_') + '.jpeg';
+            return `/assets/beasts/${houseFile}`;
+        }
+
+        // Last resort: derive from creature name
+        return `/assets/beasts/${name.toLowerCase().replace(/[^a-z0-9]/g, '_').replace(/_+/g, '_')}.jpeg`;
     };
 
     return (

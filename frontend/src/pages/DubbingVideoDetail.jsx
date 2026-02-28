@@ -192,8 +192,16 @@ export default function DubbingVideoDetail() {
                             controls
                             preload="metadata"
                             playsInline
+                            crossOrigin="anonymous"
                             controlsList="nodownload"
                             style={{ width: '100%', height: 'auto', display: 'block' }}
+                            onError={(e) => {
+                                // Try without crossOrigin on error (some servers don't support CORS headers)
+                                if (e.target.crossOrigin) {
+                                    e.target.crossOrigin = null;
+                                    e.target.load();
+                                }
+                            }}
                         />
                     </div>
                 </div>

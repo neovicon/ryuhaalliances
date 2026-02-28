@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { requireAuth } from '../middleware/auth.js';
-import { getHouseDetails, donate, purchaseItem, undoPurchase, updateCreatureStats, updateHouseFunds, updateCreatureSkills, getItems, manageItem, deleteItem } from '../controllers/beastlord.controller.js';
+import { getHouseDetails, donate, purchaseItem, undoPurchase, updateCreatureStats, updateHouseFunds, updateCreatureSkills, getItems, manageItem, deleteItem, updateCreatureIdentity } from '../controllers/beastlord.controller.js';
 
 const router = Router();
 
@@ -11,6 +11,8 @@ router.post('/undo-purchase/:transactionId', requireAuth, undoPurchase);
 router.post('/update-stats', requireAuth, updateCreatureStats);
 router.post('/update-funds', requireAuth, updateHouseFunds);
 router.post('/update-skills', requireAuth, updateCreatureSkills);
+router.post('/update-identity', requireAuth, updateCreatureIdentity);
+
 
 router.get('/items', requireAuth, getItems);
 router.post('/items', requireAuth, manageItem);
