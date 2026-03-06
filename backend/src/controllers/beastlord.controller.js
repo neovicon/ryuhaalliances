@@ -548,7 +548,7 @@ export const undoPurchase = async (req, res) => {
 
 export const updateCreatureIdentity = async (req, res) => {
     try {
-        const { targetHouseName, name, description } = req.body;
+        const { targetHouseName, name, description, image } = req.body;
         const user = await User.findById(req.user.id);
 
         if (user.role !== 'admin') {
@@ -565,6 +565,9 @@ export const updateCreatureIdentity = async (req, res) => {
         creature.name = name.trim();
         if (description !== undefined) {
             creature.description = description.trim();
+        }
+        if (image !== undefined) {
+            creature.image = image.trim();
         }
 
         await creature.save();

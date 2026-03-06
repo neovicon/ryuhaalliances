@@ -4,6 +4,7 @@ const creatureSchema = new mongoose.Schema({
     house: { type: String, required: true, unique: true, index: true },
     name: { type: String, default: 'Unnamed Creature' },
     description: { type: String, default: '' },
+    image: { type: String, default: '' },
     str: { type: Number, default: 10 },
     dex: { type: Number, default: 10 },
     spd: { type: Number, default: 10 },

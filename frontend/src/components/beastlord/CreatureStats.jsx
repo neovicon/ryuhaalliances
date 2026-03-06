@@ -23,7 +23,10 @@ export default function CreatureStats({ creature, houseName }) {
         </div>
     );
 
-    const getCreatureImage = (name) => {
+    const getCreatureImage = (creature) => {
+        if (creature.image) return creature.image;
+
+        const { name } = creature;
         if (!name) {
             if (houseName) {
                 const filename = houseName.toLowerCase().replace(/ /g, '_') + '.jpeg';
@@ -75,7 +78,7 @@ export default function CreatureStats({ creature, houseName }) {
             <div className="creature-card-header">
                 <div className="creature-image-container">
                     <img
-                        src={getCreatureImage(creature.name)}
+                        src={getCreatureImage(creature)}
                         alt={creature.name}
                         className="creature-image"
                         onError={(e) => e.target.style.display = 'none'}

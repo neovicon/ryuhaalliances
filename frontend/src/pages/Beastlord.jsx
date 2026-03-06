@@ -102,7 +102,7 @@ export default function Beastlord() {
     const sanctuaryRef = React.useRef(null);
     const [editStats, setEditStats] = useState({ str: 0, dex: 0, spd: 0, dur: 0, int: 0, wis: 0, baseHp: 500, baseMp: 300, baseSp: 300, baseIq: 50, baseTurnOrder: -50 });
     const [editSkills, setEditSkills] = useState([]);
-    const [editIdentity, setEditIdentity] = useState({ name: '', description: '' });
+    const [editIdentity, setEditIdentity] = useState({ name: '', description: '', image: '' });
 
     useEffect(() => {
         if (data?.creature) {
@@ -124,6 +124,7 @@ export default function Beastlord() {
             setEditIdentity({
                 name: data.creature.name || '',
                 description: data.creature.description || '',
+                image: data.creature.image || '',
             });
         }
     }, [data]);
@@ -164,11 +165,31 @@ export default function Beastlord() {
                 targetHouseName: selectedHouse,
                 name: editIdentity.name,
                 description: editIdentity.description,
+                image: editIdentity.image,
             });
             alert('Beast identity updated!');
             fetchData(selectedHouse);
         } catch (err) {
             alert(getErrorMessage(err, 'Identity update failed'));
+        }
+    };
+
+    const handleBeastImageUpload = async (file) => {
+        if (!file) return;
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        try {
+            const uploadRes = await client.post('/upload', formData);
+            const { key } = uploadRes.data;
+            const imageRes = await client.get(`/image/${key}`);
+            const { url } = imageRes.data;
+
+            setEditIdentity({ ...editIdentity, image: url });
+        } catch (error) {
+            console.error('Error uploading beast image:', error);
+            alert(getErrorMessage(error, 'Failed to upload image. Please try again.'));
         }
     };
 
@@ -653,6 +674,38 @@ export default function Beastlord() {
                                                         rows={5}
                                                         placeholder="Describe the beast..."
                                                     />
+                                                </div>
+                                                <div className="input-group" style={{ marginBottom: '1rem' }}>
+                                                    <label>Beast Image (URL or Upload)</label>
+                                                    <div className="upload-row">
+                                                        <input
+                                                            type="text"
+                                                            className="house-select"
+                                                            value={editIdentity.image}
+                                                            onChange={e => setEditIdentity({ ...editIdentity, image: e.target.value })}
+                                                            placeholder="https://..."
+                                                        />
+                                                        <div className="file-upload-wrapper">
+                                                            <input
+                                                                type="file"
+                                                                accept="image/*"
+                                                                id="beast-image-file"
+                                                                onChange={e => handleBeastImageUpload(e.target.files[0])}
+                                                                style={{ display: 'none' }}
+                                                            />
+                                                            <label htmlFor="beast-image-file" className="upload-icon-btn" title="Upload Image">
+                                                                <i className="bi bi-cloud-arrow-up"></i>
+                                                            </label>
+                                                        </div>
+                                                    </div>
+                                                    {editIdentity.image && (
+                                                        <img
+                                                            src={editIdentity.image}
+                                                            alt="Beast preview"
+                                                            style={{ width: 120, height: 120, objectFit: 'cover', borderRadius: 12, marginTop: 12, border: '1px solid rgba(255,255,255,0.15)' }}
+                                                            onError={e => { e.target.style.display = 'none'; }}
+                                                        />
+                                                    )}
                                                 </div>
                                                 <button type="submit" className="buy-btn" style={{ width: '100%' }}>Update Beast Identity</button>
                                             </form>
