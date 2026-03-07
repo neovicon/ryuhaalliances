@@ -42,6 +42,7 @@ import EventSpecificEntries from './pages/EventSpecificEntries.jsx'
 import LabyrinthSpectator from './pages/LabyrinthSpectator.jsx'
 import GodDomainOverview from './pages/GodDomainOverview.jsx'
 import GodDomainHouse from './pages/GodDomainHouse.jsx'
+import Welcome from './pages/Welcome.jsx'
 import { MusicPlayerProvider } from './context/MusicPlayerContext.jsx'
 import { NotificationProvider } from './context/NotificationContext.jsx'
 import { SocketProvider } from './context/SocketContext.jsx'
@@ -108,6 +109,7 @@ export default function App() {
             <Route path="/ryuha-apps/tictactoe" element={<TicTacToe />} />
             <Route path="/ryuha-apps/labyrinth" element={<LabyrinthSocketProvider><Labyrinth /></LabyrinthSocketProvider>} />
             <Route path="/labyrinth/spectate/:gameName" element={<LabyrinthSocketProvider><LabyrinthSpectator /></LabyrinthSocketProvider>} />
+            <Route path="/welcome" element={<Welcome />} />
           </Routes>
           {useLocation().pathname !== '/messenger' && <Footer />}
         </NotificationProvider>

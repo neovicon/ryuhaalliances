@@ -25,6 +25,9 @@ export default function Home() {
   const [leadershipForm, setLeadershipForm] = useState({ category: 'Creators', name: '', description: '', order: 0 });
   const [leadershipImage, setLeadershipImage] = useState(null);
   const [submittingLeadership, setSubmittingLeadership] = useState(false);
+  const [welcomePosts, setWelcomePosts] = useState([]);
+  const [loadingWelcome, setLoadingWelcome] = useState(true);
+  const [selectedWelcomeImage, setSelectedWelcomeImage] = useState(null);
   const { user } = useAuth();
 
   useEffect(() => {
@@ -35,6 +38,7 @@ export default function Home() {
     loadStories();
     loadLeadership();
     loadFeaturedEntries();
+    loadWelcomePosts();
   }, []);;
 
   async function loadEvents() {
@@ -128,6 +132,18 @@ export default function Home() {
     }
   }
 
+  async function loadWelcomePosts() {
+    try {
+      setLoadingWelcome(true);
+      const { data } = await client.get('/welcome/recent');
+      setWelcomePosts(data || []);
+    } catch (err) {
+      console.error('Error loading welcome posts:', err);
+    } finally {
+      setLoadingWelcome(false);
+    }
+  }
+
   async function handleLeadershipSubmit(e) {
     e.preventDefault();
     setSubmittingLeadership(true);
@@ -196,6 +212,150 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Welcome to Ryuha Alliance Slider */}
+      {!loadingWelcome && welcomePosts.length > 0 && (
+        <section style={{ padding: '3rem 0', overflow: 'hidden', backgroundColor: 'rgba(0,0,0,0.2)' }}>
+          <div className="container" style={{ marginBottom: '1.5rem' }}>
+            <h3 className="hdr" style={{ margin: 0 }}>Welcome to Ryuha Alliance</h3>
+            <p style={{ color: 'var(--muted)', fontSize: '0.9rem' }}>Recent highlights from our community</p>
+          </div>
+
+          <div className="welcome-slider-container">
+            <div className="welcome-slider-track">
+              {[...welcomePosts, ...welcomePosts].map((post, i) => (
+                <div key={`${post._id}-${i}`} className="welcome-slider-item">
+                  <div
+                    className="welcome-slider-image-wrapper"
+                    onClick={() => setSelectedWelcomeImage(post.imageUrl)}
+                    style={{ cursor: 'zoom-in' }}
+                  >
+                    <img src={post.imageUrl} alt="Welcome" loading="lazy" />
+                    <div className="welcome-slider-overlay">
+                      <div style={{ fontWeight: 600, fontSize: '0.8rem' }}>{post.author?.username}</div>
+                      <div style={{ fontSize: '0.6rem', opacity: 0.8 }}>{new Date(post.createdAt).toLocaleDateString()}</div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <style>{`
+            .welcome-slider-container {
+              width: 100%;
+              overflow: hidden;
+              position: relative;
+            }
+            .welcome-slider-track {
+              display: flex;
+              width: max-content;
+              animation: scroll 40s linear infinite;
+            }
+            .welcome-slider-item {
+              padding: 0 10px;
+              flex-shrink: 0;
+            }
+            .welcome-slider-image-wrapper {
+              position: relative;
+              width: 280px;
+              height: 180px;
+              border-radius: 12px;
+              overflow: hidden;
+              border: 1px solid rgba(255,255,255,0.1);
+              transition: transform 0.3s;
+            }
+            .welcome-slider-image-wrapper:hover {
+              transform: scale(1.05);
+              z-index: 10;
+            }
+            .welcome-slider-image-wrapper img {
+              width: 100%;
+              height: 100%;
+              object-fit: cover;
+            }
+            .welcome-slider-overlay {
+              position: absolute;
+              bottom: 0;
+              left: 0;
+              right: 0;
+              padding: 10px;
+              background: linear-gradient(transparent, rgba(0,0,0,0.8));
+              color: white;
+            }
+            @keyframes scroll {
+              0% { transform: translateX(0); }
+              100% { transform: translateX(-50%); }
+            }
+            @media (max-width: 768px) {
+              .welcome-slider-image-wrapper {
+                width: 200px;
+                height: 130px;
+              }
+            }
+          `}</style>
+        </section>
+      )}
+
+      {/* Lightbox Modal */}
+      {selectedWelcomeImage && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0,0,0,0.9)',
+            zIndex: 9999,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '20px',
+            cursor: 'zoom-out',
+            animation: 'fadeIn 0.3s ease'
+          }}
+          onClick={() => setSelectedWelcomeImage(null)}
+        >
+          <img
+            src={selectedWelcomeImage}
+            alt="Zoomed"
+            style={{
+              maxWidth: '95%',
+              maxHeight: '95%',
+              objectFit: 'contain',
+              borderRadius: '8px',
+              boxShadow: '0 0 30px rgba(0,0,0,0.5)',
+              animation: 'zoomIn 0.3s ease'
+            }}
+          />
+          <button
+            style={{
+              position: 'absolute',
+              top: '20px',
+              right: '20px',
+              background: 'rgba(255,255,255,0.2)',
+              border: 'none',
+              borderRadius: '50%',
+              width: '40px',
+              height: '40px',
+              color: 'white',
+              fontSize: '24px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
+            onClick={(e) => { e.stopPropagation(); setSelectedWelcomeImage(null); }}
+          >
+            ×
+          </button>
+          <style>{`
+            @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+            @keyframes zoomIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+          `}</style>
+        </div>
+      )}
 
       {/* Announcements Section */}
       {!loadingAnnouncements && announcements.length > 0 && (
@@ -268,7 +428,7 @@ export default function Home() {
         </section>
       )}
 
-      {/* Upcoming Events Section (Moved) */}
+      {/* Blogs Section */}
       <section className="container" style={{ padding: '2rem 1rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
           <h3 className="hdr" style={{ margin: 0 }}>Upcoming Events</h3>
@@ -543,74 +703,110 @@ export default function Home() {
       </section>
 
       {/* Leadership Member Modal */}
-      {showLeadershipModal && (
-        <div
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.8)',
-            backdropFilter: 'blur(5px)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 2000,
-            padding: '1rem',
-            animation: 'fadeIn 0.3s ease',
-          }}
-          onClick={() => setShowLeadershipModal(false)}
-        >
+      {
+        showLeadershipModal && (
           <div
-            onClick={(e) => e.stopPropagation()}
             style={{
-              backgroundColor: '#1e1e1e',
-              borderRadius: '12px',
-              padding: '2rem',
-              maxWidth: '500px',
-              width: '100%',
-              maxHeight: '90vh',
-              overflowY: 'auto',
-              boxShadow: '0 10px 25px rgba(0,0,0,0.5)',
-              border: '1px solid #333',
-              animation: 'slideUp 0.3s ease',
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: 'rgba(0, 0, 0, 0.8)',
+              backdropFilter: 'blur(5px)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 2000,
+              padding: '1rem',
+              animation: 'fadeIn 0.3s ease',
             }}
+            onClick={() => setShowLeadershipModal(false)}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-              <h3 className="hdr" style={{ margin: 0, fontSize: '1.5rem', background: 'linear-gradient(90deg, #fff, #ccc)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                {editingMember ? 'Edit Member' : 'Add New Member'}
-              </h3>
-              <button
-                onClick={() => setShowLeadershipModal(false)}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  color: '#888',
-                  fontSize: '1.5rem',
-                  cursor: 'pointer',
-                  padding: '0.5rem',
-                  lineHeight: 1,
-                  transition: 'color 0.2s',
-                }}
-                onMouseEnter={(e) => e.target.style.color = '#fff'}
-                onMouseLeave={(e) => e.target.style.color = '#888'}
-              >
-                ×
-              </button>
-            </div>
+            <div
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                backgroundColor: '#1e1e1e',
+                borderRadius: '12px',
+                padding: '2rem',
+                maxWidth: '500px',
+                width: '100%',
+                maxHeight: '90vh',
+                overflowY: 'auto',
+                boxShadow: '0 10px 25px rgba(0,0,0,0.5)',
+                border: '1px solid #333',
+                animation: 'slideUp 0.3s ease',
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+                <h3 className="hdr" style={{ margin: 0, fontSize: '1.5rem', background: 'linear-gradient(90deg, #fff, #ccc)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                  {editingMember ? 'Edit Member' : 'Add New Member'}
+                </h3>
+                <button
+                  onClick={() => setShowLeadershipModal(false)}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: '#888',
+                    fontSize: '1.5rem',
+                    cursor: 'pointer',
+                    padding: '0.5rem',
+                    lineHeight: 1,
+                    transition: 'color 0.2s',
+                  }}
+                  onMouseEnter={(e) => e.target.style.color = '#fff'}
+                  onMouseLeave={(e) => e.target.style.color = '#888'}
+                >
+                  ×
+                </button>
+              </div>
 
-            <form onSubmit={handleLeadershipSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-              {/* Category */}
-              <div>
-                <label style={{ display: 'block', marginBottom: '0.5rem', color: '#ccc', fontSize: '0.9rem', fontWeight: 500 }}>
-                  Category
-                </label>
-                <div style={{ position: 'relative' }}>
-                  <select
-                    value={leadershipForm.category}
-                    onChange={(e) => setLeadershipForm({ ...leadershipForm, category: e.target.value })}
+              <form onSubmit={handleLeadershipSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                {/* Category */}
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', color: '#ccc', fontSize: '0.9rem', fontWeight: 500 }}>
+                    Category
+                  </label>
+                  <div style={{ position: 'relative' }}>
+                    <select
+                      value={leadershipForm.category}
+                      onChange={(e) => setLeadershipForm({ ...leadershipForm, category: e.target.value })}
+                      required
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem 1rem',
+                        backgroundColor: '#2d2d2d',
+                        color: '#fff',
+                        border: '1px solid #444',
+                        borderRadius: '8px',
+                        fontSize: '1rem',
+                        appearance: 'none',
+                        outline: 'none',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      <option value="Creators">Creators</option>
+                      <option value="Abyssal">Abyssal</option>
+                      <option value="Council">Council</option>
+                    </select>
+                    <div style={{ position: 'absolute', right: '1rem', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: '#888' }}>
+                      ▼
+                    </div>
+                  </div>
+                </div>
+
+                {/* Name */}
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', color: '#ccc', fontSize: '0.9rem', fontWeight: 500 }}>
+                    Name
+                  </label>
+                  <input
+                    type="text"
+                    value={leadershipForm.name}
+                    onChange={(e) => setLeadershipForm({ ...leadershipForm, name: e.target.value })}
                     required
+                    maxLength={100}
+                    placeholder="Enter member name"
                     style={{
                       width: '100%',
                       padding: '0.75rem 1rem',
@@ -619,192 +815,158 @@ export default function Home() {
                       border: '1px solid #444',
                       borderRadius: '8px',
                       fontSize: '1rem',
-                      appearance: 'none',
                       outline: 'none',
-                      cursor: 'pointer',
                     }}
-                  >
-                    <option value="Creators">Creators</option>
-                    <option value="Abyssal">Abyssal</option>
-                    <option value="Council">Council</option>
-                  </select>
-                  <div style={{ position: 'absolute', right: '1rem', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: '#888' }}>
-                    ▼
-                  </div>
-                </div>
-              </div>
-
-              {/* Name */}
-              <div>
-                <label style={{ display: 'block', marginBottom: '0.5rem', color: '#ccc', fontSize: '0.9rem', fontWeight: 500 }}>
-                  Name
-                </label>
-                <input
-                  type="text"
-                  value={leadershipForm.name}
-                  onChange={(e) => setLeadershipForm({ ...leadershipForm, name: e.target.value })}
-                  required
-                  maxLength={100}
-                  placeholder="Enter member name"
-                  style={{
-                    width: '100%',
-                    padding: '0.75rem 1rem',
-                    backgroundColor: '#2d2d2d',
-                    color: '#fff',
-                    border: '1px solid #444',
-                    borderRadius: '8px',
-                    fontSize: '1rem',
-                    outline: 'none',
-                  }}
-                />
-              </div>
-
-              {/* Description */}
-              <div>
-                <label style={{ display: 'block', marginBottom: '0.5rem', color: '#ccc', fontSize: '0.9rem', fontWeight: 500 }}>
-                  Description
-                </label>
-                <textarea
-                  value={leadershipForm.description}
-                  onChange={(e) => setLeadershipForm({ ...leadershipForm, description: e.target.value })}
-                  required
-                  maxLength={1000}
-                  rows={4}
-                  placeholder="Enter description..."
-                  style={{
-                    width: '100%',
-                    padding: '0.75rem 1rem',
-                    backgroundColor: '#2d2d2d',
-                    color: '#fff',
-                    border: '1px solid #444',
-                    borderRadius: '8px',
-                    fontSize: '1rem',
-                    outline: 'none',
-                    resize: 'vertical',
-                    minHeight: '100px',
-                  }}
-                />
-              </div>
-
-              {/* Image Upload */}
-              <div>
-                <label style={{ display: 'block', marginBottom: '0.5rem', color: '#ccc', fontSize: '0.9rem', fontWeight: 500 }}>
-                  Image {editingMember && <span style={{ color: '#666', fontWeight: 400 }}>(Optional)</span>}
-                </label>
-                <div
-                  style={{
-                    border: '2px dashed #444',
-                    borderRadius: '8px',
-                    padding: '2rem',
-                    textAlign: 'center',
-                    cursor: 'pointer',
-                    backgroundColor: '#252525',
-                    transition: 'border-color 0.2s',
-                  }}
-                  onClick={() => document.getElementById('leadership-image-input').click()}
-                  onMouseEnter={(e) => e.currentTarget.style.borderColor = '#666'}
-                  onMouseLeave={(e) => e.currentTarget.style.borderColor = '#444'}
-                >
-                  <input
-                    id="leadership-image-input"
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => setLeadershipImage(e.target.files[0])}
-                    required={!editingMember}
-                    style={{ display: 'none' }}
                   />
-                  <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>📷</div>
-                  <div style={{ color: '#fff', marginBottom: '0.25rem' }}>
-                    {leadershipImage ? leadershipImage.name : 'Click to upload image'}
-                  </div>
-                  <div style={{ color: '#666', fontSize: '0.8rem' }}>
-                    Supports JPG, PNG, WEBP
+                </div>
+
+                {/* Description */}
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', color: '#ccc', fontSize: '0.9rem', fontWeight: 500 }}>
+                    Description
+                  </label>
+                  <textarea
+                    value={leadershipForm.description}
+                    onChange={(e) => setLeadershipForm({ ...leadershipForm, description: e.target.value })}
+                    required
+                    maxLength={1000}
+                    rows={4}
+                    placeholder="Enter description..."
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem 1rem',
+                      backgroundColor: '#2d2d2d',
+                      color: '#fff',
+                      border: '1px solid #444',
+                      borderRadius: '8px',
+                      fontSize: '1rem',
+                      outline: 'none',
+                      resize: 'vertical',
+                      minHeight: '100px',
+                    }}
+                  />
+                </div>
+
+                {/* Image Upload */}
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', color: '#ccc', fontSize: '0.9rem', fontWeight: 500 }}>
+                    Image {editingMember && <span style={{ color: '#666', fontWeight: 400 }}>(Optional)</span>}
+                  </label>
+                  <div
+                    style={{
+                      border: '2px dashed #444',
+                      borderRadius: '8px',
+                      padding: '2rem',
+                      textAlign: 'center',
+                      cursor: 'pointer',
+                      backgroundColor: '#252525',
+                      transition: 'border-color 0.2s',
+                    }}
+                    onClick={() => document.getElementById('leadership-image-input').click()}
+                    onMouseEnter={(e) => e.currentTarget.style.borderColor = '#666'}
+                    onMouseLeave={(e) => e.currentTarget.style.borderColor = '#444'}
+                  >
+                    <input
+                      id="leadership-image-input"
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => setLeadershipImage(e.target.files[0])}
+                      required={!editingMember}
+                      style={{ display: 'none' }}
+                    />
+                    <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>📷</div>
+                    <div style={{ color: '#fff', marginBottom: '0.25rem' }}>
+                      {leadershipImage ? leadershipImage.name : 'Click to upload image'}
+                    </div>
+                    <div style={{ color: '#666', fontSize: '0.8rem' }}>
+                      Supports JPG, PNG, WEBP
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Order */}
-              <div>
-                <label style={{ display: 'block', marginBottom: '0.5rem', color: '#ccc', fontSize: '0.9rem', fontWeight: 500 }}>
-                  Order Priority
-                </label>
-                <input
-                  type="number"
-                  value={leadershipForm.order}
-                  onChange={(e) => setLeadershipForm({ ...leadershipForm, order: parseInt(e.target.value) || 0 })}
-                  min={0}
-                  style={{
-                    width: '100%',
-                    padding: '0.75rem 1rem',
-                    backgroundColor: '#2d2d2d',
-                    color: '#fff',
-                    border: '1px solid #444',
-                    borderRadius: '8px',
-                    fontSize: '1rem',
-                    outline: 'none',
-                  }}
-                />
-                <div style={{ color: '#666', fontSize: '0.8rem', marginTop: '0.25rem' }}>
-                  Lower numbers appear first
+                {/* Order */}
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', color: '#ccc', fontSize: '0.9rem', fontWeight: 500 }}>
+                    Order Priority
+                  </label>
+                  <input
+                    type="number"
+                    value={leadershipForm.order}
+                    onChange={(e) => setLeadershipForm({ ...leadershipForm, order: parseInt(e.target.value) || 0 })}
+                    min={0}
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem 1rem',
+                      backgroundColor: '#2d2d2d',
+                      color: '#fff',
+                      border: '1px solid #444',
+                      borderRadius: '8px',
+                      fontSize: '1rem',
+                      outline: 'none',
+                    }}
+                  />
+                  <div style={{ color: '#666', fontSize: '0.8rem', marginTop: '0.25rem' }}>
+                    Lower numbers appear first
+                  </div>
                 </div>
-              </div>
 
-              {/* Buttons */}
-              <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
-                <button
-                  type="button"
-                  onClick={() => setShowLeadershipModal(false)}
-                  style={{
-                    flex: 1,
-                    padding: '0.875rem',
-                    backgroundColor: 'transparent',
-                    color: '#ccc',
-                    border: '1px solid #444',
-                    borderRadius: '8px',
-                    fontSize: '1rem',
-                    fontWeight: 500,
-                    cursor: 'pointer',
-                    transition: 'all 0.2s',
-                  }}
-                  onMouseEnter={(e) => { e.target.style.borderColor = '#666'; e.target.style.color = '#fff'; }}
-                  onMouseLeave={(e) => { e.target.style.borderColor = '#444'; e.target.style.color = '#ccc'; }}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={submittingLeadership}
-                  style={{
-                    flex: 1,
-                    padding: '0.875rem',
-                    backgroundColor: '#b10f2e',
-                    color: '#fff',
-                    border: 'none',
-                    borderRadius: '8px',
-                    fontSize: '1rem',
-                    fontWeight: 600,
-                    cursor: submittingLeadership ? 'not-allowed' : 'pointer',
-                    opacity: submittingLeadership ? 0.7 : 1,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '0.5rem',
-                    transition: 'background-color 0.2s',
-                  }}
-                  onMouseEnter={(e) => !submittingLeadership && (e.target.style.backgroundColor = '#8b0d26')}
-                  onMouseLeave={(e) => !submittingLeadership && (e.target.style.backgroundColor = '#b10f2e')}
-                >
-                  {submittingLeadership ? 'Saving...' : (editingMember ? 'Update Member' : 'Add Member')}
-                </button>
-              </div>
-            </form>
-            <style>{`
+                {/* Buttons */}
+                <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+                  <button
+                    type="button"
+                    onClick={() => setShowLeadershipModal(false)}
+                    style={{
+                      flex: 1,
+                      padding: '0.875rem',
+                      backgroundColor: 'transparent',
+                      color: '#ccc',
+                      border: '1px solid #444',
+                      borderRadius: '8px',
+                      fontSize: '1rem',
+                      fontWeight: 500,
+                      cursor: 'pointer',
+                      transition: 'all 0.2s',
+                    }}
+                    onMouseEnter={(e) => { e.target.style.borderColor = '#666'; e.target.style.color = '#fff'; }}
+                    onMouseLeave={(e) => { e.target.style.borderColor = '#444'; e.target.style.color = '#ccc'; }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={submittingLeadership}
+                    style={{
+                      flex: 1,
+                      padding: '0.875rem',
+                      backgroundColor: '#b10f2e',
+                      color: '#fff',
+                      border: 'none',
+                      borderRadius: '8px',
+                      fontSize: '1rem',
+                      fontWeight: 600,
+                      cursor: submittingLeadership ? 'not-allowed' : 'pointer',
+                      opacity: submittingLeadership ? 0.7 : 1,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '0.5rem',
+                      transition: 'background-color 0.2s',
+                    }}
+                    onMouseEnter={(e) => !submittingLeadership && (e.target.style.backgroundColor = '#8b0d26')}
+                    onMouseLeave={(e) => !submittingLeadership && (e.target.style.backgroundColor = '#b10f2e')}
+                  >
+                    {submittingLeadership ? 'Saving...' : (editingMember ? 'Update Member' : 'Add Member')}
+                  </button>
+                </div>
+              </form>
+              <style>{`
               @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
               @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
             `}</style>
+            </div>
           </div>
-        </div>
-      )}
+        )
+      }
 
       <section className="container" style={{ padding: '0 1rem 2rem' }}>
         <h3 className="hdr">Houses</h3>
@@ -837,7 +999,7 @@ export default function Home() {
           ))}
         </div>
       </section>
-    </div>
+    </div >
   );
 }
 

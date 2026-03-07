@@ -65,6 +65,7 @@ export default function Nav() {
     { to: '/announcements', label: 'Announcements', Icon: Bell },
     { to: '/attendance', label: 'Attendance', Icon: ClipboardList },
     { to: '/dubbing', label: 'Gacha Animations', Icon: MessageCircle },
+    { to: '/welcome', label: 'Welcome Section', Icon: User },
   ]
 
   // Filter links based on visibility
