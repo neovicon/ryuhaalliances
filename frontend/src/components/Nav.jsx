@@ -15,7 +15,8 @@ import {
   X,
   Bell,
   MessageCircle,
-  LayoutGrid
+  LayoutGrid,
+  Map
 } from 'lucide-react'
 import { useNotifications } from '../context/NotificationContext'
 import NotificationList from './NotificationList'
@@ -52,6 +53,7 @@ export default function Nav() {
     { to: '/stories', label: 'Stories', Icon: BookOpen },
     { to: '/articles', label: 'Articles', Icon: BookOpen },
     { to: '/events', label: 'Events', Icon: Calendar },
+    { to: '/maps', label: 'Maps', Icon: Map },
     { to: '/ryuha-apps', label: 'RyuhaApps', Icon: LayoutGrid }
   ]
 

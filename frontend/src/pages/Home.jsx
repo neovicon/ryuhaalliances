@@ -978,7 +978,6 @@ export default function Home() {
             { name: 'Zoldyck', img: '/assets/zoldyck.jpeg' },
             { name: 'Fritz', img: '/assets/fritz.jpeg' },
             { name: 'Elric', img: '/assets/elric.jpeg' },
-            { name: 'Dragneel', img: '/assets/dragneel.jpeg' },
             { name: 'Hellsing', img: '/assets/hellsing.jpeg' },
             { name: 'Obsidian Order', img: '/assets/obsidian_order.jpeg' },
             { name: 'Council of IV', img: '/assets/counsil_of_iv.jpeg' },

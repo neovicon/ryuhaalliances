@@ -4,7 +4,7 @@ import { getRankImageSrc, calculateRank, RANKS } from '../utils/rank';
 import { getErrorMessage } from '../utils/error';
 import { useAuth } from '../store/auth';
 
-const HOUSES = ['Pendragon', 'Phantomhive', 'Tempest', 'Zoldyck', 'Fritz', 'Elric', 'Dragneel', 'Hellsing', 'Obsidian Order', 'Council of IV', 'Abyssal IV', 'Von Einzbern'];
+const HOUSES = ['Pendragon', 'Phantomhive', 'Tempest', 'Zoldyck', 'Fritz', 'Elric', 'Hellsing', 'Obsidian Order', 'Council of IV', 'Abyssal IV', 'Von Einzbern'];
 
 const MEMBER_STATUSES = ['Creator of the Realm', 'Guardian', 'Lord of the House', 'General', 'Seeker', 'Herald', 'Watcher', 'Knight of Genesis', 'Knight of I', 'Knight of II', 'Knight of III', 'Knight of IV', 'Knight of V', 'Commoner', 'Shopkeeper', 'Blacksmith'];
 

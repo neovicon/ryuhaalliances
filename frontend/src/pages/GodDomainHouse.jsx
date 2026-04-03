@@ -13,7 +13,6 @@ function getHouseImageSrc(houseName) {
         'Zoldyck': 'zoldyck',
         'Fritz': 'fritz',
         'Elric': 'elric',
-        'Dragneel': 'dragneel',
         'Hellsing': 'hellsing',
         'Von Einzbern': 'von_einzbern'
     };
@@ -29,8 +28,7 @@ const houseGods = {
     'Fritz': { name: 'Soro Von Lumintaria', image: 'Soro_Von_Lumintaria_Fritz.jpg' },
     'Elric': { name: 'Thalessara Elyndra', image: '𝐓𝐡𝐚𝐥𝐞𝐬𝐬𝐚𝐫𝐚_𝐄𝐥𝐲𝐧𝐝𝐫𝐚_Elric.jpg' },
     'Hellsing': { name: 'Aethernox', image: 'Aethernox_Hellsing.jpg' },
-    'Von Einzbern': { name: 'Morglyia Noctfrost', image: 'Morglyia_Noctfrost_VON_EINZBERN.jpg' },
-    'Dragneel': { name: 'Unknown Patron', image: null }
+    'Von Einzbern': { name: 'Morglyia Noctfrost', image: 'Morglyia_Noctfrost_VON_EINZBERN.jpg' }
 };
 
 const slugToNameMap = {
@@ -40,7 +38,6 @@ const slugToNameMap = {
     'zoldyck': 'Zoldyck',
     'fritz': 'Fritz',
     'elric': 'Elric',
-    'dragneel': 'Dragneel',
     'hellsing': 'Hellsing',
     'von-einzbern': 'Von Einzbern'
 };

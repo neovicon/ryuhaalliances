@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../store/auth';
 import { getErrorMessage } from '../utils/error';
 
-const houses = ['Pendragon', 'Phantomhive', 'Tempest', 'Zoldyck', 'Fritz', 'Elric', 'Dragneel', 'Hellsing', 'Obsidian Order', 'Council of IV', 'Abyssal IV', 'Von Einzbern'];
+const houses = ['Pendragon', 'Phantomhive', 'Tempest', 'Zoldyck', 'Fritz', 'Elric', 'Hellsing', 'Obsidian Order', 'Council of IV', 'Abyssal IV', 'Von Einzbern'];
 
 const SIGIL_PATTERN = /^RA–\d{8}–\d{3}$/;
 

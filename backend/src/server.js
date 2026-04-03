@@ -31,6 +31,7 @@ import notificationRoutes from './routes/notification.routes.js';
 import beastlordRoutes from './routes/beastlord.routes.js';
 import godDomainRoutes from './routes/godDomain.routes.js';
 import welcomeRoutes from './routes/welcome.routes.js';
+import mapsRoutes from './routes/maps.routes.js';
 
 
 import { createServer } from 'http';
@@ -157,6 +158,7 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/god-domain', godDomainRoutes);
 app.use('/api/welcome', welcomeRoutes);
+app.use('/api/maps', mapsRoutes);
 
 
 

@@ -43,6 +43,8 @@ import LabyrinthSpectator from './pages/LabyrinthSpectator.jsx'
 import GodDomainOverview from './pages/GodDomainOverview.jsx'
 import GodDomainHouse from './pages/GodDomainHouse.jsx'
 import Welcome from './pages/Welcome.jsx'
+import Maps from './pages/Maps.jsx'
+import HouseMapDetail from './pages/HouseMapDetail.jsx'
 import { MusicPlayerProvider } from './context/MusicPlayerContext.jsx'
 import { NotificationProvider } from './context/NotificationContext.jsx'
 import { SocketProvider } from './context/SocketContext.jsx'
@@ -62,13 +64,14 @@ export default function App() {
 
   const location = useLocation();
   const isMessenger = location.pathname === '/messenger';
+  const isMaps = location.pathname === '/maps';
 
   return (
     <MusicPlayerProvider>
       <SocketProvider>
         <NotificationProvider>
-          {!isMessenger && <Nav />}
-          {!isMessenger && <MusicPlayer />}
+          {!isMessenger && !isMaps && <Nav />}
+          {!isMessenger && !isMaps && <MusicPlayer />}
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/feed" element={<Feed />} />
@@ -110,8 +113,10 @@ export default function App() {
             <Route path="/ryuha-apps/labyrinth" element={<LabyrinthSocketProvider><Labyrinth /></LabyrinthSocketProvider>} />
             <Route path="/labyrinth/spectate/:gameName" element={<LabyrinthSocketProvider><LabyrinthSpectator /></LabyrinthSocketProvider>} />
             <Route path="/welcome" element={<Welcome />} />
+            <Route path="/maps" element={<Maps />} />
+            <Route path="/maps/house/:id" element={<HouseMapDetail />} />
           </Routes>
-          {useLocation().pathname !== '/messenger' && <Footer />}
+          {!isMessenger && !isMaps && <Footer />}
         </NotificationProvider>
       </SocketProvider>
     </MusicPlayerProvider>

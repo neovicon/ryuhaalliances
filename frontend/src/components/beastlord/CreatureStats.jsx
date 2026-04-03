@@ -38,8 +38,6 @@ export default function CreatureStats({ creature, houseName }) {
         const map = {
             // Tempest
             'Catton Ying': 'catton_ying.jpeg',
-            // Dragneel
-            'Icarus, "Sun Stalker"': 'dragneel.jpeg',
             // Von Einzbern
             'Drakaroth': 'von_einzbern.jpeg',
             // Pendragon
@@ -63,7 +61,7 @@ export default function CreatureStats({ creature, houseName }) {
             return `/assets/beasts/${map[name]}`;
         }
 
-        // Secondary fallback: try house-named file (e.g. dragneel.jpeg)
+        // Secondary fallback: try house-named file
         if (houseName) {
             const houseFile = houseName.toLowerCase().replace(/ /g, '_') + '.jpeg';
             return `/assets/beasts/${houseFile}`;

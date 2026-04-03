@@ -20,7 +20,7 @@ const API_URL = import.meta.env.VITE_API_URL || '';
 
 
 // --- CONSTANTS ---
-const HOUSES = ['Pendragon', 'Phantomhive', 'Tempest', 'Zoldyck', 'Fritz', 'Elric', 'Dragneel', 'Hellsing', 'Obsidian Order', 'Council of IV', 'Abyssal IV', 'Von Einzbern'];
+const HOUSES = ['Pendragon', 'Phantomhive', 'Tempest', 'Zoldyck', 'Fritz', 'Elric', 'Hellsing', 'Obsidian Order', 'Council of IV', 'Abyssal IV', 'Von Einzbern'];
 const DAYS = ['Sa', 'Su', 'M', 'T', 'W', 'Th', 'F'];
 
 const STATUS_COLORS = {

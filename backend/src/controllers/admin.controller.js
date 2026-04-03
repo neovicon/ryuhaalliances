@@ -421,7 +421,6 @@ function getDefaultHouseDescription(houseName) {
     'Zoldyck': 'The house of assassins and silent guardians, Zoldyck values discipline, precision, and the mastery of one\'s craft. Members are known for their dedication and skill.',
     'Fritz': 'Warriors of justice and protectors of the innocent, Fritz represents courage, determination, and the unwavering pursuit of what is right.',
     'Elric': 'Scholars and alchemists, Elric embodies knowledge, transformation, and the pursuit of understanding. This house values wisdom and the power of learning.',
-    'Dragneel': 'A house of fire and passion, Dragneel represents friendship, loyalty, and the burning spirit of those who never give up. Members are known for their fierce determination.',
     'Hellsing': 'Guardians of the night and protectors of secrets, Hellsing values strength, independence, and the power to stand alone against darkness.',
     'Obsidian Order': 'The elite and mysterious order, Obsidian Order represents power, strategy, and the mastery of both light and shadow. Members are the architects of change.',
     'Council of IV': 'A house of wisdom and governance, Council of IV represents leadership, unity, and the collective strength of those who guide and protect.',

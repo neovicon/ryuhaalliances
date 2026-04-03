@@ -933,3 +933,95 @@ button.mobile-link {
     height: 190px !important;
   }
 }
+
+/* World Map Styles */
+.maps-page {
+  padding: 2rem 0 6rem;
+  background: radial-gradient(circle at center, #1a1a2e 0%, #0b0b0c 100%);
+  min-height: 100vh;
+}
+
+.map-view-container {
+  box-shadow: 0 40px 100px rgba(0,0,0,0.8), 0 0 40px rgba(177, 15, 46, 0.1);
+}
+
+.octagon-map {
+  transform-origin: center;
+  user-select: none;
+}
+
+.octagon-map.zoom-level-2 {
+  transform: scale(2.2) translate(-80px, 0); /* Focus on left/house side */
+}
+
+.house-node:hover {
+  transform: scale(1.15);
+}
+
+.house-node.focused {
+  transform: scale(1.2);
+}
+
+.node-glow {
+  filter: drop-shadow(0 0 10px currentColor);
+}
+
+.rhombus-tile {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.rhombus-tile:hover {
+  stroke-width: 2;
+  stroke: rgba(255,255,255,0.4);
+  transform: translateY(-2px);
+}
+
+@keyframes slideInLeft {
+  from { transform: translateY(-50%) translateX(-40px); opacity: 0; }
+  to { transform: translateY(-50%) translateX(0); opacity: 1; }
+}
+
+@keyframes zoomIn {
+  from { transform: scale(0.9); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.fade-in {
+  animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Tab animations */
+.tab-content {
+  animation: slideUp 0.4s ease-out;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(10px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* Image Modal */
+.image-modal-overlay img {
+  box-shadow: 0 0 40px rgba(0,0,0,1), 0 0 80px rgba(177, 15, 46, 0.2);
+}
+
+/* Responsive Map */
+@media (max-width: 768px) {
+  .octagon-map.zoom-level-2 {
+    transform: scale(2.5) translate(0, 0);
+  }
+  .house-overlay-card {
+    width: calc(100% - 40px);
+    left: 20px;
+    top: auto;
+    bottom: 20px;
+    transform: none;
+    animation: slideUp 0.4s ease-out;
+  }
+}

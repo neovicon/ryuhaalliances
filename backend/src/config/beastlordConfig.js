@@ -1,16 +1,4 @@
 export const DEFAULT_CREATURES = {
-    'Dragneel': {
-        name: 'Icarus, "Sun Stalker"',
-        description: 'A divine holy angel from the gates of heaven, born from the light itself that possesses wings and scale armors made of gold that never varnishes. From the east where it rises with the sun, in the highest point of the tallest mountain — the angel’s eyes opens. Humming a tune that matches the core of the sun — It uses a bow with an arrow lighting from its hum, heating up the arrow from its bow.',
-        str: 250, dur: 300, spd: 150, int: 100, dex: 100, wis: 100,
-        skills: [
-            { name: 'Inferno Breath', desc: 'Shoots and breathes fire through his mouth, burning and damaging enemies to ashes.', cost: 23, costType: 'MP', damage: 183, cooldown: 'NONE' },
-            { name: 'Lava Slash', desc: 'Our creature slashes with his Lava-scaled claws, enemies would be dealing with deep cuts or even death, in some cases, burns.', cost: 153, costType: 'SP', damage: 875, cooldown: '1 ROUND' },
-            { name: 'Magma Burst', desc: 'Fires big chunks of molten rocks, shooting enemies effortlessly in a straight line.', cost: 202, costType: 'MP', damage: 733, cooldown: '2 ROUNDS' },
-            { name: 'Magma Swipe', desc: 'Magmascorpius swings his large tail, sometimes trapping enemies under and suffocate them while they burn into ashes.', cost: 788, costType: 'SP', damage: 2100, cooldown: '3 ROUNDS' },
-            { name: 'Scorched Earth', desc: "Taking all the heat out from the Earth's crust that creates continuous whirlwinds of flames that traps enemies.", cost: 871, costType: 'MP', damage: 1833, cooldown: '1 TIME USE ONLY', isUltimate: true }
-        ]
-    },
     'Tempest': {
         name: 'Catton Ying',
         description: 'An ancient cat–demon entity and the twin of Catton Yang. Created to uphold balance between worlds, it embodies kindness and freedom while maintaining a cold, disciplined presence.',

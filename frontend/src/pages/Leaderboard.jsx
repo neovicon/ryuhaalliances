@@ -13,7 +13,6 @@ function getHouseImageSrc(houseName) {
     'Zoldyck': 'zoldyck',
     'Fritz': 'fritz',
     'Elric': 'elric',
-    'Dragneel': 'dragneel',
     'Hellsing': 'hellsing',
     'Von Einzbern': 'von_einzbern'
   };

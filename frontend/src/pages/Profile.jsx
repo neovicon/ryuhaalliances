@@ -14,7 +14,6 @@ function getHouseImageSrc(houseName) {
     Zoldyck: 'zoldyck',
     Fritz: 'fritz',
     Elric: 'elric',
-    Dragneel: 'dragneel',
     Hellsing: 'hellsing',
     'Obsidian Order': 'obsidian_order',
     'Council of IV': 'counsil_of_iv',
