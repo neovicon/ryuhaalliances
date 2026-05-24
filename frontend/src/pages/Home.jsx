@@ -24,6 +24,18 @@ export default function Home() {
   const [editingMember, setEditingMember] = useState(null);
   const [leadershipForm, setLeadershipForm] = useState({ category: 'Creators', name: '', description: '', order: 0 });
   const [leadershipImage, setLeadershipImage] = useState(null);
+  const [coverBgUrl, setCoverBgUrl] = useState('/assets/cover.jpg');
+  
+  // Update cover background based on viewport width
+  useEffect(() => {
+    const updateBg = () => {
+      const width = window.innerWidth;
+      setCoverBgUrl(width <= 1024 ? '/assets/cover_9x16.jpeg' : '/assets/cover.jpg');
+    };
+    updateBg();
+    window.addEventListener('resize', updateBg);
+    return () => window.removeEventListener('resize', updateBg);
+  }, []);
   const [submittingLeadership, setSubmittingLeadership] = useState(false);
   const [welcomePosts, setWelcomePosts] = useState([]);
   const [loadingWelcome, setLoadingWelcome] = useState(true);
@@ -193,7 +205,7 @@ export default function Home() {
   return (
     <div>
       <section style={{
-        background: 'url(/assets/cover.jpg)',
+        background: `url(${coverBgUrl})`,
         backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat', backgroundBlendMode: 'darken', backdropFilter: 'blur(10px)', backgroundColor: 'rgba(0,0,0,.6)',
         padding: '5rem 1rem',
         borderBottom: '1px solid #1f2937'
