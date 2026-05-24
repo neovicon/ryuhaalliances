@@ -206,7 +206,7 @@ export default function Home() {
     <div>
       <section style={{
         background: `url(${coverBgUrl})`,
-        backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat', backgroundBlendMode: 'darken', backdropFilter: 'blur(10px)', backgroundColor: 'rgba(0,0,0,.6)',
+        backgroundSize: coverBgUrl.includes('9x16') ? 'contain' : 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat', backgroundBlendMode: 'darken', backdropFilter: 'blur(10px)', backgroundColor: 'rgba(0,0,0,.6)',
         padding: '5rem 1rem',
         borderBottom: '1px solid #1f2937'
       }}>
