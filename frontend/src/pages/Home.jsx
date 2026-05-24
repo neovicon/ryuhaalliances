@@ -25,12 +25,12 @@ export default function Home() {
   const [leadershipForm, setLeadershipForm] = useState({ category: 'Creators', name: '', description: '', order: 0 });
   const [leadershipImage, setLeadershipImage] = useState(null);
   const [coverBgUrl, setCoverBgUrl] = useState('/assets/cover.jpg');
-  
+
   // Update cover background based on viewport width
   useEffect(() => {
     const updateBg = () => {
       const width = window.innerWidth;
-      setCoverBgUrl(width <= 1024 ? '/assets/cover_9x16.jpeg' : '/assets/cover.jpg');
+      setCoverBgUrl(width < 768 ? '/assets/cover_9x16.jpeg' : '/assets/cover.jpg');
     };
     updateBg();
     window.addEventListener('resize', updateBg);
@@ -204,25 +204,114 @@ export default function Home() {
 
   return (
     <div>
-      <section style={{
-        background: `url(${coverBgUrl})`,
-        backgroundSize: coverBgUrl.includes('9x16') ? 'contain' : 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat', backgroundBlendMode: 'darken', backdropFilter: 'blur(10px)', backgroundColor: 'rgba(0,0,0,.6)',
-        padding: '5rem 1rem',
-        borderBottom: '1px solid #1f2937'
+      <div style={{ width: '100%', backgroundColor: '#000', display: 'flex', justifyContent: 'center' }}>
+        <img 
+          src={coverBgUrl} 
+          alt="Ryuha Alliance Cover"
+          style={{
+            width: '100%',
+            height: 'auto',
+            display: 'block'
+          }}
+        />
+      </div>
+
+      <section className="hero-text-section" style={{
+        backgroundColor: '#0a0a0c',
+        padding: '4rem 1rem',
+        textAlign: 'center',
+        borderBottom: '1px solid rgba(255,255,255,0.05)',
+        position: 'relative',
+        overflow: 'hidden'
       }}>
-        <div className="container" style={{ textAlign: 'center' }}>
-          <h1 className="hdr" style={{ fontSize: 42, letterSpacing: 2 }}>Ryuha Alliance</h1>
-          <p style={{ maxWidth: 800, margin: '1rem auto', color: 'var(--muted)', lineHeight: 1.6 }}>
-            a legendary gathering of warriors, dreamers, and adventurers from all walks of anime fandom.
+        {/* Animated ambient glow behind container */}
+        <div style={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          width: 'clamp(300px, 50vw, 600px)',
+          height: 'clamp(300px, 50vw, 600px)',
+          background: 'radial-gradient(circle, rgba(220, 38, 38, 0.1) 0%, rgba(0,0,0,0) 70%)',
+          filter: 'blur(40px)',
+          zIndex: 0,
+          animation: 'pulseGlow 6s infinite alternate'
+        }}></div>
+
+        <div className="container" style={{ 
+          position: 'relative',
+          zIndex: 1,
+          maxWidth: '800px',
+          margin: '0 auto',
+          animation: 'fadeInUp 1s cubic-bezier(0.16, 1, 0.3, 1)'
+        }}>
+          <h1 className="hdr" style={{ 
+            fontSize: 'clamp(2.5rem, 6vw, 4.5rem)', 
+            letterSpacing: '-1px', 
+            margin: '0 0 1rem 0',
+            background: 'linear-gradient(135deg, #ffffff 0%, #e2e8f0 100%)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.3))'
+          }}>
+            Ryuha Alliance
+          </h1>
+          <p style={{ 
+            fontSize: 'clamp(1rem, 2vw, 1.25rem)',
+            margin: '0 auto 2.5rem', 
+            color: 'rgba(255,255,255,0.7)', 
+            lineHeight: 1.7,
+            fontWeight: 400
+          }}>
+            A legendary gathering of warriors, dreamers, and adventurers from all walks of anime fandom.
           </p>
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '.75rem', flexWrap: 'wrap', marginTop: '1rem' }}>
-            <span className="card">Honor</span>
-            <span className="card">Discipline</span>
-            <span className="card">Courage</span>
-            <span className="card">Growth</span>
-            <span className="card">Unity</span>
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'center', 
+            gap: '0.75rem', 
+            flexWrap: 'wrap' 
+          }}>
+            {['Honor', 'Discipline', 'Courage', 'Growth', 'Unity'].map((tag, i) => (
+              <span key={tag} className="hero-tag" style={{
+                animationDelay: `${i * 0.1}s`
+              }}>
+                {tag}
+              </span>
+            ))}
           </div>
         </div>
+
+        <style>{`
+          @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+          }
+          @keyframes pulseGlow {
+            0% { opacity: 0.5; transform: translate(-50%, -50%) scale(0.8); }
+            100% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
+          }
+          .hero-tag {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 0.6rem 1.5rem;
+            border-radius: 9999px;
+            color: rgba(255,255,255,0.9);
+            font-size: 0.85rem;
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            backdrop-filter: blur(4px);
+            animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+          }
+          .hero-tag:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.3);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2), 0 0 15px rgba(255,255,255,0.1);
+            color: #fff;
+          }
+        `}</style>
       </section>
 
       {/* Welcome to Ryuha Alliance Slider */}
