@@ -6,10 +6,12 @@ export const RANKS = [
   'Elite',
   'Supreme Elite',
   'Mythical',
+  'Celestial'
 ];
 
 // Calculate rank based on points (matches backend)
 export function calculateRank(points) {
+  if (points >= 5000) return 'Celestial';
   if (points >= 2500) return 'Mythical';
   if (points >= 1000) return 'Supreme Elite';
   if (points >= 250) return 'Elite';

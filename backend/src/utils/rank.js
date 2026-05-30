@@ -6,6 +6,7 @@ export const RANK_THRESHOLDS = {
   'Elite': 250,
   'Supreme Elite': 1000,
   'Mythical': 2500,
+  'Celestial': 5000,
 };
 
 // Calculate rank based on points
