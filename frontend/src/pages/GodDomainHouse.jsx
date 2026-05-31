@@ -416,7 +416,7 @@ export default function GodDomainHouse() {
                             />
                             <div style={{ flex: 1 }}>
                                 <div style={{ fontWeight: 600 }}>
-                                    {post.author?.username}
+                                    {post.author?.displayName || post.author?.username}
                                     <span style={{ color: 'var(--muted)', fontSize: '0.8rem', marginLeft: '0.5rem', fontWeight: 400 }}>
                                         {post.author?.memberStatus}
                                     </span>
@@ -483,7 +483,7 @@ export default function GodDomainHouse() {
                                         />
                                         <div style={{ flex: 1, background: 'rgba(255,255,255,0.03)', padding: '0.5rem 0.75rem', borderRadius: '8px' }}>
                                             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                                <span style={{ fontWeight: 600, fontSize: '0.85rem' }}>{comment.author?.username}</span>
+                                                <span style={{ fontWeight: 600, fontSize: '0.85rem' }}>{comment.author?.displayName || comment.author?.username}</span>
                                                 <div style={{ display: 'flex', gap: '0.5rem' }}>
                                                     {(user?.id === comment.author?._id || user?.role === 'admin' || (user?.house === houseName && user?.memberStatus === 'Lord of the House')) && (
                                                         <button
