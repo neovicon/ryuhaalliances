@@ -14,7 +14,8 @@ function getHouseImageSrc(houseName) {
         'Fritz': 'fritz',
         'Elric': 'elric',
         'Hellsing': 'hellsing',
-        'Von Einzbern': 'von_einzbern'
+        'Von Einzbern': 'von_einzbern',
+        'Vermillion': 'vermillion'
     };
     const fileName = houseMap[houseName] || houseName.toLowerCase().replace(/\s+/g, '_');
     return `/assets/${fileName}.jpeg`;
@@ -39,7 +40,8 @@ const slugToNameMap = {
     'fritz': 'Fritz',
     'elric': 'Elric',
     'hellsing': 'Hellsing',
-    'von-einzbern': 'Von Einzbern'
+    'von-einzbern': 'Von Einzbern',
+    'vermillion': 'Vermillion'
 };
 
 const PAGE_LIMIT = 10;

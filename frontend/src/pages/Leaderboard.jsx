@@ -14,7 +14,8 @@ function getHouseImageSrc(houseName) {
     'Fritz': 'fritz',
     'Elric': 'elric',
     'Hellsing': 'hellsing',
-    'Von Einzbern': 'von_einzbern'
+    'Von Einzbern': 'von_einzbern',
+    'Vermillion': 'vermillion'
   };
   const fileName = houseMap[houseName] || houseName.toLowerCase().replace(' ', '_');
   return `/assets/${fileName}.jpeg`;

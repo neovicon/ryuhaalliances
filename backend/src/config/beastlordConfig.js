@@ -86,6 +86,17 @@ export const DEFAULT_CREATURES = {
             { name: 'Spatial Warp', desc: 'Warps the space around enemies to cause internal damage.', cost: 250, costType: 'MP', damage: 1200, cooldown: '1 ROUND' },
             { name: 'Heaven\'s Feel', desc: 'Unleashes the absolute magic of the Einzbern family.', cost: 850, costType: 'MP', damage: 4000, cooldown: '1 TIME USE ONLY', isUltimate: true }
         ]
+    },
+    'Vermillion': {
+        name: 'Leonis Vermis',
+        description: 'A colossal, divine lion of fire and crimson light, born from the eternal flame of House Vermillion. Leonis Vermis is the living embodiment of royal fury — its mane ignites like a crown of wildfire, its roar alone can shatter the earth. Loyal only to those of Vermillion blood, this beast fights with the savage grace of a king, punishing enemies with relentless flame and unyielding strength.',
+        str: 310, dur: 220, spd: 260, int: 150, dex: 230, wis: 180,
+        skills: [
+            { name: 'Blazing Mane', desc: 'Ignites its mane and charges, burning anything in its path with royal fire.', cost: 70, costType: 'SP', damage: 420, cooldown: 'NONE' },
+            { name: 'Crimson Roar', desc: 'Releases a shockwave of fire and sonic force that disorients enemies.', cost: 130, costType: 'MP', damage: 700, cooldown: '1 ROUND' },
+            { name: 'Crown of Wildfire', desc: 'Summons a ring of royal flame around itself, burning all who dare approach.', cost: 280, costType: 'MP', damage: 1300, cooldown: '2 ROUNDS' },
+            { name: 'King\'s Inferno', desc: 'Ascends to its full divine form and unleashes an apocalyptic wave of royal flame upon the battlefield.', cost: 800, costType: 'MP', damage: 3800, cooldown: '1 TIME USE ONLY', isUltimate: true }
+        ]
     }
 };
 

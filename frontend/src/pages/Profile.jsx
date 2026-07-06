@@ -19,6 +19,7 @@ function getHouseImageSrc(houseName) {
     'Council of IV': 'counsil_of_iv',
     'Abyssal IV': 'abyssal_iv',
     'Von Einzbern': 'von_einzbern',
+    Vermillion: 'vermillion',
   };
   const fileName = houseMap[houseName] || houseName.toLowerCase().replace(/\s+/g, '_');
   return `../../assets/${fileName}.jpeg`;

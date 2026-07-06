@@ -17,6 +17,7 @@ function getHouseImageSrc(houseName) {
     'council-of-iv': 'counsil_of_iv',
     'abyssal-iv': 'abyssal_iv',
     'von-einzbern': 'von_einzbern',
+    'vermillion': 'vermillion',
   };
   const fileName = houseMap[houseName.toLowerCase()] || houseName.toLowerCase().replace(/-/g, '_');
   return `/assets/${fileName}.jpeg`;
@@ -35,6 +36,7 @@ function getHouseName(slug) {
     'council-of-iv': 'Council of IV',
     'abyssal-iv': 'Abyssal IV',
     'von-einzbern': 'Von Einzbern',
+    'vermillion': 'Vermillion',
   };
   return nameMap[slug.toLowerCase()] || slug.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
 }
@@ -52,6 +54,7 @@ function getHouseDescription(houseName) {
     'Council of IV': 'A house of wisdom and governance, Council of IV represents leadership, unity, and the collective strength of those who guide and protect.',
     'Abyssal IV': 'A house of depth and mystery, Abyssal IV represents the hidden depths of power, resilience, and the unyielding force that emerges from the shadows.',
     'Von Einzbern': 'An ancient and noble lineage of magi, the Von Einzbern house is synonymous with alchemical mastery and the pursuit of the Holy Grail. They value tradition, precision, and the manifestation of supreme magical mysteries.',
+    'Vermillion': 'The Flame of House Vermillion burns eternal — a proud and fierce bloodline of warrior royals from the Clover Kingdom. Members of Vermillion carry an unbreakable fire in their hearts, embodying passion, strength, and the untamed spirit of those who rise to become kings.',
   };
   return descriptions[houseName] || 'A distinguished house within the Ryuha Alliance, dedicated to honor, discipline, and unity.';
 }

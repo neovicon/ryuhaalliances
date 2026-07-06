@@ -102,6 +102,19 @@ export const housesData = [
     beasts: ['Dire Wolf', 'Obsididog'],
     knights: ['Sir Thorne', 'Lady Raven'],
     flags: ['The Black Shield', 'Unbroken Spirit']
+  },
+  {
+    id: 9,
+    name: 'Vermillion',
+    slug: 'vermillion',
+    color: '#dc2626', // Vermillion Red
+    logo: '/assets/vermillion.jpeg',
+    shortSummary: 'The Flame of House Vermillion — fierce warrior royals from the Clover Kingdom whose fire burns eternal.',
+    membersCount: 0,
+    guardians: ['Flame Sovereign', 'Crimson Warden'],
+    beasts: ['Inferno Lion', 'Fire Drake'],
+    knights: ['Sir Agares', 'Lady Noelle'],
+    flags: ['The Crimson Crest', 'Banner of the Undying Flame']
   }
 ];
 
