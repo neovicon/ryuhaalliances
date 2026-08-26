@@ -16,8 +16,7 @@ export default function Home() {
   const [loadingArticles, setLoadingArticles] = useState(true);
   const [stories, setStories] = useState([]);
   const [loadingStories, setLoadingStories] = useState(true);
-  const [featuredEntries, setFeaturedEntries] = useState([]);
-  const [loadingFeaturedEntries, setLoadingFeaturedEntries] = useState(true);
+
   const [leadershipMembers, setLeadershipMembers] = useState([]);
   const [loadingLeadership, setLoadingLeadership] = useState(true);
   const [showLeadershipModal, setShowLeadershipModal] = useState(false);
@@ -49,7 +48,7 @@ export default function Home() {
     loadArticles();
     loadStories();
     loadLeadership();
-    loadFeaturedEntries();
+
     loadWelcomePosts();
   }, []);;
 
@@ -130,19 +129,7 @@ export default function Home() {
     }
   }
 
-  async function loadFeaturedEntries() {
-    try {
-      setLoadingFeaturedEntries(true);
-      const { data } = await client.get('/event-entries', {
-        params: { trending: 'true', limit: 4 }
-      });
-      setFeaturedEntries(data || []);
-    } catch (err) {
-      console.error('Error loading featured entries:', err);
-    } finally {
-      setLoadingFeaturedEntries(false);
-    }
-  }
+
 
   async function loadWelcomePosts() {
     try {
@@ -573,65 +560,7 @@ export default function Home() {
         )}
       </section>
 
-      {/* Featured Event Entries Section */}
-      {!loadingFeaturedEntries && featuredEntries.length > 0 && (
-        <section className="container" style={{ padding: '2rem 1rem' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-            <div>
-              <h3 className="hdr" style={{ margin: 0 }}>Featured Submissions</h3>
-              <p style={{ color: 'var(--muted)', fontSize: '0.9rem', marginTop: '0.25rem' }}>The most popular entries from our events</p>
-            </div>
-            <button className="btn" onClick={() => navigate('/event-entries')} style={{ background: 'transparent', border: '1px solid rgba(148,163,184,0.3)' }}>
-              See more
-            </button>
-          </div>
-          <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem' }}>
-            {featuredEntries.map((entry) => (
-              <div key={entry._id} className="card" style={{ padding: 0, overflow: 'hidden', position: 'relative' }}>
-                <div
-                  style={{
-                    width: '100%',
-                    aspectRatio: '1/1',
-                    background: `url(${entry.mediaUrl}) center/cover no-repeat`,
-                    backgroundColor: '#000',
-                    cursor: 'pointer'
-                  }}
-                  onClick={() => navigate(`/events/${entry.event?._id}/entries`)}
-                />
-                <div style={{ padding: '1rem' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
-                    <div style={{ fontWeight: 700, fontSize: '1rem' }}>{entry.memberName}</div>
-                    <div style={{ fontSize: '0.8rem', color: 'var(--primary)', fontWeight: 600 }}>
-                      🔥 {entry.engagementScore}
-                    </div>
-                  </div>
-                  {entry.event?.title && (
-                    <div style={{ color: 'var(--muted)', fontSize: '0.8rem', marginBottom: '0.5rem' }}>
-                      Event: <span style={{ color: 'var(--text)' }}>{entry.event.title}</span>
-                    </div>
-                  )}
-                  <div style={{
-                    color: 'var(--muted)',
-                    fontSize: '0.9rem',
-                    lineHeight: 1.5,
-                    display: '-webkit-box',
-                    WebkitLineClamp: 2,
-                    WebkitBoxOrient: 'vertical',
-                    overflow: 'hidden'
-                  }}>
-                    {entry.description}
-                  </div>
-                  <div style={{ marginTop: '1rem' }}>
-                    <span className="link" onClick={() => navigate(`/events/${entry.event?._id}/entries`)}>
-                      View event entries
-                    </span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
+
 
       {/* Articles Section */}
       {!loadingArticles && articles.length > 0 && (
